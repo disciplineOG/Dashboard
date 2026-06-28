@@ -153,6 +153,9 @@ Adding the app to your home screen makes it behave like a native app — it open
 
 The app icon will now appear on your home screen and open full-screen, just like a downloaded app.
 
+**Optional — set a custom home screen icon:**
+Upload a square image named `icon-192.png` (192×192 pixels or larger) to the root of your repository. It can be any photo, logo, or image you like. If you skip this, the browser will fall back to a generic bookmark icon automatically — the app still works fine either way.
+
 ---
 
 ## Sharing with someone (read-only access)
@@ -180,6 +183,21 @@ From there you can update your app name, currency, Firebase configuration, and p
 ---
 
 ## Troubleshooting
+
+**"I get a 404 error when I open the app"**
+
+This almost always means your repository is set to **private**. GitHub Pages only works with public repositories on a free GitHub account.
+
+To fix it:
+
+1. Go to your repository on GitHub.
+2. Click **Settings**.
+3. Scroll down to the **Danger Zone** section at the bottom.
+4. Click **Change repository visibility** and set it to **Public**.
+
+Your app and its data are still protected — the app has its own password system (set up in the wizard). Making the repository public just means someone can read the source code, not access your data. There are no passwords, API keys, or personal data stored in the code itself.
+
+---
 
 **"The app shows a blank page or doesn't load"**
 
