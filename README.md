@@ -28,7 +28,7 @@ Forking means making your own personal copy of this project on GitHub, hosted un
 1. Make sure you are signed in to GitHub.
 2. On this repository's page, click the **Fork** button in the top-right corner.
 3. On the next screen, leave everything as-is and click **Create fork**.
-4. You now have your own copy at `https://github.com/YOURUSERNAME/REPONAME`.
+4. You now have your own copy at `https://github.com/disciplineOG/Dashboard`.
 
 Now turn on GitHub Pages so the app is publicly accessible:
 
@@ -41,10 +41,10 @@ Now turn on GitHub Pages so the app is publicly accessible:
 GitHub will now build your site. It takes about 1–2 minutes. Your app will be live at:
 
 ```
-https://YOURUSERNAME.github.io/REPONAME/
+https://disciplineog.github.io/Dashboard/
 ```
 
-Replace `YOURUSERNAME` with your GitHub username and `REPONAME` with the name of your forked repository. You can also see the exact URL on the Pages settings page once it is ready.
+If you have forked this repo under your own account, your URL will follow the same pattern: `https://YOURUSERNAME.github.io/Dashboard/` — check the Pages settings screen to confirm.
 
 ---
 
@@ -97,7 +97,7 @@ Go to your GitHub Pages URL from Step 1. The first time you open the app, a setu
 
 - **App Name** — whatever you want to call it (e.g. "Bargav's Dashboard")
 - **Currency Symbol** — your local currency symbol. The default is ₹ — change it to `$`, `€`, `£`, or whatever you use. This appears throughout the Expenses tab.
-- **Hosting URL** — paste your GitHub Pages URL here (e.g. `https://YOURUSERNAME.github.io/REPONAME/`). This is used when the app generates sharing links. Leave it blank if you are running locally.
+- **Hosting URL** — paste your GitHub Pages URL here: `https://disciplineog.github.io/Dashboard/`. This is used when the app generates sharing links. Leave it blank if you are running locally.
 
 Click **Next →** to continue.
 
