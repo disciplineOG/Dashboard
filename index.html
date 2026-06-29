@@ -1943,7 +1943,8 @@
       try {
         if (!FB_CONFIG || !FB_CONFIG.apiKey) { if (!_initDone) { _initDone = true; initDashboard(); } return; }
         if (typeof firebase === 'undefined') { initDashboard(); return; }
-        _fbApp = firebase.initializeApp(FB_CONFIG);
+        if (_fbReady) { applyAuthRole(); if (_initDone) reRenderAll(); return; }
+        _fbApp = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(FB_CONFIG);
         _fbDb  = firebase.database();
         _fbRef = _fbDb.ref('dashboard/data');
         _fbReady = true;
@@ -1958,6 +1959,12 @@
             });
           }
 
+          // If app_config exists locally but Firebase has none, push immediately
+          // (happens after first-time setup — finishSetup saves to localStorage only)
+          if (!data || !Object.prototype.hasOwnProperty.call(data, 'app_config')) {
+            var localCfg = localStorage.getItem('app_config');
+            if (localCfg) { pushToFirebase(); }
+          }
           if (!_initDone) { _initDone = true; initDashboard(); }
           else { reRenderAll(); } // Firebase arrived after 4s timeout — refresh UI with real data
         }).catch(function() {
@@ -6134,13 +6141,14 @@
           localStorage.setItem('_auth_role', 'admin');
           document.getElementById('auth_overlay').classList.remove('open');
           applyAuthRole();
-          initFirebase();
+          _updateShareableHash();
+          if (!_fbReady) { initFirebase(); } else { reRenderAll(); }
         } else if (hash === AUTH_READONLY_HASH) {
           _authRole = 'readonly';
           localStorage.setItem('_auth_role', 'readonly');
           document.getElementById('auth_overlay').classList.remove('open');
           applyAuthRole();
-          initFirebase();
+          if (!_fbReady) { initFirebase(); } else { reRenderAll(); }
         } else {
           err.textContent = 'Invalid code. Try again.';
           document.getElementById('auth_input').value = '';
@@ -6165,6 +6173,12 @@
         if (syncBtn) syncBtn.style.display = 'none';
       } else {
         document.body.classList.remove('readonly');
+        // Remove the readonly badge if present
+        var badge = document.getElementById('ro_badge');
+        if (badge) badge.parentNode.removeChild(badge);
+        // Restore sync button visibility
+        var syncBtn = document.getElementById('sync_btn');
+        if (syncBtn) syncBtn.style.display = '';
       }
     }
 
@@ -6268,8 +6282,7 @@
         if (checkAuth()) {
           initFirebase();
         } else {
-          // No stored role — auto-grant readonly; admin can log in via settings menu
-          localStorage.setItem('_auth_role', 'readonly');
+          // No stored role — auto-grant readonly (in-memory only); admin can log in via settings menu
           _authRole = 'readonly';
           applyAuthRole();
           initFirebase();
@@ -6310,8 +6323,7 @@
             AUTH_ADMIN_HASH    = remoteConfig.authAdminHash    || null;
             AUTH_READONLY_HASH = remoteConfig.authReadonlyHash || null;
             initAppTitle();
-            // Auto-grant readonly — no password prompt for shared users
-            localStorage.setItem('_auth_role', 'readonly');
+            // Auto-grant readonly (in-memory only) — no password prompt for shared users
             _authRole = 'readonly';
             applyAuthRole();
             initFirebase();
