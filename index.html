@@ -1950,6 +1950,8 @@
         _fbRef = _fbDb.ref('dashboard/data');
         _fbReady = true;
         _updateShareableHash();
+        // Persist Firebase config so hash-less launches (PWA home screen) work on this device
+        try { localStorage.setItem('_fb_bootstrap', JSON.stringify(FB_CONFIG)); } catch(e) {}
 
         // Fetch once from server → seed localStorage → init
         _fbRef.once('value').then(function(snap) {
@@ -6318,6 +6320,8 @@
           clearTimeout(timer);
           var remoteConfig = snap.val();
           if (remoteConfig && remoteConfig.setupDone) {
+            // Persist the Firebase config so home screen / hash-less launches work next time
+            try { localStorage.setItem('_fb_bootstrap', JSON.stringify(bootstrapCfg)); } catch(e) {}
             // Seed localStorage so the rest of the app behaves normally
             try { localStorage.setItem('app_config', JSON.stringify(remoteConfig)); } catch(e) {}
             // Reload the derived globals that were read at script-parse time
@@ -6351,7 +6355,15 @@
           if (cfg && cfg.apiKey && cfg.databaseURL) return cfg;
         }
       } catch(e) {}
-      // 2. Fall back to <meta name="fb-bootstrap"> tag
+      // 2. Check localStorage (saved after first successful bootstrap — survives home screen launches)
+      try {
+        var saved = localStorage.getItem('_fb_bootstrap');
+        if (saved) {
+          var cfg = JSON.parse(saved);
+          if (cfg && cfg.apiKey && cfg.databaseURL) return cfg;
+        }
+      } catch(e) {}
+      // 3. Fall back to <meta name="fb-bootstrap"> tag
       try {
         var el = document.querySelector('meta[name="fb-bootstrap"]');
         if (!el) return null;
