@@ -1992,7 +1992,7 @@
       }
     }
 
-    var SYNCED_KEYS = ['sched','groc_meal','groc_ess',
+    var SYNCED_KEYS = ['app_config','sched','groc_meal','groc_ess',
       'monthly_focus','weekly_intentions',
       'tasks_active_list','tasks_done_list','expenses_list','exp_limits',
       'weight_log','theme','notif_dismissed','custom_groc',
@@ -6240,15 +6240,77 @@
 
     window.addEventListener('load', function() {
       initAppTitle();
-      if (!isSetupDone()) {
-        initSetupWizard();
-      } else if (checkAuth()) {
-        initFirebase();
+      if (isSetupDone()) {
+        // Config is already in localStorage — decide routing immediately
+        if (checkAuth()) {
+          initFirebase();
+        } else {
+          document.getElementById('auth_overlay').classList.add('open');
+          updateAuthSubtitle();
+        }
       } else {
-        document.getElementById('auth_overlay').classList.add('open');
-        updateAuthSubtitle();
+        // No local app_config — try to pull it from Firebase before deciding.
+        // This handles User B (fresh browser, shared link) when User A has
+        // already completed setup and app_config is synced to Firebase.
+        _bootstrapFromFirebase();
       }
     });
+
+    function _bootstrapFromFirebase() {
+      // Try to read a bootstrap Firebase config from a <meta name="fb-bootstrap"> tag.
+      // If none is found, fall through to the setup wizard (true first run).
+      var bootstrapCfg = _getBootstrapFirebaseConfig();
+      if (!bootstrapCfg) {
+        initSetupWizard();
+        return;
+      }
+      var done = false;
+      var timer = setTimeout(function() {
+        if (!done) { done = true; initSetupWizard(); }
+      }, 5000);
+      try {
+        // Use a separate named Firebase app so we don't collide with the main one
+        var tmpApp = firebase.initializeApp(bootstrapCfg, '_bootstrap');
+        var tmpRef = firebase.app('_bootstrap').database().ref('dashboard/data/app_config');
+        tmpRef.once('value').then(function(snap) {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          var remoteConfig = snap.val();
+          if (remoteConfig && remoteConfig.setupDone) {
+            // Seed localStorage so the rest of the app behaves normally
+            try { localStorage.setItem('app_config', JSON.stringify(remoteConfig)); } catch(e) {}
+            // Reload the derived globals that were read at script-parse time
+            AUTH_ADMIN_HASH    = remoteConfig.authAdminHash    || null;
+            AUTH_READONLY_HASH = remoteConfig.authReadonlyHash || null;
+            initAppTitle();
+            // Show Access Code screen — do NOT call initSetupWizard()
+            document.getElementById('auth_overlay').classList.add('open');
+            updateAuthSubtitle();
+          } else {
+            initSetupWizard();
+          }
+        }).catch(function() {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          initSetupWizard();
+        });
+      } catch(e) {
+        if (!done) { done = true; clearTimeout(timer); initSetupWizard(); }
+      }
+    }
+
+    function _getBootstrapFirebaseConfig() {
+      // Reads Firebase config from <meta name="fb-bootstrap" content='{"apiKey":"...","databaseURL":"...",...}'>.
+      // The admin sets this once after completing setup (optional but enables multi-user sharing).
+      try {
+        var m = document.querySelector('meta[name="fb-bootstrap"]');
+        if (!m) return null;
+        var cfg = JSON.parse(m.getAttribute('content'));
+        return (cfg && cfg.apiKey && cfg.databaseURL) ? cfg : null;
+      } catch(e) { return null; }
+    }
 
     // initDashboard is called by initFirebase after data is loaded
     function initDashboard() {
