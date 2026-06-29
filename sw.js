@@ -1,4 +1,4 @@
-const CACHE = 'dashboard-v1';
+const CACHE = 'dashboard-v2';
 const ASSETS = ['/Dashboard/', '/Dashboard/index.html'];
 
 self.addEventListener('install', function(e) {
@@ -18,6 +18,19 @@ self.addEventListener('activate', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
+  // Network-first for HTML so deployments are always picked up immediately
+  if (e.request.mode === 'navigate' || e.request.url.endsWith('index.html') || e.request.url.endsWith('/Dashboard/')) {
+    e.respondWith(
+      fetch(e.request).then(function(res) {
+        var clone = res.clone();
+        caches.open(CACHE).then(function(c) { c.put(e.request, clone); });
+        return res;
+      }).catch(function() {
+        return caches.match(e.request);
+      })
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then(function(r) { return r || fetch(e.request); })
   );
