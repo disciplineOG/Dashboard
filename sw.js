@@ -1,9 +1,13 @@
-const CACHE = 'dashboard-v2';
-const ASSETS = ['/Dashboard/', '/Dashboard/index.html'];
+const CACHE = 'dashboard-v3';
+const ASSETS = [
+  '/Dashboard/',
+  '/Dashboard/index.html',
+  '/Dashboard/#fb=eyJhcGlLZXkiOiJBSXphU3lDaDFwMmgtMUdrbzYzZzZyUllpT2JZdE9LLXM2OWE1UkkiLCJhdXRoRG9tYWluIjoibm8tbmVnb3RpYXRpb24uZmlyZWJhc2VhcHAuY29tIiwiZGF0YWJhc2VVUkwiOiJodHRwczovL25vLW5lZ290aWF0aW9uLWRlZmF1bHQtcnRkYi5hc2lhLXNvdXRoZWFzdDEuZmlyZWJhc2VkYXRhYmFzZS5hcHAiLCJwcm9qZWN0SWQiOiJuby1uZWdvdGlhdGlvbiIsInN0b3JhZ2VCdWNrZXQiOiJuby1uZWdvdGlhdGlvbi5maXJlYmFzZXN0b3JhZ2UuYXBwIiwibWVzc2FnaW5nU2VuZGVySWQiOiIxMDc2NjY3NDY2ODg4IiwiYXBwSWQiOiIxOjEwNzY2Njc0NjY4ODg6d2ViOjkyNzdiYTU0OGQ4ZWU5YmEwN2NiM2QifQ%3D%3D'
+];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
-    caches.open(CACHE).then(function(c) { return c.addAll(ASSETS); })
+    caches.open(CACHE).then(function(c) { return c.addAll(['/Dashboard/', '/Dashboard/index.html']); })
   );
   self.skipWaiting();
 });
@@ -19,14 +23,14 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   // Network-first for HTML so deployments are always picked up immediately
-  if (e.request.mode === 'navigate' || e.request.url.endsWith('index.html') || e.request.url.endsWith('/Dashboard/')) {
+  if (e.request.mode === 'navigate' || e.request.url.endsWith('index.html') || e.request.url.endsWith('/Dashboard/') || e.request.url.indexOf('/Dashboard/#') !== -1) {
     e.respondWith(
       fetch(e.request).then(function(res) {
         var clone = res.clone();
         caches.open(CACHE).then(function(c) { c.put(e.request, clone); });
         return res;
       }).catch(function() {
-        return caches.match(e.request);
+        return caches.match(e.request) || caches.match('/Dashboard/index.html');
       })
     );
     return;
@@ -34,4 +38,20 @@ self.addEventListener('fetch', function(e) {
   e.respondWith(
     caches.match(e.request).then(function(r) { return r || fetch(e.request); })
   );
+});
+
+// FIX 4: Handle SET_START_URL message from the app so the SW caches the correct
+// hash URL after a fresh Firebase setup (e.g. after finishSetup() runs and
+// _updateShareableHash() writes the #fb= fragment into location.hash).
+self.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'SET_START_URL' && e.data.hash) {
+    var newUrl = '/Dashboard/' + e.data.hash;
+    caches.open(CACHE).then(function(c) {
+      // Fetch the base HTML and store it under the new hash URL so future
+      // navigations to that URL get a cache hit.
+      fetch('/Dashboard/index.html').then(function(res) {
+        c.put(new Request(newUrl), res);
+      }).catch(function() {});
+    });
+  }
 });
