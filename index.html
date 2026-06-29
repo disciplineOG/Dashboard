@@ -526,6 +526,11 @@
                     </button>
 
                     <div class="smenu-divider"></div>
+                    <!-- Share Link -->
+                    <button onclick="copyShareLink();closeSettingsMenu()" class="smenu-item admin-only">
+                        🔗 Copy Share Link
+                    </button>
+                    <div class="smenu-divider admin-only"></div>
                     <!-- Export -->
                     <button onclick="exportData();closeSettingsMenu()" class="smenu-item admin-only">
                         💾 Export Backup
@@ -543,6 +548,11 @@
                     <!-- App Settings -->
                     <button onclick="openAppSettings();closeSettingsMenu()" class="smenu-item admin-only">
                         ⚙️ App Settings
+                    </button>
+                    <div class="smenu-divider"></div>
+                    <!-- Admin Login (visible to all roles) -->
+                    <button onclick="showAdminLogin();closeSettingsMenu()" class="smenu-item">
+                        🔐 Admin Login
                     </button>
                     <!-- Last synced -->
                     <div id="smenu_sync_time" style="font-size:10px;color:var(--text3);padding:6px 10px;margin-top:2px"></div>
@@ -1851,7 +1861,7 @@
     <div class="auth-box">
         <div class="auth-logo">⚡</div>
         <div class="auth-title" id="app_title_auth">My Dashboard</div>
-        <div class="auth-sub" id="auth_sub">Enter your access code to continue.<br>Read-only access is available.</div>
+        <div class="auth-sub" id="auth_sub">Enter admin password for edit access.</div>
         <input class="auth-input" id="auth_input" type="password" placeholder="Access code" autocomplete="off">
         <div class="auth-err" id="auth_err"></div>
         <button class="btn btn-o" style="width:100%" onclick="tryAuth()">Enter</button>
@@ -1937,6 +1947,7 @@
         _fbDb  = firebase.database();
         _fbRef = _fbDb.ref('dashboard/data');
         _fbReady = true;
+        _updateShareableHash();
 
         // Fetch once from server → seed localStorage → init
         _fbRef.once('value').then(function(snap) {
@@ -6163,6 +6174,16 @@
       if (ai) ai.addEventListener('keydown', function(e){ if (e.key === 'Enter') tryAuth(); });
     });
 
+    function showAdminLogin() {
+      var sub = document.getElementById('auth_sub');
+      if (sub) sub.textContent = 'Enter admin password for edit access.';
+      var inp = document.getElementById('auth_input');
+      if (inp) inp.value = '';
+      var err = document.getElementById('auth_err');
+      if (err) err.textContent = '';
+      document.getElementById('auth_overlay').classList.add('open');
+    }
+
     // ═══════════════════════════════════════
     // AUTO-MISSED LOGIC
     // If a logged item is 2+ days old and still unlogged (state=0),
@@ -6247,8 +6268,11 @@
         if (checkAuth()) {
           initFirebase();
         } else {
-          document.getElementById('auth_overlay').classList.add('open');
-          updateAuthSubtitle();
+          // No stored role — auto-grant readonly; admin can log in via settings menu
+          localStorage.setItem('_auth_role', 'readonly');
+          _authRole = 'readonly';
+          applyAuthRole();
+          initFirebase();
         }
       } else {
         // No local app_config — try to pull it from Firebase before deciding.
@@ -6286,9 +6310,11 @@
             AUTH_ADMIN_HASH    = remoteConfig.authAdminHash    || null;
             AUTH_READONLY_HASH = remoteConfig.authReadonlyHash || null;
             initAppTitle();
-            // Show Access Code screen — do NOT call initSetupWizard()
-            document.getElementById('auth_overlay').classList.add('open');
-            updateAuthSubtitle();
+            // Auto-grant readonly — no password prompt for shared users
+            localStorage.setItem('_auth_role', 'readonly');
+            _authRole = 'readonly';
+            applyAuthRole();
+            initFirebase();
           } else {
             initSetupWizard();
           }
@@ -6304,14 +6330,69 @@
     }
 
     function _getBootstrapFirebaseConfig() {
-      // Reads Firebase config from <meta name="fb-bootstrap" content='{"apiKey":"...","databaseURL":"...",...}'>.
-      // The admin sets this once after completing setup (optional but enables multi-user sharing).
+      // 1. Check URL hash for #fb=BASE64 (set automatically when User A's Firebase is active)
       try {
-        var m = document.querySelector('meta[name="fb-bootstrap"]');
-        if (!m) return null;
-        var cfg = JSON.parse(m.getAttribute('content'));
+        var m = location.hash.match(/[#&]fb=([^&]*)/);
+        if (m) {
+          var cfg = JSON.parse(atob(decodeURIComponent(m[1])));
+          if (cfg && cfg.apiKey && cfg.databaseURL) return cfg;
+        }
+      } catch(e) {}
+      // 2. Fall back to <meta name="fb-bootstrap"> tag
+      try {
+        var el = document.querySelector('meta[name="fb-bootstrap"]');
+        if (!el) return null;
+        var cfg = JSON.parse(el.getAttribute('content'));
         return (cfg && cfg.apiKey && cfg.databaseURL) ? cfg : null;
       } catch(e) { return null; }
+    }
+
+    function _updateShareableHash() {
+      // Encodes the Firebase config into the URL hash so the current URL is always shareable.
+      // Firebase apiKey/databaseURL are intentionally public — security comes from Firebase Rules.
+      try {
+        if (!FB_CONFIG || !FB_CONFIG.apiKey) return;
+        var encoded = encodeURIComponent(btoa(JSON.stringify({
+          apiKey:            FB_CONFIG.apiKey,
+          authDomain:        FB_CONFIG.authDomain        || '',
+          databaseURL:       FB_CONFIG.databaseURL,
+          projectId:         FB_CONFIG.projectId         || '',
+          storageBucket:     FB_CONFIG.storageBucket     || '',
+          messagingSenderId: FB_CONFIG.messagingSenderId || '',
+          appId:             FB_CONFIG.appId             || ''
+        })));
+        var newHash = '#fb=' + encoded;
+        if (location.hash !== newHash) history.replaceState(null, '', newHash);
+      } catch(e) {}
+    }
+
+    function copyShareLink() {
+      _updateShareableHash();
+      var url = location.href;
+      if (url.indexOf('#fb=') === -1) {
+        appToast('⚠️ Firebase not configured — add Firebase in App Settings first');
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function() {
+          appToast('🔗 Share link copied!');
+        }).catch(function() { _copyFallback(url); });
+      } else {
+        _copyFallback(url);
+      }
+    }
+
+    function _copyFallback(url) {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        appToast('🔗 Share link copied!');
+      } catch(e) { appToast('⚠️ Could not copy — copy the URL manually'); }
     }
 
     // initDashboard is called by initFirebase after data is loaded
@@ -8082,6 +8163,40 @@
       nextSetupStep(n);
     }
 
+    function _showPasswordModal(title, password, onContinue) {
+      var overlay = document.createElement('div');
+      overlay.className = 'auth-overlay';
+      overlay.style.cssText = 'z-index:10002';
+      overlay.innerHTML = [
+        '<div class="auth-box" style="max-width:420px;text-align:center">',
+        '<div class="auth-logo">🔑</div>',
+        '<div class="auth-title">' + title + '</div>',
+        '<p style="color:var(--text2);font-size:13px;margin:8px 0 16px">Share this read-only password with anyone you want to give access. <strong>You will not see it again.</strong></p>',
+        '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px">',
+        '<span id="_pwm_text" style="flex:1;font-size:18px;font-weight:600;letter-spacing:2px;color:var(--accent);word-break:break-all">' + password + '</span>',
+        '<button onclick="_pwmCopy()" style="background:var(--bg4,var(--bg2));border:0.5px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text1);cursor:pointer;font-size:12px" id="_pwm_copy_btn">Copy</button>',
+        '</div>',
+        '<button class="btn btn-o" style="width:100%" onclick="_pwmContinue()">Got it — Continue</button>',
+        '</div>'
+      ].join('');
+      document.body.appendChild(overlay);
+      overlay.classList.add('open');
+      window._pwmCopy = function() {
+        var txt = password;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(txt).then(function() {
+            document.getElementById('_pwm_copy_btn').textContent = 'Copied!';
+          }).catch(function() { _copyFallback(txt); });
+        } else { _copyFallback(txt); }
+      };
+      window._pwmContinue = function() {
+        document.body.removeChild(overlay);
+        delete window._pwmCopy;
+        delete window._pwmContinue;
+        onContinue();
+      };
+    }
+
     async function finishSetup() {
       var getV = function(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
       var appName    = getV('sw_app_name')       || 'My Dashboard';
@@ -8116,7 +8231,11 @@
         authReadonlyHash: roHash,
         firebase:         fbCfg
       });
-      window.location.reload();
+      if (roPass) {
+        window.location.reload();
+      } else {
+        window.location.reload();
+      }
     }
 
     function skipSetup() {
@@ -8308,8 +8427,15 @@
 
       saveAppConfig(cfg);
       closeAppSettings();
-      appToast('Settings saved. Reloading...');
-      setTimeout(function() { window.location.reload(); }, 1200);
+      if (roPassNew) {
+        _showPasswordModal('Read-only password updated', roPassNew, function() {
+          appToast('Settings saved. Reloading...');
+          setTimeout(function() { window.location.reload(); }, 1200);
+        });
+      } else {
+        appToast('Settings saved. Reloading...');
+        setTimeout(function() { window.location.reload(); }, 1200);
+      }
     }
 
     function _buildAppSettingsModal() {
