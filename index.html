@@ -10,6 +10,9 @@
     <meta name="theme-color" content="#0d0d10">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- FIX 1: fb-bootstrap meta tag — read by _getBootstrapFirebaseConfig() priority 3.
+         Survives iOS PWA localStorage isolation and hash-less launches entirely. -->
+    <meta name="fb-bootstrap" content='{"apiKey":"AIzaSyCh1p2h-1Gko63g6rRYiObYtOK-s69a5RI","authDomain":"no-negotiation.firebaseapp.com","databaseURL":"https://no-negotiation-default-rtdb.asia-southeast1.firebasedatabase.app","projectId":"no-negotiation","storageBucket":"no-negotiation.firebasestorage.app","messagingSenderId":"107666746688","appId":"1:107666746688:web:9277ba548d8ee9ba07cb3d"}'>
     <!-- Firebase SDK (offline persistence built-in) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1950,6 +1953,13 @@
         _fbRef = _fbDb.ref('dashboard/data');
         _fbReady = true;
         _updateShareableHash();
+        // FIX 3 (task): Notify the service worker of the current #fb= hash so it can
+        // cache the correct start URL for future PWA launches (handled in sw.js).
+        try {
+          if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'SET_START_URL', hash: location.hash });
+          }
+        } catch(e) {}
         // Persist Firebase config so hash-less launches (PWA home screen) work on this device
         try { localStorage.setItem('_fb_bootstrap', JSON.stringify(FB_CONFIG)); } catch(e) {}
 
@@ -6311,9 +6321,13 @@
         if (!done) { done = true; initSetupWizard(); }
       }, 5000);
       try {
-        // Use a separate named Firebase app so we don't collide with the main one
-        var tmpApp = firebase.initializeApp(bootstrapCfg, '_bootstrap');
-        var tmpRef = firebase.app('_bootstrap').database().ref('dashboard/data/app_config');
+        // Use a separate named Firebase app so we don't collide with the main one.
+        // FIX 3 (audit): Guard against "Firebase App named '_bootstrap' already exists"
+        // which is thrown on second call (e.g. SW-triggered reload) and was being caught
+        // below, causing initSetupWizard() to appear for no reason.
+        var tmpApp = (firebase.apps && firebase.apps.find(function(a){ return a.name === '_bootstrap'; }))
+                     || firebase.initializeApp(bootstrapCfg, '_bootstrap');
+        var tmpRef = tmpApp.database().ref('dashboard/data/app_config');
         tmpRef.once('value').then(function(snap) {
           if (done) return;
           done = true;
@@ -6327,18 +6341,26 @@
             // Reload the derived globals that were read at script-parse time
             AUTH_ADMIN_HASH    = remoteConfig.authAdminHash    || null;
             AUTH_READONLY_HASH = remoteConfig.authReadonlyHash || null;
+            // FIX 2 (audit): FB_CONFIG was evaluated as null at parse time before
+            // _bootstrapFromFirebase ran. Re-assign it here so initFirebase() does
+            // not short-circuit at the "if (!FB_CONFIG)" guard on line ~1945.
+            var _reCfg = getAppConfig().firebase || null;
+            FB_CONFIG = (_reCfg && _reCfg.apiKey) ? _reCfg : null;
             initAppTitle();
             // Auto-grant readonly (in-memory only) — no password prompt for shared users
             _authRole = 'readonly';
             applyAuthRole();
+            try { tmpApp.delete(); } catch(e) {}
             initFirebase();
           } else {
+            try { tmpApp.delete(); } catch(e) {}
             initSetupWizard();
           }
         }).catch(function() {
           if (done) return;
           done = true;
           clearTimeout(timer);
+          try { tmpApp.delete(); } catch(e) {}
           initSetupWizard();
         });
       } catch(e) {
