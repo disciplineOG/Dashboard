@@ -326,14 +326,15 @@
         /* ══════════════════════════════════════
            SCORE CIRCLES
         ══════════════════════════════════════ */
-        .score-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 0;flex-wrap:wrap}
-        .score-circle{display:flex;flex-direction:column;align-items:center}
+        .score-row{display:flex;align-items:flex-end;justify-content:space-evenly;padding:8px 0;flex-wrap:nowrap}
+        .score-circle{display:flex;flex-direction:column;align-items:center;min-width:0;max-width:70px;flex-shrink:1}
         .score-circle svg{display:block;overflow:visible}
         .score-sm svg{width:68px;height:68px}
         .score-md svg{width:84px;height:84px}
         .score-lg svg{width:108px;height:108px}
-        .s-label{text-align:center;font-size:10px;font-weight:600;color:var(--text3);margin-top:5px;text-transform:uppercase;letter-spacing:.4px}
-        @media(max-width:420px){.score-sm svg{width:52px;height:52px}.score-md svg{width:64px;height:64px}.score-lg svg{width:82px;height:82px}}
+        .s-label{text-align:center;font-size:8px;font-weight:600;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+        @media(max-width:420px){.score-sm svg{width:48px;height:48px}.score-md svg{width:60px;height:60px}.score-lg svg{width:76px;height:76px}}
+        @media(max-width:360px){.score-sm svg{width:42px;height:42px}.score-md svg{width:52px;height:52px}.score-lg svg{width:66px;height:66px}}
 
         /* ══════════════════════════════════════
            TRI-STATE BUTTON
@@ -1514,6 +1515,7 @@
                         <div class="form-group"><label>Person</label><input class="fi" id="ow_person" placeholder="e.g. Ravi"></div>
                         <div class="form-group"><label>What for</label><input class="fi" id="ow_desc" placeholder="e.g. Movie tickets"></div>
                         <div class="form-group"><label>Amount</label><input type="number" class="fi" id="ow_amount" placeholder="500"></div>
+                        <div class="form-group"><label>Date</label><input type="date" class="fi" id="ow_date"></div>
                     </div>
                     <button class="btn btn-o btn-sm admin-only" onclick="addOwed()">+ Track</button>
                 </div>
@@ -4265,8 +4267,10 @@
         });
         Object.keys(dailyEN).forEach(function(day){if(dailyEN[day]>dailyLim)daysOver++;else daysUnder++;});
         var usedVar=usedEssNonEss;
-        var available = monthBudget - usedVar;
-        var usedPct = Math.min(Math.round(usedVar / monthBudget * 100), 100);
+        var dailyPool = dailyLim * totalDays;
+        var usedDailyPct = Math.min(Math.round(usedEssNonEss / dailyPool * 100), 100);
+        var usedPct = usedDailyPct;
+        var available = dailyPool - usedEssNonEss;
         var today = new Date();
         var dayOfMonth = (curMonth === isoD(today).slice(0,7)) ? today.getDate() : totalDays;
         var daysElapsed = Math.max(1, dayOfMonth);
@@ -4279,18 +4283,18 @@
         // Header
         html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
         html += '<div style="font-size:12px;color:var(--text3)">' + monthName + ' · ' + fmtCur(dailyLim) + '/day</div>';
-        html += '<span class="badge bw" title="' + budgetSource + '">' + fmtCur(monthBudget) + ' budget</span>';
+        html += '<span class="badge bw" title="daily limit pool">₹' + (dailyLim * totalDays).toLocaleString('en-IN') + ' daily pool</span>';
         html += '</div>';
         // Progress bar
         var barClr = usedPct >= 90 ? 'var(--red)' : usedPct >= 70 ? 'var(--yellow)' : 'var(--green)';
         html += '<div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;margin-bottom:4px">';
         html += '<div style="height:100%;width:' + usedPct + '%;background:' + barClr + ';border-radius:4px;transition:width .4s"></div></div>';
         html += '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:12px">';
-        html += '<span>' + fmtCur(usedVar) + ' used</span><span>' + usedPct + '%</span><span>' + fmtCur(monthBudget) + ' total</span>';
+        html += '<span>₹' + usedEssNonEss.toLocaleString('en-IN') + ' ess+non</span><span>' + usedPct + '%</span><span>₹' + (dailyLim*totalDays).toLocaleString('en-IN') + ' pool</span>';
         html += '</div>';
         // Stats grid
         html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
-        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:700;color:' + (available>=0?'var(--green)':'var(--red)') + '">' + fmtCur(Math.abs(available)) + '</div><div style="font-size:10px;color:var(--text3)">' + (available>=0?'Remaining':'Over budget') + '</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:700;color:' + (available>=0?'var(--green)':'var(--red)') + '">' + fmtCur(Math.abs(available)) + '</div><div style="font-size:10px;color:var(--text3)">' + (available>=0?'Daily pool left':'Pool exceeded') + '</div></div>';
         html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:700;color:' + (actualAvg>dailyLim?'var(--red)':'var(--green)') + '">' + fmtCur(actualAvg) + '</div><div style="font-size:10px;color:var(--text3)">Actual avg/day</div></div>';
         html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:13px;font-weight:700"><span style="color:var(--red)">' + daysOver + 'd ↑</span> · <span style="color:var(--green)">' + daysUnder + 'd ↓</span></div><div style="font-size:10px;color:var(--text3)">Over · Under limit</div></div>';
         html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:700;color:' + (safeToSpend>=0?'var(--accent)':'var(--red)') + '">' + fmtCur(Math.max(0,safeToSpend)) + '</div><div style="font-size:10px;color:var(--text3)">Safe to spend/day</div></div>';
@@ -4540,18 +4544,21 @@
     function setOwed(val) { try { localStorage.setItem('owed_list', JSON.stringify(val)); } catch(e) {} }
 
     function addOwed() {
+      if(document.getElementById('ow_date')&&!document.getElementById('ow_date').value){document.getElementById('ow_date').value=getTodayISO();}
       var direction=(document.getElementById('ow_direction')||{}).value||'i_owe';
       var person=document.getElementById('ow_person').value.trim();
       var desc=document.getElementById('ow_desc').value.trim();
       var amount=parseFloat(document.getElementById('ow_amount').value);
+      var owDate=(document.getElementById('ow_date')||{}).value||getTodayISO();
       if(!person||!desc||!amount||amount<=0){alert('Fill all fields.');return;}
       var owed=getOwed();
       var newId=getTodayISO().replace(/-/g,'')+'_'+person.slice(0,4)+String(Object.keys(owed).length);
-      owed[newId]={id:newId,date:getTodayISO(),direction:direction,person:person,desc:desc,amount:amount};
+      owed[newId]={id:newId,date:owDate,direction:direction,person:person,desc:desc,amount:amount};
       setOwed(owed);
       document.getElementById('ow_person').value='';
       document.getElementById('ow_desc').value='';
       document.getElementById('ow_amount').value='';
+      document.getElementById('ow_date') && (document.getElementById('ow_date').value='');
       renderOwed();schedulePush();
     }
 
