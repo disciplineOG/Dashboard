@@ -1418,6 +1418,7 @@
                     <select class="fs" id="ex_nature">
                         <option value="essential">✅ Essential</option>
                         <option value="nonessential">💸 Non-Essential</option>
+                        <option value="fixed">Fixed (EMI/rent/bill)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1483,34 +1484,39 @@
                 <span>💰 Split &amp; Owed</span><span id="split_arr">▶</span>
             </div>
             <div id="split_body" style="display:none;margin-top:12px">
-                <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Track split expenses and amounts others paid on your behalf.</div>
-
-                <!-- Split Expense -->
-                <div style="border-bottom:0.5px solid var(--border);padding-bottom:14px;margin-bottom:16px">
-                    <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:10px">✂️ Split an Expense</div>
+                <div style="border-bottom:0.5px solid var(--border);padding-bottom:14px;margin-bottom:14px">
+                    <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:10px">Split Expense (log my share)</div>
                     <div class="form-grid-3">
                         <div class="form-group"><label>What</label><input class="fi" id="sp_ex_desc" placeholder="e.g. Dinner at XYZ"></div>
-                        <div class="form-group"><label>Total Amount (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="sp_total" placeholder="e.g. 1000" oninput="calcSplitShare()"></div>
-                        <div class="form-group"><label>Split Between (people)</label><input type="number" class="fi" id="sp_ways" value="2" min="2" oninput="calcSplitShare()"></div>
+                        <div class="form-group"><label>Total</label><input type="number" class="fi" id="sp_total" placeholder="1000" oninput="calcSplitShare()"></div>
+                        <div class="form-group"><label>Split ways</label><input type="number" class="fi" id="sp_ways" value="2" min="2" oninput="calcSplitShare()"></div>
                     </div>
-                    <div class="form-grid" style="margin-bottom:10px">
-                        <div class="form-group"><label>Your Share (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="sp_share" placeholder="Auto-calculated" style="opacity:0.75" readonly></div>
+                    <div class="form-grid" style="margin-bottom:8px">
+                        <div class="form-group"><label>My share</label><input type="number" class="fi" id="sp_share" readonly style="opacity:0.75"></div>
                         <div class="form-group"><label>Date</label><input type="date" class="fi" id="sp_date"></div>
+                        <div class="form-group"><label>Type</label>
+                            <select class="fs" id="sp_nature"><option value="essential">Essential</option><option value="nonessential" selected>Non-Essential</option></select>
+                        </div>
                     </div>
-                    <button class="btn btn-o btn-sm admin-only" onclick="addSplitExpense()">+ Save My Share as Expense</button>
+                    <button class="btn btn-o btn-sm admin-only" onclick="addSplitExpense()">+ Save My Share</button>
                 </div>
-
-                <!-- Someone paid for me -->
                 <div style="margin-bottom:14px">
-                    <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:10px">🤝 Someone Paid for Me (I Owe Them)</div>
-                    <div class="form-grid-3">
-                        <div class="form-group"><label>Who paid</label><input class="fi" id="ow_person" placeholder="e.g. Ravi"></div>
+                    <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:10px">Track Money Owed</div>
+                    <div class="form-grid" style="margin-bottom:8px">
+                        <div class="form-group"><label>Direction</label>
+                            <select class="fs" id="ow_direction">
+                                <option value="i_owe">I owe them (they paid for me)</option>
+                                <option value="they_owe">They owe me (I paid for them)</option>
+                                <option value="i_lent">I lent cash (they owe me back)</option>
+                                <option value="i_borrowed">I borrowed cash (I owe them back)</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Person</label><input class="fi" id="ow_person" placeholder="e.g. Ravi"></div>
                         <div class="form-group"><label>What for</label><input class="fi" id="ow_desc" placeholder="e.g. Movie tickets"></div>
-                        <div class="form-group"><label>My Share (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="ow_amount" placeholder="e.g. 300"></div>
+                        <div class="form-group"><label>Amount</label><input type="number" class="fi" id="ow_amount" placeholder="500"></div>
                     </div>
-                    <button class="btn btn-o btn-sm admin-only" onclick="addOwed()">+ Track as Owed</button>
+                    <button class="btn btn-o btn-sm admin-only" onclick="addOwed()">+ Track</button>
                 </div>
-
                 <div id="owed_list_wrap"></div>
             </div>
         </div>
@@ -2268,20 +2274,27 @@
         urgentTasks.sort(function(a, b) { return a.dl - b.dl; });
 
         if (urgentTasks.length > 0) {
-            html += '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 6px">Urgent Tasks</div>';
+            html += '<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 6px">Urgent Tasks</div>';
             urgentTasks.forEach(function(t) {
-                var isOverdue = t.dl < 0;
-                var isDueToday = t.dl === 0;
-                var badge = isOverdue
-                    ? '<span style="font-size:10px;background:rgba(255,59,48,0.15);color:var(--red);border-radius:6px;padding:1px 6px;font-weight:700">Overdue ' + Math.abs(t.dl) + 'd</span>'
-                    : isDueToday
-                    ? '<span style="font-size:10px;background:rgba(255,159,10,0.15);color:var(--yellow);border-radius:6px;padding:1px 6px;font-weight:700">Due today</span>'
-                    : '<span style="font-size:10px;background:rgba(255,159,10,0.1);color:var(--yellow);border-radius:6px;padding:1px 6px;font-weight:700">' + t.dl + 'd left</span>';
-                html += '<div onclick="showTab(\'today\')" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border2);cursor:pointer">';
-                html += '<span style="font-size:16px">🔔</span>';
-                html += '<span style="font-size:13px;color:var(--text1);flex:1">' + esc(t.name) + '</span>';
-                html += badge;
-                html += '</div>';
+                var isOverdue=t.dl<0,isDueToday=t.dl===0;
+                var badge=isOverdue
+                    ?'<span style="font-size:10px;background:rgba(255,59,48,0.15);color:var(--red);border-radius:6px;padding:1px 6px;font-weight:700">Overdue '+Math.abs(t.dl)+'d</span>'
+                    :isDueToday
+                    ?'<span style="font-size:10px;background:rgba(255,159,10,0.15);color:var(--yellow);border-radius:6px;padding:1px 6px;font-weight:700">Due today</span>'
+                    :'<span style="font-size:10px;background:rgba(255,159,10,0.1);color:var(--yellow);border-radius:6px;padding:1px 6px;font-weight:700">'+t.dl+'d left</span>';
+                var tdata=(getTasks()[t.id])||{};
+                var status=tdata.status||'todo';
+                var sC={todo:'var(--text3)',inprogress:'var(--blue)',blocked:'var(--red)',done:'var(--green)'};
+                var sL={todo:'To Do',inprogress:'In Progress',blocked:'Blocked',done:'Done'};
+                html+='<div style="padding:8px;background:rgba(255,59,48,0.06);border:0.5px solid rgba(255,59,48,0.2);border-radius:10px;margin-bottom:6px">';
+                html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+                html+='<span style="font-size:13px;color:var(--red);font-weight:600;flex:1">'+esc(t.name)+'</span>'+badge;
+                html+='</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
+                html+='<button class="btn btn-w btn-sm admin-only" style="font-size:10px;padding:3px 8px" onclick="quickCompleteTask(\''+t.id+'\');renderTodayChecklist()">Done</button>';
+                html+='<button class="btn btn-w btn-sm admin-only" style="font-size:10px;padding:3px 8px;color:'+sC[status]+'" onclick="quickCycleTaskStatus(\''+t.id+'\');renderTodayChecklist()">'+sL[status]+'</button>';
+                html+='<button class="btn btn-w btn-sm admin-only" style="font-size:10px;padding:3px 8px" onclick="showNotifOptions(\''+t.id+'\')">Remind</button>';
+                html+='<button class="btn btn-w btn-sm" style="font-size:10px;padding:3px 8px" onclick="showTab(\'today\')">View</button>';
+                html+='</div></div>';
             });
         }
 
@@ -2687,12 +2700,14 @@
       rows.forEach(function(row, ri) {
         var k = 'sched_' + type + '_' + ri + '_' + dateStr;
         var state = data[k] || 0;
+        var isMissedPast = (state===0) && typeof dateStr==='string' && dateStr>='2026-07-01' && dateStr<getTodayISO();
         html += '<tr>';
         html += '<td class="s1" style="color:var(--accent);font-weight:700;font-size:10px">' + esc(row.time||'') + '</td>';
         html += '<td class="s2">' + esc(row.task||'') + '</td>';
         if (isPast || isReadOnly) {
-          var roStyle = state===1 ? triStyle(1) : state===2 ? triStyle(2) : 'background:var(--bg3);opacity:0.4;border:0.5px solid var(--border)';
-          html += '<td class="dc"><button class="tri-btn" style="' + roStyle + '" disabled></button></td>';
+          var roStyle = state===1 ? triStyle(1) : state===2 ? triStyle(2) : isMissedPast ? 'background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.4);border-radius:6px' : 'background:var(--bg3);opacity:0.4;border:0.5px solid var(--border)';
+          var roContent = isMissedPast ? '<span style="font-size:8px;color:var(--red)">x</span>' : '';
+          html += '<td class="dc"><button class="tri-btn" style="' + roStyle + '" disabled>' + roContent + '</button></td>';
         } else {
           html += '<td class="dc"><button class="tri-btn" style="' + triStyle(state) + '" data-k="' + k + '" data-store="sched" data-flash="fl_sched" onclick="triClick(this)"></button></td>';
         }
@@ -4241,29 +4256,24 @@
         var monthBudget = ldata2.monthly || (dailyLim * totalDays);
         var budgetSource = ldata2.monthly ? 'monthly budget' : 'daily × ' + totalDays + 'd';
         var expenses = getExpenses();
-        var usedVar = 0, daysOver = 0, daysUnder = 0;
-        var dailyVar = {};
-        Object.keys(expenses).forEach(function(id) {
-            var e = expenses[id];
-            if (e.date.slice(0,7) === curMonth && e.vartype !== 'Fixed') {
-                usedVar += Number(e.amt);
-                if (!dailyVar[e.date]) dailyVar[e.date] = 0;
-                dailyVar[e.date] += Number(e.amt);
-            }
+        var usedEssNonEss=0,usedAll=0,daysOver=0,daysUnder=0,dailyEN={};
+        Object.keys(expenses).forEach(function(id){
+          var e=expenses[id];if(e.date.slice(0,7)!==curMonth)return;
+          var nat=e.nature||(e.vartype==='Fixed'?'fixed':'nonessential');
+          usedAll+=Number(e.amt);
+          if(nat!=='fixed'){usedEssNonEss+=Number(e.amt);if(!dailyEN[e.date])dailyEN[e.date]=0;dailyEN[e.date]+=Number(e.amt);}
         });
-        Object.keys(dailyVar).forEach(function(day) {
-            if (dailyVar[day] > dailyLim) daysOver++;
-            else daysUnder++;
-        });
+        Object.keys(dailyEN).forEach(function(day){if(dailyEN[day]>dailyLim)daysOver++;else daysUnder++;});
+        var usedVar=usedEssNonEss;
         var available = monthBudget - usedVar;
         var usedPct = Math.min(Math.round(usedVar / monthBudget * 100), 100);
         var today = new Date();
         var dayOfMonth = (curMonth === isoD(today).slice(0,7)) ? today.getDate() : totalDays;
         var daysElapsed = Math.max(1, dayOfMonth);
-        var actualAvg = Math.round(usedVar / daysElapsed);
-        var daysRemaining = totalDays - dayOfMonth;
+        var actualAvg=Math.round(usedAll/daysElapsed);
+        var daysRemaining=Math.max(1,totalDays-dayOfMonth+1);
         var remaining = monthBudget - usedVar;
-        var safeToSpend = daysRemaining > 0 ? Math.round(remaining / daysRemaining) : 0;
+        var safeToSpend=Math.round((totalDays*dailyLim-usedEssNonEss)/daysRemaining);
 
         var html = '';
         // Header
@@ -4286,19 +4296,15 @@
         html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:700;color:' + (safeToSpend>=0?'var(--accent)':'var(--red)') + '">' + fmtCur(Math.max(0,safeToSpend)) + '</div><div style="font-size:10px;color:var(--text3)">Safe to spend/day</div></div>';
         html += '</div>';
         // Verdict banner
-        var verdict = actualAvg <= dailyLim
-            ? '<span style="color:var(--green)">✅ On track — under by ' + fmtCur(dailyLim - actualAvg) + '/day on average</span>'
-            : '<span style="color:var(--red)">⚠️ Over — averaging ' + fmtCur(actualAvg - dailyLim) + ' above limit/day</span>';
+        var _enA=Math.round(usedEssNonEss/daysElapsed);
+        var verdict=_enA<=dailyLim
+          ?'<span style="color:var(--green)">Daily on track: '+_enA.toLocaleString('en-IN')+'/day vs '+dailyLim.toLocaleString('en-IN')+' limit</span>'
+          :'<span style="color:var(--red)">Daily limit exceeded: '+_enA.toLocaleString('en-IN')+'/day vs '+dailyLim.toLocaleString('en-IN')+' limit</span>';
         html += '<div style="background:rgba(255,107,0,0.07);border:0.5px solid rgba(255,107,0,0.2);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;text-align:center">' + verdict + '</div>';
 
         // ── Monthly Budget bar (all spend) ──
         if (ldata2.monthly) {
-            var usedAll = 0;
-            Object.keys(expenses).forEach(function(id) {
-                var e = expenses[id];
-                if (e.date.slice(0,7) === curMonth) usedAll += Number(e.amt);
-            });
-            var usedFixed = usedAll - usedVar;
+            var usedFixed=usedAll-usedEssNonEss;
             var mPct = Math.min(Math.round(usedAll / monthBudget * 100), 120);
             var mBarClr = mPct >= 100 ? 'var(--red)' : mPct >= 85 ? 'var(--yellow)' : 'var(--green)';
             var mLeft = monthBudget - usedAll;
@@ -4517,7 +4523,7 @@
       if (!share || share <= 0) { alert('Could not calculate share.'); return; }
       var ex = getExpenses();
       var id = String(Date.now());
-      ex[id] = { id:id, date:date, desc:desc, amt:share, type:'Variable', nature:'nonessential',
+      ex[id] = { id:id, date:date, desc:desc, amt:share, type:'Variable', nature:(document.getElementById('sp_nature')||{}).value||'nonessential',
                  notes:'Split ' + ways + ' ways — total ' + fmtCur(total) + ', your share: ' + fmtCur(share) };
       ls_set('expenses_list', ex);
       document.getElementById('sp_ex_desc').value = '';
@@ -4534,34 +4540,33 @@
     function setOwed(val) { try { localStorage.setItem('owed_list', JSON.stringify(val)); } catch(e) {} }
 
     function addOwed() {
-      var person = document.getElementById('ow_person').value.trim();
-      var desc   = document.getElementById('ow_desc').value.trim();
-      var amount = parseFloat(document.getElementById('ow_amount').value);
-      if (!person || !desc || !amount || amount <= 0) { alert('Fill in all three fields.'); return; }
-      var owed = getOwed();
-      var id = String(Date.now());
-      owed[id] = { id:id, date:getTodayISO(), person:person, desc:desc, amount:amount };
+      var direction=(document.getElementById('ow_direction')||{}).value||'i_owe';
+      var person=document.getElementById('ow_person').value.trim();
+      var desc=document.getElementById('ow_desc').value.trim();
+      var amount=parseFloat(document.getElementById('ow_amount').value);
+      if(!person||!desc||!amount||amount<=0){alert('Fill all fields.');return;}
+      var owed=getOwed();
+      var newId=getTodayISO().replace(/-/g,'')+'_'+person.slice(0,4)+String(Object.keys(owed).length);
+      owed[newId]={id:newId,date:getTodayISO(),direction:direction,person:person,desc:desc,amount:amount};
       setOwed(owed);
-      document.getElementById('ow_person').value = '';
-      document.getElementById('ow_desc').value   = '';
-      document.getElementById('ow_amount').value = '';
-      renderOwed();
+      document.getElementById('ow_person').value='';
+      document.getElementById('ow_desc').value='';
+      document.getElementById('ow_amount').value='';
+      renderOwed();schedulePush();
     }
 
     function settleOwed(id) {
-      var owed = getOwed();
-      if (!owed[id]) return;
-      var o = owed[id];
-      if (!confirm('Mark ' + fmtCur(o.amount) + ' owed to ' + o.person + ' as settled?\nThis will add it as an expense entry.')) return;
-      var ex = getExpenses();
-      var eid = String(Date.now());
-      ex[eid] = { id:eid, date:getTodayISO(), desc:'Settled: ' + o.desc + ' (paid to ' + o.person + ')',
-                  amt:o.amount, type:'Variable', nature:'nonessential',
-                  notes:'Settlement — originally paid by ' + o.person + ' on ' + o.date };
-      ls_set('expenses_list', ex);
-      delete owed[id];
-      setOwed(owed);
-      renderOwed(); renderExpenses(); renderExpensePattern();
+      var owed=getOwed();if(!owed[id])return;
+      var o=owed[id],dir=o.direction||'i_owe';
+      var iOwe=(dir==='i_owe'||dir==='i_borrowed');
+      if(!confirm(iOwe?'Settled to '+o.person+'? Adds expense entry.':'Mark collected from '+o.person+'?'))return;
+      if(iOwe){
+        var ex=getExpenses(),eid=getTodayISO()+'_settle_'+o.person.replace(/s/g,'').slice(0,6);
+        ex[eid]={id:eid,date:getTodayISO(),desc:'Settled: '+o.desc+' to '+o.person,amt:o.amount,type:'Variable',nature:'essential',notes:'Settlement'};
+        ls_set('expenses_list',ex);
+      }
+      delete owed[id];setOwed(owed);renderOwed();renderExpenses();renderExpensePattern();
+      appToast(iOwe?'Settled & logged':'Marked collected');
     }
 
     function deleteOwed(id) {
@@ -4570,31 +4575,25 @@
     }
 
     function renderOwed() {
-      var el = document.getElementById('owed_list_wrap');
-      if (!el) return;
-      var owed = getOwed();
-      var ids  = Object.keys(owed);
-      if (ids.length === 0) {
-        el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:10px 0;text-align:center">No pending amounts — all settled up ✅</div>';
-        return;
-      }
-      var total = ids.reduce(function(s,id){ return s + owed[id].amount; }, 0);
-      var html = '<div style="font-size:12px;font-weight:700;color:var(--text1);margin-bottom:8px">Pending: <span style="color:var(--red)">' + fmtCur(total.toFixed(2)) + '</span> across ' + ids.length + ' item(s)</div>';
-      html += '<div class="table-wrap"><table><tr><th>Who</th><th>What for</th><th>Amount</th><th>Date</th><th>Actions</th></tr>';
-      ids.forEach(function(id) {
-        var o = owed[id];
-        html += '<tr>';
-        html += '<td style="font-weight:600">' + o.person + '</td>';
-        html += '<td>' + o.desc + '</td>';
-        html += '<td style="color:var(--red);font-weight:600">' + fmtCur(o.amount.toFixed(2)) + '</td>';
-        html += '<td style="font-size:11px;color:var(--text3)">' + o.date + '</td>';
-        html += '<td style="white-space:nowrap">';
-        html += '<button class="btn btn-o btn-sm admin-only" onclick="settleOwed(\'' + id + '\')">✅ Settle</button> ';
-        html += '<button class="btn btn-w btn-sm admin-only" onclick="deleteOwed(\'' + id + '\')">🗑️</button>';
-        html += '</td></tr>';
+      var el=document.getElementById('owed_list_wrap');if(!el)return;
+      var owed=getOwed(),ids=Object.keys(owed);
+      if(!ids.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:10px 0;text-align:center">All settled</div>';return;}
+      var dL={i_owe:'I owe',they_owe:'They owe me',i_lent:'I lent',i_borrowed:'I borrowed'};
+      var iT=0,tT=0;
+      ids.forEach(function(id){var o=owed[id],d=o.direction||'i_owe';if(d==='i_owe'||d==='i_borrowed')iT+=o.amount;else tT+=o.amount;});
+      var h='<div style="display:flex;gap:10px;margin-bottom:10px">';
+      h+='<div style="flex:1;background:rgba(255,59,48,0.1);border-radius:8px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:700;color:var(--red)">'+iT.toFixed(0)+'</div><div style="font-size:10px;color:var(--text3)">I owe</div></div>';
+      h+='<div style="flex:1;background:rgba(52,199,89,0.1);border-radius:8px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:700;color:var(--green)">'+tT.toFixed(0)+'</div><div style="font-size:10px;color:var(--text3)">Owed to me</div></div>';
+      h+='</div><div class="table-wrap"><table><tr><th>Dir</th><th>Who</th><th>What</th><th>Amt</th><th>Date</th><th></th></tr>';
+      ids.forEach(function(id){
+        var o=owed[id],d=o.direction||'i_owe',iO=(d==='i_owe'||d==='i_borrowed');
+        h+='<tr><td><span class="badge '+(iO?'br':'bg')+'" style="font-size:9px">'+(dL[d]||d)+'</span></td>';
+        h+='<td style="font-weight:600">'+esc(o.person)+'</td><td>'+esc(o.desc)+'</td>';
+        h+='<td style="color:'+(iO?'var(--red)':'var(--green)')+';font-weight:600">'+Number(o.amount).toFixed(0)+'</td>';
+        h+='<td style="font-size:10px;color:var(--text3)">'+o.date+'</td>';
+        h+='<td><button class="btn btn-o btn-sm admin-only" style="font-size:10px" onclick="settleOwed(\''+id+'\')">OK</button> <button class="btn btn-w btn-sm admin-only" style="font-size:10px" onclick="deleteOwed(\''+id+'\')">Del</button></td></tr>';
       });
-      html += '</table></div>';
-      el.innerHTML = html;
+      h+='</table></div>';el.innerHTML=h;
     }
 
     // ═══ TASK NOTIFICATIONS ═══
