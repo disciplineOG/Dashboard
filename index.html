@@ -326,13 +326,14 @@
         /* ══════════════════════════════════════
            SCORE CIRCLES
         ══════════════════════════════════════ */
-        .score-row{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 0;flex-wrap:nowrap}
+        .score-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 0;flex-wrap:wrap}
         .score-circle{display:flex;flex-direction:column;align-items:center}
         .score-circle svg{display:block;overflow:visible}
         .score-sm svg{width:68px;height:68px}
         .score-md svg{width:84px;height:84px}
         .score-lg svg{width:108px;height:108px}
         .s-label{text-align:center;font-size:10px;font-weight:600;color:var(--text3);margin-top:5px;text-transform:uppercase;letter-spacing:.4px}
+        @media(max-width:420px){.score-sm svg{width:52px;height:52px}.score-md svg{width:64px;height:64px}.score-lg svg{width:82px;height:82px}}
 
         /* ══════════════════════════════════════
            TRI-STATE BUTTON
@@ -672,9 +673,9 @@
         <!-- 💪 Body sub-section -->
         <div style="margin-bottom:8px">
             <button onclick="(function(){var b=document.getElementById('health_body_body');var a=document.getElementById('health_body_arr');var h=b.style.display==='none';b.style.display=h?'block':'none';a.textContent=h?'▼':'▶';})()" style="background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:12px 14px;width:100%;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;font-weight:700;color:var(--text1);font-family:inherit;outline:none">
-                <span>💪 Body</span><span id="health_body_arr">▼</span>
+                <span>💪 Body</span><span id="health_body_arr">▶</span>
             </button>
-            <div id="health_body_body" style="display:block;margin-top:8px">
+            <div id="health_body_body" style="display:none;margin-top:8px">
         <!-- Current metrics strip -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
             <div class="metric">
@@ -888,9 +889,9 @@
         <!-- 📅 Schedule sub-section -->
         <div style="margin-bottom:8px">
             <button onclick="(function(){var b=document.getElementById('today_sched_body');var a=document.getElementById('today_sched_arr');var h=b.style.display==='none';b.style.display=h?'block':'none';a.textContent=h?'▼':'▶';})()" style="background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:12px 14px;width:100%;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;font-weight:700;color:var(--text1);font-family:inherit;outline:none">
-                <span>📅 Schedule</span><span id="today_sched_arr">▼</span>
+                <span>📅 Schedule</span><span id="today_sched_arr">▶</span>
             </button>
-            <div id="today_sched_body" style="display:block;margin-top:8px">
+            <div id="today_sched_body" style="display:none;margin-top:8px">
         <div class="card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
                 <div class="card-title" style="margin-bottom:0">📅 My Day</div>
@@ -1548,6 +1549,7 @@
                     <div class="sum-box" style="min-width:68px"><div class="sv" id="up_pct_done" style="color:var(--green)">0%</div><div class="sl">Complete</div></div>
                     <div class="sum-box" style="min-width:68px"><div class="sv" id="up_topics_done" style="color:var(--teal)">0/0</div><div class="sl">Topics</div></div>
                     <div class="sum-box" style="min-width:68px"><div class="sv" id="up_mocks_done" style="color:var(--yellow)">0</div><div class="sl">Mocks</div></div>
+                    <div class="sum-box" style="min-width:80px"><div class="sv" id="up_total_days" style="color:var(--text3)">—</div><div class="sl">Total days</div></div>
                 </div>
             </div>
             <div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;margin-bottom:10px">
@@ -1556,12 +1558,14 @@
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <div style="font-size:11px;color:var(--text3)">Started: <strong id="up_start_label" style="color:var(--text2)">Not set</strong></div>
                 <button class="btn btn-w btn-sm admin-only" onclick="setUpskillStartDate()">📅 Set Start</button>
+                <button class="btn btn-w btn-sm admin-only" onclick="openPrepMetaModal()" style="font-size:11px">Edit Info</button>
                 <div style="margin-left:auto;display:flex;gap:5px">
                     <button id="up_f_all"  class="btn btn-o btn-sm" onclick="setUpFilter('all')"  style="font-size:11px">All</button>
                     <button id="up_f_todo" class="btn btn-w btn-sm" onclick="setUpFilter('todo')" style="font-size:11px">To Do</button>
                     <button id="up_f_done" class="btn btn-w btn-sm" onclick="setUpFilter('done')" style="font-size:11px">✅ Done</button>
                 </div>
             </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:6px;display:flex;gap:16px;flex-wrap:wrap">Expected: <strong id="up_est_finish" style="color:var(--green)">—</strong> Actual: <strong id="up_act_finish" style="color:var(--teal)">—</strong></div>
         </div>
 
         <!-- Phases rendered by JS -->
@@ -1569,7 +1573,7 @@
 
         <!-- Add Custom Topic -->
         <div class="card admin-only">
-            <div class="card-title">➕ Add Custom Topic</div>
+            <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">➕ Add Custom Topic <button class="btn btn-w btn-sm" style="font-size:11px" onclick="openCategoryModal(null)">+ New Category</button></div>
             <div class="form-grid" style="margin-bottom:8px">
                 <div class="form-group"><label>Phase</label>
                     <select class="fs" id="ct_phase">
@@ -1583,6 +1587,7 @@
                 <div class="form-group"><label>Topic Name</label><input class="fi" id="ct_name" placeholder="e.g. Spring WebFlux"></div>
                 <div class="form-group"><label>Source / Platform</label><input class="fi" id="ct_source" placeholder="e.g. Baeldung"></div>
                 <div class="form-group"><label>URL</label><input class="fi" id="ct_url" placeholder="https://…"></div>
+                <div class="form-group"><label>Days needed</label><input type="number" class="fi" id="ct_days" placeholder="e.g. 2" min="1" max="60"></div>
                 <div class="form-group"><label>Hours estimate</label><input type="number" class="fi" id="ct_hours" placeholder="2" min="1" max="20"></div>
                 <div class="form-group"><label>Difficulty</label>
                     <select class="fs" id="ct_diff">
@@ -1648,7 +1653,7 @@
                 <div class="form-group" style="margin-bottom:8px"><label>Source</label><input class="fi" id="edit_source"></div>
                 <div class="form-group" style="margin-bottom:8px"><label>URL</label><input class="fi" id="edit_url"></div>
                 <div class="form-grid" style="margin-bottom:12px">
-                    <div class="form-group"><label>Hours</label><input type="number" class="fi" id="edit_hours" min="1" max="40"></div>
+                    <div class="form-group"><label>Days needed</label><input type="number" class="fi" id="edit_days_field" min="1" max="60"><input type="hidden" id="edit_hours"></div>
                     <div class="form-group"><label>Difficulty</label>
                         <select class="fs" id="edit_diff"><option>Easy</option><option>Medium</option><option>Hard</option></select>
                     </div>
@@ -1666,12 +1671,36 @@
             <div class="dz-sub">Permanently erase data. Cannot be undone.</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px">
                 <button class="btn-erase" onclick="eraseSection('prep')">🗑️ All Prep Progress &amp; Notes</button>
+                <button class="btn-erase" onclick="eraseAllPrepCategories()">Reset Categories</button>
+                <button class="btn-erase" onclick="eraseAllPrepData()">Erase Everything</button>
             </div>
         </div>
 
     </div>
 </div><!-- end .content -->
 
+<!-- PREP META MODAL -->
+<div id="prep_meta_modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border-radius:20px;padding:20px;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto">
+    <div style="font-size:14px;font-weight:700;color:var(--text1);margin-bottom:14px">Edit Prep Info</div>
+    <div class="form-group" style="margin-bottom:8px"><label>Title</label><input class="fi" id="pm_title" placeholder="e.g. Job Switch Prep"></div>
+    <div class="form-group" style="margin-bottom:8px"><label>Subtitle</label><input class="fi" id="pm_subtitle" placeholder="e.g. Java Dev to Product Company"></div>
+    <div class="form-group" style="margin-bottom:8px"><label>Target Salary</label><input class="fi" id="pm_salary" placeholder="e.g. 25+ LPA"></div>
+    <div class="form-group" style="margin-bottom:12px"><label>Start Date</label><input type="date" class="fi" id="pm_start"></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-o" style="flex:1" onclick="savePrepMeta()">Save</button><button class="btn btn-w" style="flex:1" onclick="closePrepMetaModal()">Cancel</button></div>
+  </div>
+</div>
+<!-- PREP CATEGORY MODAL -->
+<div id="prep_cat_modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border-radius:20px;padding:20px;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.5)">
+    <div style="font-size:14px;font-weight:700;color:var(--text1);margin-bottom:14px" id="prep_cat_modal_title">New Category</div>
+    <input type="hidden" id="prep_cat_id">
+    <div class="form-group" style="margin-bottom:8px"><label>Icon (emoji)</label><input class="fi" id="prep_cat_icon" placeholder="e.g. 📚" maxlength="4"></div>
+    <div class="form-group" style="margin-bottom:8px"><label>Name</label><input class="fi" id="prep_cat_label" placeholder="e.g. Master Kafka"></div>
+    <div class="form-group" style="margin-bottom:12px"><label>Description</label><input class="fi" id="prep_cat_desc" placeholder="e.g. Kafka deep dive"></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-o" style="flex:1" onclick="saveCategoryModal()">Save</button><button class="btn btn-w" style="flex:1" onclick="closeCategoryModal()">Cancel</button></div>
+  </div>
+</div>
 <!-- TAB MANAGER MODAL -->
 <div class="ql-overlay" id="tab_mgr_overlay" onclick="if(event.target===this)closeTabManager()">
   <div class="ql-sheet">
@@ -1966,20 +1995,25 @@
         // Fetch once from server → seed localStorage → init
         _fbRef.once('value').then(function(snap) {
           var data = snap.val();
-          if (data && typeof data === 'object') {
-            Object.keys(data).forEach(function(k) {
-              try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
+          var serverTs = (data && data._server_ts) ? data._server_ts : 0;
+          var localTs  = parseInt(localStorage.getItem('_ls_local_ts') || '0');
+          var hasPending = localStorage.getItem('_ls_pending_push') === '1';
+          if (hasPending && localTs > serverTs) {
+            if (!_initDone) { _initDone = true; initDashboard(); }
+            setTimeout(pushToFirebase, 100);
+          } else if (data && typeof data === 'object') {
+            SYNCED_KEYS.forEach(function(k) {
+              if (Object.prototype.hasOwnProperty.call(data, k)) {
+                try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
+              } else {
+                try { localStorage.removeItem(k); } catch(e) {}
+              }
             });
+            if (!_initDone) { _initDone = true; initDashboard(); }
+            else { reRenderAll(); }
+          } else {
+            if (!_initDone) { _initDone = true; initDashboard(); }
           }
-
-          // If app_config exists locally but Firebase has none, push immediately
-          // (happens after first-time setup — finishSetup saves to localStorage only)
-          if (!data || !Object.prototype.hasOwnProperty.call(data, 'app_config')) {
-            var localCfg = localStorage.getItem('app_config');
-            if (localCfg) { pushToFirebase(); }
-          }
-          if (!_initDone) { _initDone = true; initDashboard(); }
-          else { reRenderAll(); } // Firebase arrived after 4s timeout — refresh UI with real data
         }).catch(function() {
           if (!_initDone) { _initDone = true; initDashboard(); }
         });
@@ -1992,16 +2026,11 @@
         // Live sync listener — only fires for REMOTE changes AFTER init
         _fbRef.on('value', function(snap) {
           if (!_initDone) return;
-          if (_pendingPush || (Date.now() - _localChangeTime < 6000)) return;
-          var data = snap.val();
-          if (data && data._server_ts && _localChangeTime > 0) {
-            var serverTs = data._server_ts;
-            var localTs  = _localChangeTime;
-            if (serverTs > localTs + 5000) {
-              // Server is newer — show notice before applying
-              appToast('🔄 Synced from another device');
-            }
-          }
+          if (_pendingPush) return;
+          var _ld = snap.val();
+          var _sts = (_ld && _ld._server_ts) ? _ld._server_ts : 0;
+          var _lts = parseInt(localStorage.getItem('_ls_local_ts') || '0');
+          if (_lts > _sts + 2000) return;
           var data = snap.val();
           if (!data) return;
           SYNCED_KEYS.forEach(function(k) {
@@ -2036,7 +2065,7 @@
       'nut_templates','recurring_expenses','recurring_logged',
       'score_weights','day_notes','exp_tags_custom','things_notes',
       'upskill_progress','upskill_notes','upskill_mocks','upskill_meta','upskill_custom','owed_list','hidden_tabs',
-      'day_type_defs'];
+      'day_type_defs','upskill_overrides','upskill_plan_data'];
 
     function schedulePush() {
       if (_syncTimer) clearTimeout(_syncTimer);
@@ -2054,6 +2083,7 @@
       _pendingPush = true;
       _fbRef.set(out).then(function() {
         _pendingPush = false;
+        try{localStorage.removeItem('_ls_pending_push');}catch(e){}
         _lastSyncTime = Date.now();
       }).catch(function() {
         _pendingPush = false;
@@ -2061,6 +2091,13 @@
         setTimeout(pushToFirebase, 3000);
       });
     }
+
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden' && localStorage.getItem('_ls_pending_push') === '1') {
+        if (_syncTimer) { clearTimeout(_syncTimer); _syncTimer = null; }
+        pushToFirebase();
+      }
+    });
 
     function reRenderAll() {
       buildSched();
@@ -2170,8 +2207,8 @@
         var tab = document.getElementById('tab_' + name);
         if (tab) tab.classList.add('active');
         if (name === 'overview') { renderScores(); updateOverviewMetrics(); renderWeeklyReport(); renderScoreTrend(30); renderCalorieGauge(); renderTodayChecklist(); }
-        if (name === 'today') { buildSched(); renderHabits(); renderTasks(); }
-        if (name === 'health') { renderBodyTab(); initNutritionTab(); renderNutTemplates(); renderNutritionSummary(); renderCalorieGauge(); }
+        if (name === 'today') { ['sched','tasks','habits'].forEach(function(s){var b=document.getElementById('today_'+s+'_body');var a=document.getElementById('today_'+s+'_arr');if(b)b.style.display='none';if(a)a.textContent='▶';}); buildSched(); renderHabits(); renderTasks(); }
+        if (name === 'health') { ['body','food'].forEach(function(s){var b=document.getElementById('health_'+s+'_body');var a=document.getElementById('health_'+s+'_arr');if(b)b.style.display='none';if(a)a.textContent='▶';}); renderBodyTab(); initNutritionTab(); renderNutTemplates(); renderNutritionSummary(); renderCalorieGauge(); }
         if (name === 'upskill') { renderUpskill(); renderPrepTodayCard(); }
         if (name === 'goals') { renderScoreWeights(); buildGrocery(); renderCustomGrocery(); renderShopping(); renderThings(); renderSparks(); renderJournal(); renderMoodChart(); renderMonthlyReview(); }
         if (name === 'expenses') { renderExpenses(); renderExpensePattern(); renderOwed(); }
@@ -2281,9 +2318,9 @@
     function renderPrepTodayCard() {
         var el = document.getElementById('prep_today_card');
         if (!el) return;
-        var startRaw = ls_get('upskill_start');
-        var start = startRaw && startRaw.date ? new Date(startRaw.date + 'T00:00:00') : null;
-        var TOTAL_DAYS = 50;
+        var _pmd = ls_get('upskill_meta');
+        var start = _pmd && _pmd.start ? new Date(_pmd.start + 'T00:00:00') : null;
+        var TOTAL_DAYS = (typeof getTotalPrepDays==='function'?getTotalPrepDays():0)||50;
         if (!start) {
             el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">Set a start date above to see today\'s focus.</div>';
             return;
@@ -2420,7 +2457,8 @@
     }
     function ls_set(key, val) {
       try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
-      _localChangeTime = Date.now();
+      _localChangeTime = Date['now']();
+      try{localStorage.setItem('_ls_local_ts',String(_localChangeTime));localStorage.setItem('_ls_pending_push','1');}catch(e){}
       schedulePush();
     }
     function flash(id) {
@@ -7763,6 +7801,102 @@
             ]}
     ];
 
+    function getPrepPlanData() {
+        var stored = ls_get('upskill_plan_data');
+        if (stored && Array.isArray(stored) && stored.length > 0) return stored;
+        return UPSKILL_PLAN.map(function(ph) {
+            return {id:ph.id,icon:ph.icon,label:ph.label,desc:ph.desc||'',
+                topics:(ph.topics||[]).map(function(t){return {id:t.id,name:t.name,days:t.hours||1,source:t.source||'',url:t.url||'',diff:t.diff||'Medium'};})};
+        });
+    }
+    function savePrepPlanData(d){ls_set('upskill_plan_data',d);}
+    function getTotalPrepDays(){
+        var plan=getPrepPlanData(),custom=ls_get('upskill_custom'),ov=ls_get('upskill_overrides')||{},tot=0;
+        plan.forEach(function(ph){
+            (ph.topics||[]).forEach(function(tp){var o=ov[tp.id];tot+=Number((o&&o.days!=null)?o.days:(tp.days||1));});
+            (custom[ph.id]||[]).forEach(function(tp){tot+=Number(tp.days||1);});
+        }); return tot;
+    }
+    function getRemainingPrepDays(){
+        var plan=getPrepPlanData(),custom=ls_get('upskill_custom'),prog=ls_get('upskill_progress'),ov=ls_get('upskill_overrides')||{},rem=0;
+        plan.forEach(function(ph){
+            (ph.topics||[]).forEach(function(tp){if(!prog[tp.id]){var o=ov[tp.id];rem+=Number((o&&o.days!=null)?o.days:(tp.days||1));}});
+            (custom[ph.id]||[]).forEach(function(tp){if(!prog[tp.id])rem+=Number(tp.days||1);});
+        }); return rem;
+    }
+    function openCategoryModal(catId){
+        var plan=getPrepPlanData(),cat=catId?plan.find(function(p){return p.id===catId;}):null;
+        var m=document.getElementById('prep_cat_modal');if(!m)return;
+        document.getElementById('prep_cat_id').value=catId||'';
+        document.getElementById('prep_cat_icon').value=cat?cat.icon:'';
+        document.getElementById('prep_cat_label').value=cat?cat.label:'';
+        document.getElementById('prep_cat_desc').value=cat?(cat.desc||''):'';
+        document.getElementById('prep_cat_modal_title').textContent=catId?'✏️ Edit Category':'➕ New Category';
+        m.style.display='flex';
+    }
+    function closeCategoryModal(){var m=document.getElementById('prep_cat_modal');if(m)m.style.display='none';}
+    function saveCategoryModal(){
+        var catId=document.getElementById('prep_cat_id').value.trim();
+        var icon=document.getElementById('prep_cat_icon').value.trim()||'📚';
+        var label=document.getElementById('prep_cat_label').value.trim();
+        var desc=document.getElementById('prep_cat_desc').value.trim();
+        if(!label){appToast('⚠️ Category name required');return;}
+        var plan=getPrepPlanData();
+        var newCatId=catId||('cat_'+String(performance && performance.now ? Math.floor(performance.now()*1000) : plan.length+1));
+        if(catId){plan=plan.map(function(p){return p.id===catId?Object.assign({},p,{icon:icon,label:label,desc:desc}):p;});}
+        else{plan.push({id:newCatId,icon:icon,label:label,desc:desc,topics:[]});}
+        savePrepPlanData(plan);closeCategoryModal();renderUpskill();appToast(catId?'✅ Category updated!':'✅ Category created!');
+    }
+    function deletePrepCategory(catId){
+        if(!confirm('Delete this entire category and all its topics?'))return;
+        var plan=getPrepPlanData().filter(function(p){return p.id!==catId;});
+        savePrepPlanData(plan);
+        var prog=ls_get('upskill_progress'),notes=ls_get('upskill_notes'),custom=ls_get('upskill_custom');
+        (custom[catId]||[]).forEach(function(t){delete prog[t.id];delete notes[t.id];});
+        ls_set('upskill_progress',prog);ls_set('upskill_notes',notes);
+        renderUpskill();appToast('🗑️ Category deleted');
+    }
+    function openPrepMetaModal(){
+        var meta=ls_get('upskill_meta'),m=document.getElementById('prep_meta_modal');if(!m)return;
+        document.getElementById('pm_title').value=meta.title||'';
+        document.getElementById('pm_subtitle').value=meta.subtitle||'';
+        document.getElementById('pm_salary').value=meta.salary||'';
+        document.getElementById('pm_start').value=meta.start||'';
+        m.style.display='flex';
+    }
+    function closePrepMetaModal(){var m=document.getElementById('prep_meta_modal');if(m)m.style.display='none';}
+    function savePrepMeta(){
+        var title=document.getElementById('pm_title').value.trim();
+        var subtitle=document.getElementById('pm_subtitle').value.trim();
+        var salary=document.getElementById('pm_salary').value.trim();
+        var start=document.getElementById('pm_start').value.trim();
+        if(start&&!start.match(/^d{4}-d{2}-d{2}$/)){appToast('⚠️ Start date: YYYY-MM-DD');return;}
+        var meta=ls_get('upskill_meta');
+        if(title)meta.title=title;if(subtitle)meta.subtitle=subtitle;if(salary)meta.salary=salary;if(start)meta.start=start;
+        ls_set('upskill_meta',meta);closePrepMetaModal();renderUpskill();appToast('✅ Prep info saved!');
+    }
+    function eraseAllPrepCategories(){
+        if(!confirm('Reset categories to defaults? Progress is kept.'))return;
+        ls_set('upskill_plan_data',[]);renderUpskill();appToast('🗑️ Reset to defaults');
+    }
+    function eraseAllPrepData(){
+        if(!confirm('Delete ALL prep data: progress, notes, categories, mocks?'))return;
+        ['upskill_progress','upskill_notes','upskill_mocks','upskill_meta','upskill_custom','upskill_plan_data','upskill_overrides'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+        schedulePush();renderUpskill();appToast('🗑️ All prep data erased');
+    }
+    function quickCompleteTask(id){
+        var tasks=getTasks();if(!tasks[id])return;
+        var done=ls_get('tasks_done_list');tasks[id].status='done';tasks[id].completedDate=getTodayISO();
+        done[id]=tasks[id];delete tasks[id];
+        ls_set('tasks_active_list',tasks);ls_set('tasks_done_list',done);appToast('✅ Task completed!');
+    }
+    function quickCycleTaskStatus(id){
+        var tasks=getTasks();if(!tasks[id])return;
+        var cycle=['todo','inprogress','blocked'];var cur=tasks[id].status||'todo';
+        tasks[id].status=cycle[(cycle.indexOf(cur)+1)%cycle.length];
+        ls_set('tasks_active_list',tasks);
+    }
+
     // ═══════════════════════════════════════
     // UPSKILL — STATE
     // ═══════════════════════════════════════
@@ -7793,7 +7927,8 @@
 
         // Count all topics including custom
         var allTopics = [];
-        UPSKILL_PLAN.forEach(function(ph) {
+        var plan=getPrepPlanData();
+        plan.forEach(function(ph) {
             allTopics = allTopics.concat(ph.topics);
             if (custom[ph.id]) allTopics = allTopics.concat(custom[ph.id]);
         });
@@ -7816,6 +7951,19 @@
             if (daysLeftEl) daysLeftEl.textContent = '50';
             if (startLbl)   startLbl.textContent = 'Not set';
         }
+
+        var _tDays=getTotalPrepDays(),_rDays=getRemainingPrepDays();
+        var _tdEl=document.getElementById('up_total_days'),_efEl=document.getElementById('up_est_finish'),_afEl=document.getElementById('up_act_finish');
+        if(_tdEl)_tdEl.textContent=_tDays+'d';
+        if(meta.start){
+            var _sd=new Date(meta.start+'T00:00:00');
+            var _ee=new Date(_sd.getTime()+_tDays*86400000);
+            var _nowiso=getTodayISO();
+            var _nd=new Date(_nowiso+'T00:00:00');
+            var _ae=new Date(_nd.getTime()+_rDays*86400000);
+            if(_efEl)_efEl.textContent=isoD(_ee);
+            if(_afEl)_afEl.textContent=isoD(_ae);
+        }else{if(_efEl)_efEl.textContent='—';if(_afEl)_afEl.textContent='—';}
 
         var pctEl     = document.getElementById('up_pct_done');
         var topicsEl  = document.getElementById('up_topics_done');
@@ -7853,14 +8001,15 @@
 
         // Find the first incomplete phase to auto-expand it
         var firstIncompleteId = null;
-        UPSKILL_PLAN.forEach(function(phase) {
+        var plan=getPrepPlanData();
+        plan.forEach(function(phase) {
             if (firstIncompleteId) return;
             var allT = phase.topics.concat(custom[phase.id] || []);
             var done = allT.filter(function(t){ return prog[t.id]; }).length;
             if (done < allT.length) firstIncompleteId = phase.id;
         });
 
-        UPSKILL_PLAN.forEach(function(phase) {
+        plan.forEach(function(phase) {
             var allTopics = phase.topics.concat(custom[phase.id] || []);
             var visible = allTopics.filter(function(t) {
                 if (_upFilter === 'done') return !!prog[t.id];
@@ -7889,7 +8038,8 @@
             html += '<span id="up_phase_arrow_' + phase.id + '" style="font-size:11px;color:var(--text3);flex-shrink:0">' + arrowChar + '</span>';
             html += '<div>';
             html += '<div style="font-size:14px;font-weight:700;color:var(--text1)">' + phase.icon + ' ' + phase.label + '</div>';
-            html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + phase.days + ' \xb7 ' + phase.desc + '</div>';
+            var _phd=((phase.topics||[]).concat(custom[phase.id]||[])).reduce(function(s,t){return s+Number(t.days||t.hours||1);},0);
+            html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+_phd+'d · '+esc(phase.desc||'')+'</div>';
             html += '</div>';
             html += '</div>';
             html += '<div style="text-align:right"><div style="font-size:16px;font-weight:800;color:' + pClr + '">' + pPct + '%</div>';
@@ -7897,6 +8047,7 @@
             html += '</div>';
             html += '<div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-bottom:10px">';
             html += '<div style="height:100%;width:' + pPct + '%;background:' + pClr + ';border-radius:2px;transition:width .4s"></div></div>';
+            if(isAdmin){html+='<div style="display:flex;gap:5px;margin-bottom:6px"><button class="btn btn-w btn-sm" style="font-size:10px" onclick="event.stopPropagation();openCategoryModal(\''+phase.id+'\')">Edit</button><button class="btn btn-r btn-sm" style="font-size:10px" onclick="event.stopPropagation();deletePrepCategory(\''+phase.id+'\')">Del</button></div>';}
 
             // Collapsible body
             html += '<div id="up_phase_body_' + phase.id + '" style="display:' + bodyDisplay + '">';
@@ -7921,7 +8072,8 @@
                 html += '</div>';
                 html += '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;align-items:center">';
                 html += '<span style="font-size:10px;color:' + (dc[topic.diff]||'var(--text3)') + ';background:rgba(0,0,0,.18);border-radius:20px;padding:1px 7px">' + (topic.diff||'Medium') + '</span>';
-                html += '<span style="font-size:10px;color:var(--text3);background:var(--bg4);border-radius:20px;padding:1px 7px">⏱ ' + (topic.hours||1) + 'h</span>';
+                var _td=topic.days||topic.hours||1;
+                html += '<span style="font-size:10px;color:var(--text3);background:var(--bg4);border-radius:20px;padding:1px 7px">📅 ' + _td + 'd</span>';
                 if (topic.url) {
                     html += '<a href="' + topic.url + '" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none;background:rgba(255,107,0,0.08);border-radius:20px;padding:1px 8px">📖 ' + esc(topic.source) + ' ↗</a>';
                 } else {
@@ -7999,6 +8151,7 @@
         document.getElementById('edit_source').value   = topic.source || '';
         document.getElementById('edit_url').value      = topic.url || '';
         document.getElementById('edit_hours').value    = topic.hours || 2;
+        var _df2=document.getElementById('edit_days_field');if(_df2)_df2.value=topic.days||topic.hours||1;
         document.getElementById('edit_diff').value     = topic.diff || 'Medium';
         // Store phase id for custom save
         document.getElementById('edit_topic_id').dataset.phase = phaseId || '';
@@ -8014,7 +8167,8 @@
         var name   = document.getElementById('edit_name').value.trim();
         var source = document.getElementById('edit_source').value.trim();
         var url    = document.getElementById('edit_url').value.trim();
-        var hours  = parseInt(document.getElementById('edit_hours').value) || 2;
+        var _df=document.getElementById('edit_days_field')||document.getElementById('edit_hours');
+        var days=parseInt((_df||{}).value)||1; var hours=days;
         var diff   = document.getElementById('edit_diff').value;
         if (!name) { appToast('⚠️ Topic name required'); return; }
 
@@ -8022,14 +8176,14 @@
             var custom = ls_get('upskill_custom');
             if (custom[phase]) {
                 custom[phase] = custom[phase].map(function(t) {
-                    return t.id === id ? Object.assign({}, t, {name:name, source:source, url:url, hours:hours, diff:diff}) : t;
+                    return t.id === id ? Object.assign({}, t, {name:name, source:source, url:url, hours:hours, days:hours, diff:diff}) : t;
                 });
                 ls_set('upskill_custom', custom);
             }
         } else {
             // For built-in topics — store override in custom overrides list
             var overrides = ls_get('upskill_overrides') || {};
-            overrides[id] = {name:name, source:source, url:url, hours:hours, diff:diff};
+            overrides[id] = {name:name, source:source, url:url, hours:hours, days:hours, diff:diff};
             ls_set('upskill_overrides', overrides);
             // Patch in-memory
             UPSKILL_PLAN.forEach(function(ph) {
@@ -8051,15 +8205,16 @@
         var name   = ((document.getElementById('ct_name')  ||{}).value||'').trim();
         var source = ((document.getElementById('ct_source')||{}).value||'').trim();
         var url    = ((document.getElementById('ct_url')   ||{}).value||'').trim();
-        var hours  = parseInt((document.getElementById('ct_hours')||{}).value)||2;
+        var days=parseInt((document.getElementById('ct_days')||{}).value)||parseInt((document.getElementById('ct_hours')||{}).value)||1;
+        var hours=days;
         var diff   = (document.getElementById('ct_diff')  ||{}).value || 'Medium';
         if (!name) { appToast('⚠️ Enter a topic name'); return; }
         var custom = ls_get('upskill_custom');
         if (!custom[phase]) custom[phase] = [];
         var id = 'custom_' + Date.now();
-        custom[phase].push({id:id, name:name, source:source||'Custom', url:url||'', hours:hours, diff:diff});
+        custom[phase].push({id:id, name:name, source:source||'Custom', url:url||'', hours:hours, days:days, diff:diff});
         ls_set('upskill_custom', custom);
-        ['ct_name','ct_source','ct_url','ct_hours'].forEach(function(fid){
+        ['ct_name','ct_source','ct_url','ct_hours','ct_days'].forEach(function(fid){
             var el = document.getElementById(fid); if (el) el.value = '';
         });
         renderUpskill();
