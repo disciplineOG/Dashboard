@@ -1,7 +1,13 @@
-const CACHE = 'dashboard-v4';
+const CACHE = 'dashboard-v5';
 // Derive base path dynamically so this SW works at any deployment path (not just /Dashboard/)
 const BASE = new URL('./', self.location.href).pathname;
-const ASSETS = [BASE, BASE + 'index.html'];
+const ASSETS = [
+  BASE,
+  BASE + 'index.html',
+  'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js',
+  'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js'
+];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
@@ -21,16 +27,22 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
-  // Network-first for HTML so deployments are always picked up immediately
+  // Stale-while-revalidate for HTML: return cached shell immediately for instant loads,
+  // then fetch and update the cache in the background so the next load gets fresh content.
   var isNav = e.request.mode === 'navigate' || url.endsWith('index.html') || url.endsWith(BASE) || url.endsWith(BASE.replace(/\/$/, ''));
   if (isNav) {
     e.respondWith(
-      fetch(e.request).then(function(res) {
-        var clone = res.clone();
-        caches.open(CACHE).then(function(c) { c.put(e.request, clone); });
-        return res;
-      }).catch(function() {
-        return caches.match(e.request) || caches.match(BASE + 'index.html');
+      caches.open(CACHE).then(function(c) {
+        return c.match(e.request).then(function(cached) {
+          var networkFetch = fetch(e.request).then(function(res) {
+            c.put(e.request, res.clone());
+            return res;
+          }).catch(function() {
+            return cached || c.match(BASE + 'index.html');
+          });
+          // Return cached response immediately if available, otherwise wait for network
+          return cached || networkFetch;
+        });
       })
     );
     return;
