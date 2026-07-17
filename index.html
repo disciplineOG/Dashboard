@@ -12,11 +12,12 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <!-- FIX 1: fb-bootstrap meta tag — read by _getBootstrapFirebaseConfig() priority 3.
          Survives iOS PWA localStorage isolation and hash-less launches entirely. -->
-    <meta name="fb-bootstrap" content='{"apiKey":"AIzaSyCh1p2h-1Gko63g6rRYiObYtOK-s69a5RI","authDomain":"no-negotiation.firebaseapp.com","databaseURL":"https://no-negotiation-default-rtdb.asia-southeast1.firebasedatabase.app","projectId":"no-negotiation","storageBucket":"no-negotiation.firebasestorage.app","messagingSenderId":"107666746688","appId":"1:107666746688:web:9277ba548d8ee9ba07cb3d"}'>
+    <meta name="fb-bootstrap" content="">
     <!-- Firebase SDK (offline persistence built-in) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
     <style>
         /* ══════════════════════════════════════
@@ -3631,13 +3632,6 @@
       return Math.round((green / rows.length) * 100);
     }
 
-    // Keep legacy compat for score row
-    function getAllSchedRows() {
-      var d = (document.getElementById('day_date')||{}).value || isoD(new Date());
-      var type = getDayTypeForDate(d);
-      return getDayTypeSchedules()[type] || [];
-    }
-
     // Parse time string to minutes for sorting
     function timeToMins(t) {
       if (!t) return 9999;
@@ -5030,13 +5024,6 @@
         if (s.cb) s.cb();
       }, '🗑️ Erase', true);
       return; // appConfirm is async
-      // Use ls_set({}) instead of removeItem so the timestamp gets bumped and
-      // the erasure is treated as a local write — it will be pushed to Firebase,
-      // preventing the next sync from restoring the old data.
-      s.keys.forEach(function(k) {
-        try { ls_set(k, {}); } catch(e) {}
-      });
-      if (s.cb) s.cb();
     }
 
     // ═══════════════════════════════════════
@@ -6374,14 +6361,14 @@
       for (var i = 6; i >= 0; i--) {
         days.push(isoD(new Date(Date.now() - i * 86400000)));
       }
+      var _consPct = consistencyScore(); // computed once — date-independent
       var scores = days.map(function(d) {
         var s = schedScoreForDate(d);
         var nutPct = nutritionScore(d);
         var expData = expenseScoreForDate(d);
         var expPct = expData ? expData.pct : null;
         var expScore = expPct === null ? null : Math.max(0, 100 - expPct);
-        var consPct = consistencyScore();
-        var metrics = [s, expScore, nutPct, consPct].filter(function(v){ return v !== null; });
+        var metrics = [s, expScore, nutPct, _consPct].filter(function(v){ return v !== null; });
         var overall = metrics.length > 0 ? Math.round(metrics.reduce(function(a,b){return a+b},0)/metrics.length) : null;
         return {date:d, score:overall};
       });
@@ -6425,14 +6412,93 @@
             var b = document.getElementById('trend_' + d + '_btn');
             if (b) b.className = (d === String(days)) ? 'btn btn-o btn-sm' : 'btn btn-w btn-sm';
         });
+        // Pre-read all localStorage keys once to avoid repeated JSON.parse inside the loop
+        var _cachedSchedData    = ls_get('sched');
+        var _cachedDayTypeLog   = ls_get('day_type_log');
+        var _cachedDayTypeDefs  = ls_get('day_type_defs');
+        var _cachedExpenses     = ls_get('expenses_list');
+        var _cachedExpLimits    = ls_get('exp_limits');
+        var _cachedNutLog       = ls_get('nutrition_log');
+        var _cachedDailyMacros  = ls_get('daily_macros');
+
         var points = [];
         for (var i = days - 1; i >= 0; i--) {
             var d = isoD(new Date(Date.now() - i * 86400000));
-            var sched = schedScoreForDate(d);
-            var expData = expenseScoreForDate(d);
+
+            // --- schedScoreForDate(d) inlined with cached data ---
+            var _dtLog = _cachedDayTypeLog;
+            var _dtType = _dtLog[d] || (function(){
+                if (_dtLog[d]) return _dtLog[d];
+                var _keys = Object.keys(_cachedDayTypeDefs);
+                return _keys.length > 0 ? _keys[0] : null;
+            })();
+            var _dtDefs = _cachedDayTypeDefs;
+            var _dtRows = (_dtDefs[_dtType] && _dtDefs[_dtType].schedule) ? _dtDefs[_dtType].schedule : [];
+            var sched;
+            if (_dtRows.length === 0) {
+                sched = null;
+            } else {
+                var _green = 0, _anyLogged = false;
+                for (var _ri = 0; _ri < _dtRows.length; _ri++) {
+                    var _k = 'sched_' + _dtType + '_' + _ri + '_' + d;
+                    var _v = _cachedSchedData[_k];
+                    if (_v !== undefined) _anyLogged = true;
+                    if (_v === 1) _green++;
+                }
+                var _today = isoD(new Date());
+                sched = (!_anyLogged && d >= _today) ? null : Math.round((_green / _dtRows.length) * 100);
+            }
+
+            // --- expenseScoreForDate(d) inlined with cached data ---
+            var _month = d.slice(0, 7);
+            var _limVal = _cachedExpLimits[_month];
+            var _limDaily = (_limVal === undefined || _limVal === null) ? null :
+                            (typeof _limVal === 'number' ? _limVal : (_limVal.daily || null));
+            var expData;
+            if (!_limDaily) {
+                expData = null;
+            } else {
+                var _total = 0, _hasEntry = false;
+                Object.keys(_cachedExpenses).forEach(function(id) {
+                    var e = _cachedExpenses[id];
+                    if (e.date === d) {
+                        _hasEntry = true;
+                        if (e.vartype !== 'Fixed') _total += Number(e.amt);
+                    }
+                });
+                if (_total === 0 && !_hasEntry) {
+                    expData = null;
+                } else {
+                    var _pct = Math.round((_total / _limDaily) * 100);
+                    expData = {pct: _pct, over: _pct > 100};
+                }
+            }
             var expPct = expData ? expData.pct : null;
             var expScore = expPct === null ? null : Math.max(0, 100 - expPct);
-            var nut = nutritionScore(d);
+
+            // --- nutritionScore(d) inlined with cached data ---
+            var _nutDay = _cachedNutLog[d];
+            var nut;
+            if (!_nutDay || Object.keys(_nutDay).length === 0) {
+                nut = isDateMissed(d) ? 0 : null;
+            } else {
+                var _macros = {
+                    cal:  _cachedDailyMacros.cal  || 1600,
+                    prot: _cachedDailyMacros.prot || 130,
+                    carb: _cachedDailyMacros.carb || 130,
+                    fat:  _cachedDailyMacros.fat  || 50,
+                    fib:  _cachedDailyMacros.fib  || 25
+                };
+                var _tProt=0, _tCarb=0, _tFat=0, _tFib=0;
+                Object.keys(_nutDay).forEach(function(cat) {
+                    var e = _nutDay[cat];
+                    _tProt += e.prot||0; _tCarb += e.carb||0; _tFat += e.fat||0; _tFib += e.fib||0;
+                });
+                function _pctOf(got, need) { return !need ? null : Math.min(Math.round(got/need*100), 100); }
+                var _parts = [_pctOf(_tProt,_macros.prot), _pctOf(_tCarb,_macros.carb), _pctOf(_tFat,_macros.fat), _pctOf(_tFib,_macros.fib)].filter(function(v){ return v !== null; });
+                nut = _parts.length === 0 ? null : Math.round(_parts.reduce(function(a,b){return a+b},0) / _parts.length);
+            }
+
             var metrics = [sched, expScore, nut].filter(function(v){ return v !== null; });
             points.push({d:d, score: metrics.length > 0 ? Math.round(metrics.reduce(function(a,b){return a+b},0)/metrics.length) : null});
         }
@@ -6998,11 +7064,13 @@
           clearTimeout(timer);
           var remoteConfig = snap.val();
           if (remoteConfig && remoteConfig.setupDone) {
-            // Persist the Firebase config so home screen / hash-less launches work next time
-            try { localStorage.setItem('_fb_bootstrap', JSON.stringify(bootstrapCfg)); } catch(e) {}
-            // Seed localStorage so the rest of the app behaves normally
-            try { localStorage.setItem('app_config', JSON.stringify(remoteConfig)); } catch(e) {}
-            // Reload the derived globals that were read at script-parse time
+            var _hasLocalSetup = (function(){ try { return localStorage.getItem('_dashboard_local_setup') === '1'; } catch(e) { return false; } })();
+            if (!_hasLocalSetup) {
+              // Persist the Firebase config so home screen / hash-less launches work next time
+              try { localStorage.setItem('_fb_bootstrap', JSON.stringify(bootstrapCfg)); } catch(e) {}
+              // Seed localStorage so the rest of the app behaves normally
+              try { localStorage.setItem('app_config', JSON.stringify(remoteConfig)); } catch(e) {}
+            }            // Reload the derived globals that were read at script-parse time
             AUTH_ADMIN_HASH    = remoteConfig.authAdminHash    || null;
             AUTH_READONLY_HASH = remoteConfig.authReadonlyHash || null;
             // FIX 2 (audit): FB_CONFIG was evaluated as null at parse time before
@@ -7055,7 +7123,9 @@
       try {
         var el = document.querySelector('meta[name="fb-bootstrap"]');
         if (!el) return null;
-        var cfg = JSON.parse(el.getAttribute('content'));
+        var raw = el.getAttribute('content');
+        if (!raw || !raw.trim()) return null;
+        var cfg = JSON.parse(raw);
         return (cfg && cfg.apiKey && cfg.databaseURL) ? cfg : null;
       } catch(e) { return null; }
     }
@@ -7356,11 +7426,11 @@
         if (log[d][_nutCat]) {
           // Merge macros with existing entry rather than silently overwriting
           var old = log[d][_nutCat];
-          entry.prot_c = (parseFloat(old.prot_c)||0) + (parseFloat(entry.prot_c)||0);
-          entry.carb_c = (parseFloat(old.carb_c)||0) + (parseFloat(entry.carb_c)||0);
-          entry.fat_c  = (parseFloat(old.fat_c) ||0) + (parseFloat(entry.fat_c) ||0);
-          entry.fib_c  = (parseFloat(old.fib_c) ||0) + (parseFloat(entry.fib_c) ||0);
-          entry.cal_c  = (parseFloat(old.cal_c) ||0) + (parseFloat(entry.cal_c) ||0);
+          entry.prot = (parseFloat(old.prot)||0) + (parseFloat(entry.prot)||0);
+          entry.carb = (parseFloat(old.carb)||0) + (parseFloat(entry.carb)||0);
+          entry.fat  = (parseFloat(old.fat) ||0) + (parseFloat(entry.fat) ||0);
+          entry.fib  = (parseFloat(old.fib) ||0) + (parseFloat(entry.fib) ||0);
+          entry.cal  = (parseFloat(old.cal) ||0) + (parseFloat(entry.cal) ||0);
           if (!entry.dish && old.dish) entry.dish = old.dish;
         }
         log[d][_nutCat] = entry;
@@ -9167,7 +9237,6 @@
       var baseUrl    = getV('sw_base_url');
       var authHint   = getV('sw_auth_hint');
       var adminPass  = getV('sw_admin_pass');
-      var roPass     = getV('sw_ro_pass');
       var fbApiKey   = getV('sw_fb_apikey');
       var fbAuthDom  = getV('sw_fb_authdomain');
       var fbDbUrl    = getV('sw_fb_dburl');
@@ -9177,7 +9246,6 @@
       var fbAppId    = getV('sw_fb_appid');
 
       var adminHash = adminPass ? await sha256(adminPass) : null;
-      var roHash    = roPass    ? await sha256(roPass)    : null;
 
       var fbCfg = (fbApiKey && fbDbUrl) ? {
         apiKey: fbApiKey, authDomain: fbAuthDom, databaseURL: fbDbUrl,
@@ -9191,9 +9259,9 @@
         baseUrl:          baseUrl  || '',
         authHint:         authHint || '',
         authAdminHash:    adminHash,
-        authReadonlyHash: roHash,
         firebase:         fbCfg
       });
+      try { localStorage.setItem('_dashboard_local_setup', '1'); } catch(e) {}
       // If Firebase is configured and an admin password was set, create the Firebase Auth account
       // so that `.write: "auth != null"` Firebase rules work immediately.
       function doReload() { window.location.reload(); }
@@ -9319,10 +9387,6 @@
         '<input class="fi" id="sw_admin_pass" type="password" placeholder="Full-access password" style="margin-top:4px">',
         '</div>',
         '<div class="form-group">',
-        '<label style="font-size:12px;color:var(--text3)">Read-only Password <span style="font-weight:400;color:var(--text3)">(optional)</span></label>',
-        '<input class="fi" id="sw_ro_pass" type="password" placeholder="View-only password (can leave blank)" style="margin-top:4px">',
-        '</div>',
-        '<div class="form-group">',
         '<label style="font-size:12px;color:var(--text3)">Login Screen Hint <span style="font-weight:400;color:var(--text3)">(optional)</span></label>',
         '<input class="fi" id="sw_auth_hint" placeholder="e.g. Enter your name to continue" style="margin-top:4px">',
         '<div style="font-size:10px;color:var(--text3);margin-top:3px">Shown below the password field. Leave blank for the default text.</div>',
@@ -9418,6 +9482,7 @@
       }
 
       saveAppConfig(cfg);
+      try { localStorage.setItem('_dashboard_local_setup', '1'); } catch(e) {}
       closeAppSettings();
       if (roPassNew) {
         _showPasswordModal('Read-only password updated', roPassNew, function() {
@@ -10398,8 +10463,6 @@ function renderGymTemplates() {
       + '</div></div>';
   }).join('');
 }
-// Alias for initGymTracker call
-function renderTemplates() { renderGymTemplates(); }
 
 // ═══════════════════════════════════════════════════════════════════
 // 1RM — EPLEY FORMULA:  1RM = weight × (1 + reps / 30)
@@ -10457,25 +10520,7 @@ function renderGymStrengthBlock(ex, ei) {
   return html;
 }
 
-// Override addStrengthSet to capture RPE and show rest picker
-// addStrengthSet — alias kept for any legacy calls; real logic is in addGymStrengthSet
-function addStrengthSet(ei) { addGymStrengthSet(ei); }
 
-// ═══════════════════════════════════════════════════════════════════
-// REST TIMER
-// ═══════════════════════════════════════════════════════════════════
-
-
-
-
-// ═══════════════════════════════════════════════════════════════════
-// WORKOUT TEMPLATES
-// ═══════════════════════════════════════════════════════════════════
-
-
-
-
-// updateSet needs to handle rpe
 </script>
 <!-- QUICK LOG FLOATING BUTTON -->
 <button id="ql_fab" onclick="openQuickLog()" style="position:fixed;bottom:24px;right:18px;z-index:400;background:var(--accent);color:#fff;border:none;border-radius:50%;width:52px;height:52px;font-size:22px;cursor:pointer;box-shadow:0 4px 18px var(--accent-glow);display:none;align-items:center;justify-content:center">⚡</button>
