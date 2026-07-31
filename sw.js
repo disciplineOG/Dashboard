@@ -1,9 +1,11 @@
-const CACHE = 'dashboard-v5';
+const CACHE = 'dashboard-v6';
 // Derive base path dynamically so this SW works at any deployment path (not just /Dashboard/)
 const BASE = new URL('./', self.location.href).pathname;
 const ASSETS = [
   BASE,
   BASE + 'index.html',
+  BASE + 'manifest.json',
+  BASE + 'icon-192.png',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js'
