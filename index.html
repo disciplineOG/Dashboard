@@ -97,7 +97,6 @@
           text-shadow:0 0 18px var(--accent-glow);
           letter-spacing:-0.3px;
         }
-        .header-sub{font-size:11px;color:var(--text3);margin-top:2px;margin-bottom:10px}
 
         .tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:10px;padding-top:6px}
         .tabs::-webkit-scrollbar{display:none}
@@ -136,6 +135,14 @@
           box-shadow:0 2px 8px rgba(0,0,0,0.18);
         }
         .card-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+        /* "Add X" input cards use a lighter shade than "list/display" cards to visually separate entry forms from existing data */
+        .add-card{
+          background:var(--bg3);
+          border:0.5px solid var(--border2);
+        }
+        .list-card{
+          background:var(--bg2);
+        }
         .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
         @media(min-width:500px){.metrics{grid-template-columns:repeat(4,1fr)}}
         .metric{
@@ -144,19 +151,14 @@
           border-radius:10px;padding:10px 12px;
           transition:background .35s;
         }
-        .metric-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-        .metric-val{font-size:21px;font-weight:700;line-height:1.1}
-        .metric-sub{font-size:10px;color:var(--text3);margin-top:3px}
 
         /* ══════════════════════════════════════
            BADGES
         ══════════════════════════════════════ */
         .badge{display:inline-block;font-size:10px;padding:2px 9px;border-radius:20px;font-weight:700}
         .bg{background:rgba(52,199,89,0.12);color:var(--green);border:0.5px solid rgba(52,199,89,0.28)}
-        .bo{background:rgba(255,159,10,0.12);color:var(--yellow);border:0.5px solid rgba(255,159,10,0.28)}
         .br{background:rgba(255,59,48,0.12);color:var(--red);border:0.5px solid rgba(255,59,48,0.25)}
         .bw{background:var(--bg3);color:var(--text2);border:0.5px solid var(--border)}
-        .bb{background:rgba(10,132,255,0.12);color:var(--blue);border:0.5px solid rgba(10,132,255,0.25)}
 
         /* ══════════════════════════════════════
            TABLES
@@ -178,7 +180,6 @@
         }
         tr:last-child td{border-bottom:none}
         tr:hover td{background:rgba(255,107,0,.03)}
-        .total-row td{font-weight:700;color:var(--accent);background:rgba(255,107,0,0.06) !important}
 
         /* ══════════════════════════════════════
            TRACKER TABLE
@@ -214,8 +215,6 @@
         .tl-item::before{content:'';position:absolute;left:-15px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
         .tl-item::after{content:'';position:absolute;left:-12px;top:13px;bottom:0;width:1px;background:var(--border)}
         .tl-item:last-child::after{display:none}
-        .tl-time{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:2px}
-        .tl-desc{font-size:12px;color:var(--text2);line-height:1.65}
 
         /* ══════════════════════════════════════
            CONTROLS + FORMS
@@ -261,19 +260,6 @@
         input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 
         /* ══════════════════════════════════════
-           SECTION HEADERS
-        ══════════════════════════════════════ */
-        .sec-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-        .sec-num{
-          width:24px;height:24px;border-radius:50%;
-          background:var(--accent);color:#fff;
-          display:flex;align-items:center;justify-content:center;
-          font-size:11px;font-weight:700;flex-shrink:0;
-          box-shadow:0 0 10px var(--accent-glow);
-        }
-        .sec-label{font-size:13px;font-weight:700;color:var(--text1)}
-
-        /* ══════════════════════════════════════
            NOTES + INFOS
         ══════════════════════════════════════ */
         .note{
@@ -282,22 +268,11 @@
           color:var(--text2);line-height:1.65;margin-top:8px;
           transition:color .35s;
         }
-        .info-g{
-          background:rgba(52,199,89,0.08);border:0.5px solid rgba(52,199,89,0.25);
-          border-radius:10px;padding:10px 12px;font-size:12px;color:var(--green);
-          line-height:1.6;margin-bottom:12px;
-        }
         .info-o{
           background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.25);
           border-radius:10px;padding:10px 12px;font-size:12px;color:var(--yellow);
           line-height:1.6;margin-bottom:12px;
         }
-
-        /* ══════════════════════════════════════
-           COOKING PILLS
-        ══════════════════════════════════════ */
-        .cook{display:inline-block;background:rgba(10,132,255,0.12);color:var(--blue);border:0.5px solid rgba(10,132,255,0.25);border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;white-space:nowrap}
-        .temp{display:block;background:rgba(255,159,10,0.10);color:var(--yellow);border:0.5px solid rgba(255,159,10,0.22);border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;white-space:nowrap;margin-top:3px}
 
         /* ══════════════════════════════════════
            SUMMARY
@@ -311,7 +286,6 @@
         /* ══════════════════════════════════════
            MACRO BAR + MISC
         ══════════════════════════════════════ */
-        .macro-bar{height:7px;border-radius:4px;overflow:hidden;display:flex;margin:8px 0}
         .divider{height:0.5px;background:var(--border);margin:12px 0}
         .flash{font-size:10px;color:var(--green);margin-left:8px;display:none}
         .flash.on{display:inline}
@@ -321,9 +295,8 @@
            TASK/EXPENSE STATUS COLORS
         ══════════════════════════════════════ */
         .ph{color:var(--red);font-weight:700}.pm{color:var(--yellow);font-weight:600}.pl{color:var(--green);font-weight:600}
-        .st-todo{color:var(--text3)}.st-prog{color:var(--yellow)}.st-done{color:var(--green)}
+        .st-todo{color:var(--text3)}.st-prog{color:var(--yellow)}
         .dn{color:var(--red);font-weight:700}.ds{color:var(--yellow);font-weight:600}.dok{color:var(--green)}
-        .t-need{color:var(--blue)}.t-want{color:var(--yellow)}.t-desire{color:var(--purple)}
         .amt{color:var(--green);font-weight:700;font-variant-numeric:tabular-nums}
 
         /* ══════════════════════════════════════
@@ -399,17 +372,8 @@
         .ql-overlay.ql-nested{z-index:1600}
         .ql-sheet{background:var(--bg2);border-radius:22px 22px 0 0;padding:18px 16px 36px;width:100%;max-width:480px;max-height:82vh;overflow-y:auto}
         .ql-title{font-size:15px;font-weight:700;color:var(--text1);margin-bottom:4px}
-        .ql-sub{font-size:11px;color:var(--text3);margin-bottom:14px}
         .ql-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)}
         .ql-row:last-child{border-bottom:none}
-        .ql-label{font-size:13px;color:var(--text2);flex:1}
-        .ql-time{font-size:11px;color:var(--accent);margin-right:8px;white-space:nowrap}
-
-        /* ══════ WATER TRACKER ══════ */
-        .water-grid{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}
-        .water-cup{width:32px;height:36px;border-radius:4px;border:1.5px solid rgba(90,200,250,0.35);background:transparent;cursor:pointer;transition:all .15s;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;font-size:10px;color:transparent}
-        .water-cup.filled{background:rgba(90,200,250,0.28);border-color:var(--teal);box-shadow:0 0 6px rgba(90,200,250,0.4);color:var(--teal)}
-        .water-cup:active{transform:scale(0.88)}
 
         /* ══════ WEEKLY REPORT ══════ */
         .report-day{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)}
@@ -441,38 +405,6 @@
         .danger-zone .dz-sub{font-size:11px;color:var(--text3);margin-bottom:10px}
         .btn-erase{background:rgba(255,59,48,0.10);border:0.5px solid rgba(255,59,48,0.35);color:var(--red);padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
         .btn-erase:active{background:rgba(255,59,48,0.22)}
-
-        /* ══════════════════════════════════════
-           MONTH PICKER MODAL
-        ══════════════════════════════════════ */
-        .mpicker-overlay{
-          display:none;position:fixed;inset:0;
-          background:rgba(0,0,0,0.6);z-index:1000;
-          align-items:flex-end;justify-content:center;
-          backdrop-filter:blur(4px);
-        }
-        .mpicker-overlay.open{display:flex}
-        .mpicker-sheet{
-          background:var(--bg2);border-radius:20px 20px 0 0;
-          padding:16px;width:100%;max-width:480px;
-          transition:background .35s;
-        }
-        .mpicker-title{font-size:13px;font-weight:700;color:var(--text2);text-align:center;margin-bottom:14px}
-        .mpicker-year{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:14px}
-        .mpicker-year button{background:var(--bg3);border:0.5px solid var(--border);color:var(--text1);border-radius:8px;padding:6px 14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-width:36px}
-        .mpicker-year span{font-size:18px;font-weight:700;color:var(--text1);min-width:60px;text-align:center}
-        .mpicker-months{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-        .mpicker-months button{
-          background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);
-          border-radius:10px;padding:10px 4px;font-size:13px;font-weight:600;
-          cursor:pointer;font-family:inherit;transition:all .15s;
-        }
-        .mpicker-months button.sel{
-          background:var(--accent);color:#fff;border-color:var(--accent);
-          box-shadow:0 0 10px var(--accent-glow);
-        }
-        .mpicker-months button:active{transform:scale(0.94)}
-        .mpicker-cancel{width:100%;background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
 
         /* ══════════════════════════════════════
            RESPONSIVE
@@ -685,13 +617,8 @@
 
     <!-- ═══ TODAY ═══ -->
     <div id="sec_today" class="section">
-        <!-- 📅 Schedule sub-section -->
-        <div style="margin-bottom:8px">
-            <button onclick="(function(){var b=document.getElementById('today_sched_body');var a=document.getElementById('today_sched_arr');var h=b.style.display==='none';b.style.display=h?'block':'none';a.textContent=h?'▼':'▶';})()" style="background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:12px 14px;width:100%;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;font-weight:700;color:var(--text1);font-family:inherit;outline:none">
-                <span>📅 Schedule</span><span id="today_sched_arr">▶</span>
-            </button>
-            <div id="today_sched_body" style="display:none;margin-top:8px">
-        <div class="card">
+        <!-- 📅 Schedule -->
+        <div class="card list-card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
                 <div class="card-title" style="margin-bottom:0">📅 My Day</div>
                 <input type="date" class="fi view-ok" id="day_date" style="width:auto;padding:5px 10px;font-size:12px" onchange="onDayDateChange()">
@@ -704,15 +631,8 @@
                 <div id="day_note_saved" style="font-size:10px;color:var(--text3);margin-top:3px;min-height:14px"></div>
             </div>
         </div>
-            </div>
-        </div>
-        <!-- ✅ Tasks sub-section -->
-        <div style="margin-bottom:8px">
-            <button onclick="(function(){var b=document.getElementById('today_tasks_body');var a=document.getElementById('today_tasks_arr');var h=b.style.display==='none';b.style.display=h?'block':'none';a.textContent=h?'▼':'▶';})()" style="background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:12px 14px;width:100%;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;font-weight:700;color:var(--text1);font-family:inherit;outline:none">
-                <span>✅ Tasks</span><span id="today_tasks_arr">▶</span>
-            </button>
-            <div id="today_tasks_body" style="display:none;margin-top:8px">
-        <div class="card">
+        <!-- ✅ Tasks -->
+        <div class="card list-card">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
                 <div class="card-title" style="margin-bottom:0">Active Tasks</div>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -728,7 +648,7 @@
             </div>
         </div>
 
-        <div class="card admin-only">
+        <div class="card add-card admin-only">
             <div class="card-title">Add New Task</div>
             <div class="form-grid">
                 <div class="form-group"><label>Task Name</label><input class="fi" id="t_name" placeholder="e.g. Apply for passport"></div>
@@ -749,7 +669,7 @@
             <button class="btn btn-o" onclick="addTask()">+ Add Task</button>
         </div>
 
-        <div class="card" id="tasks_done_card" style="display:none">
+        <div class="card list-card" id="tasks_done_card" style="display:none">
             <div class="card-title">✅ Completed Tasks</div>
             <div class="table-wrap">
                 <table id="tasks_done_tbl">
@@ -757,9 +677,7 @@
                 </table>
             </div>
         </div>
-            </div>
-        </div>
-        <!-- Danger Zone: Today — always visible, outside all collapsibles -->
+        <!-- Danger Zone: Today — always visible -->
         <div class="card admin-only danger-zone">
             <div class="dz-title">⚠️ Danger Zone</div>
             <div class="dz-sub">Permanently erase data. Cannot be undone.</div>
@@ -775,12 +693,7 @@
     <!-- ═══ GOALS 🎯 ═══ -->
     <div id="sec_goals" class="section">
         <!-- Wish List -->
-        <div style="margin-bottom:8px">
-        <button onclick="(function(){var b=document.getElementById('g_wish_body');var a=document.getElementById('g_wish_body_arr');var h=b.style.display==='none';b.style.display=h?'block':'none';a.textContent=h?'▼':'▶';})()" style="background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:12px 14px;width:100%;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;font-weight:700;color:var(--text1);font-family:inherit;outline:none">
-            <span>🛍️ Wish List</span><span id="g_wish_body_arr">▶</span>
-        </button>
-        <div id="g_wish_body" style="display:none;margin-top:8px">
-        <div class="card">
+        <div class="card add-card">
             <div class="card-title">🛍️ Add to Wish List</div>
             <div class="form-grid">
                 <div class="form-group"><label>Item</label><input class="fi" id="sh_item" placeholder="e.g. Sky blue T-shirt"></div>
@@ -797,25 +710,18 @@
             <div class="form-group" style="margin-bottom:10px"><label>Notes</label><input class="fi" id="sh_notes" placeholder="Size, colour, brand..."></div>
             <button class="btn btn-o admin-only" onclick="addShopItem()">+ Add to Wish List</button>
         </div>
-        <div class="card">
+        <div class="card list-card">
             <div class="shop-sum" id="sh_summary"></div>
             <div class="card-title">🎯 Wish List — To Buy</div>
             <div class="table-wrap"><table id="sh_tobuy_tbl"><tr><th>Item</th><th>For</th><th>Priority</th><th>Budget <span class="cur-sym">₹</span></th><th>Notes</th><th>Actions</th></tr></table></div>
         </div>
-        <div class="card" id="sh_bought_card" style="display:none">
+        <div class="card list-card" id="sh_bought_card" style="display:none">
             <div class="card-title">✅ Purchased — Memory Lane</div>
             <div class="table-wrap"><table id="sh_bought_tbl"><tr><th>Item</th><th>For</th><th>Bought On</th><th>Budget <span class="cur-sym">₹</span></th><th>Spent <span class="cur-sym">₹</span></th><th>Feeling</th></tr></table></div>
         </div>
-        </div>
-        </div>
         <!-- Notes -->
-        <div style="margin-bottom:8px">
-        <button onclick="(function(){var b=document.getElementById('g_notes_body');var a=document.getElementById('g_notes_body_arr');var h=b.style.display==='none';b.style.display=h?'block':'none';a.textContent=h?'▼':'▶';})()" style="background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:12px 14px;width:100%;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;font-weight:700;color:var(--text1);font-family:inherit;outline:none">
-            <span>📝 Notes</span><span id="g_notes_body_arr">▶</span>
-        </button>
-        <div id="g_notes_body" style="display:none;margin-top:8px">
         <div class="info-o">One place to jot anything down — a reminder, a number, an idea, a question, or something to pick up. If it crosses your mind, note it here before it fades.</div>
-        <div class="card admin-only">
+        <div class="card add-card admin-only">
             <div class="card-title">📝 Add a Note</div>
             <div class="form-grid">
                 <div class="form-group"><label>Title</label><input class="fi" id="nt_title" placeholder="e.g. Keys are on the shelf near the door"></div>
@@ -834,7 +740,7 @@
             </div>
             <button class="btn btn-o" onclick="addNote()">+ Save Note</button>
         </div>
-        <div class="card">
+        <div class="card list-card">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
                 <div class="card-title" style="margin-bottom:0">🗂️ All Notes</div>
                 <div style="display:flex;gap:6px;align-items:center">
@@ -844,8 +750,6 @@
             </div>
             <select id="notes_filter_row" class="fs" style="margin-bottom:10px" onchange="setNotesFilter(this.value)"></select>
             <div id="notes_list"></div>
-        </div>
-        </div>
         </div>
         <!-- Danger Zone: Goals -->
         <div class="card admin-only danger-zone">
@@ -931,15 +835,25 @@
                 <div id="up_plan_title" style="font-size:18px;font-weight:800;color:var(--text1)">🚀 Prep</div>
                 <div id="up_plan_sub" style="font-size:12px;color:var(--text3);margin-top:2px">Tap "Edit Info" to set your goal, then "+ New Category" below to start building your plan.</div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
                 <div style="font-size:11px;color:var(--text3)">Started: <strong id="up_start_label" style="color:var(--text2)">Not set</strong></div>
                 <button class="btn btn-w btn-sm admin-only" onclick="setUpskillStartDate()">📅 Set Start</button>
                 <button class="btn btn-w btn-sm admin-only" onclick="openPrepMetaModal()" style="font-size:11px">Edit Info</button>
-                <div style="margin-left:auto;display:flex;gap:5px">
-                    <button id="up_f_all"  class="btn btn-o btn-sm" onclick="setUpFilter('all')"  style="font-size:11px">All</button>
-                    <button id="up_f_todo" class="btn btn-w btn-sm" onclick="setUpFilter('todo')" style="font-size:11px">To Do</button>
-                    <button id="up_f_done" class="btn btn-w btn-sm" onclick="setUpFilter('done')" style="font-size:11px">✅ Done</button>
-                </div>
+            </div>
+            <div style="display:flex;gap:5px">
+                <button id="up_f_all"  class="btn btn-o btn-sm" onclick="setUpFilter('all')"  style="font-size:11px;flex:1">All</button>
+                <button id="up_f_todo" class="btn btn-w btn-sm" onclick="setUpFilter('todo')" style="font-size:11px;flex:1">To Do</button>
+                <button id="up_f_done" class="btn btn-w btn-sm" onclick="setUpFilter('done')" style="font-size:11px;flex:1">✅ Done</button>
+            </div>
+        </div>
+
+        <!-- Log Study Session -->
+        <div class="card add-card admin-only">
+            <div class="card-title">📚 Log Study Session</div>
+            <div style="display:flex;gap:8px">
+                <input class="fi" id="up_study_topic" placeholder="Topic…" style="flex:2">
+                <input type="number" class="fi" id="up_study_hrs" placeholder="hrs" style="flex:1" step="0.5">
+                <button class="btn btn-o btn-sm" onclick="var t=document.getElementById('up_study_topic').value;var h=document.getElementById('up_study_hrs').value;if(t&&h){logStudySession(t,h);document.getElementById('up_study_topic').value='';document.getElementById('up_study_hrs').value='';appToast('Logged: '+h+'h on '+t);}else{appToast('Fill both fields');}">+ Log</button>
             </div>
         </div>
 
@@ -947,7 +861,7 @@
         <div id="up_phases_wrap"></div>
 
         <!-- Add Custom Topic -->
-        <div class="card admin-only">
+        <div class="card add-card admin-only">
             <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">➕ Add Custom Topic <button class="btn btn-w btn-sm" style="font-size:11px" onclick="openCategoryModal(null)">+ New Category</button></div>
             <div class="form-grid" style="margin-bottom:8px">
                 <div class="form-group"><label>Phase</label>
@@ -1335,130 +1249,6 @@
     </div>
 </div>
 
-<!-- SETUP WIZARD MODAL -->
-<div class="auth-overlay" id="setup_wizard_overlay" style="display:none">
-    <div class="auth-box" style="max-width:420px;width:92%">
-        <div class="auth-logo">&#128295;</div>
-        <div class="auth-title">Welcome! Let&#39;s set things up</div>
-        <div class="auth-sub" id="wizard_step_counter" style="margin-bottom:16px">Step 1 of 3</div>
-
-        <!-- Step 1: App basics -->
-        <div id="wizard_step_1">
-            <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:12px">App Basics</div>
-            <div style="margin-bottom:10px">
-                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">App Name</label>
-                <input class="auth-input" id="wiz_app_name" type="text" placeholder="My Life Dashboard" style="margin-bottom:0">
-            </div>
-            <div style="margin-bottom:10px">
-                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Currency Symbol</label>
-                <input class="auth-input" id="wiz_currency" type="text" placeholder="&#8377; or $ or &#8364;" style="margin-bottom:0">
-            </div>
-            <div style="margin-bottom:16px">
-                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Base URL</label>
-                <input class="auth-input" id="wiz_base_url" type="text" placeholder="https://yourname.github.io/yourrepo/" style="margin-bottom:0">
-            </div>
-        </div>
-
-        <!-- Step 2: Firebase config -->
-        <div id="wizard_step_2" style="display:none">
-            <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:8px">Firebase Config</div>
-            <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Paste your Firebase config JSON below (the entire FB_CONFIG object value). Leave blank to use local-only mode (no sync).</div>
-            <textarea id="wiz_firebase_config" class="ft" placeholder="{
-  &quot;apiKey&quot;: &quot;...&quot;,
-  &quot;authDomain&quot;: &quot;...&quot;,
-  &quot;databaseURL&quot;: &quot;...&quot;,
-  &quot;projectId&quot;: &quot;...&quot;,
-  &quot;storageBucket&quot;: &quot;...&quot;,
-  &quot;messagingSenderId&quot;: &quot;...&quot;,
-  &quot;appId&quot;: &quot;...&quot;
-}" style="min-height:130px;font-size:11px;font-family:monospace;margin-bottom:8px;width:100%;box-sizing:border-box"></textarea>
-        </div>
-
-        <!-- Step 3: Set passwords -->
-        <div id="wizard_step_3" style="display:none">
-            <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:8px">Set Passwords</div>
-            <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Passwords are stored as SHA-256 hashes &#8212; never in plain text.</div>
-            <div style="margin-bottom:10px">
-                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Admin Password</label>
-                <input class="auth-input" id="setup_admin_pw" type="password" placeholder="Admin password" style="margin-bottom:6px">
-                <input class="auth-input" id="setup_admin_pw_confirm" type="password" placeholder="Confirm admin password" style="margin-bottom:0">
-            </div>
-            <div style="margin-bottom:8px">
-                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Read-only Password</label>
-                <input class="auth-input" id="setup_ro_pw" type="password" placeholder="Read-only password" style="margin-bottom:6px">
-                <input class="auth-input" id="setup_ro_pw_confirm" type="password" placeholder="Confirm read-only password" style="margin-bottom:0">
-            </div>
-            <div class="auth-err" id="wizard_err" style="min-height:16px"></div>
-        </div>
-
-        <!-- Navigation -->
-        <div style="display:flex;gap:8px;margin-top:8px">
-            <button id="wizard_prev_btn" class="btn" style="flex:1;background:var(--bg3);border:0.5px solid var(--border);color:var(--text1);display:none" onclick="wizardPrev()">&#8592; Back</button>
-            <button id="wizard_next_btn" class="btn btn-o" style="flex:1" onclick="wizardNext()">Next &#8594;</button>
-            <button id="wizard_finish_btn" class="btn btn-o" style="flex:1;display:none" onclick="finishSetup()">Finish Setup</button>
-        </div>
-
-        <div style="text-align:center;margin-top:14px">
-            <a href="#" style="font-size:11px;color:var(--text3);text-decoration:underline" onclick="skipSetup();return false">Skip setup &#8212; I&#39;ll configure later</a>
-        </div>
-    </div>
-</div>
-
-<!-- APP SETTINGS MODAL -->
-<div class="auth-overlay" id="app_settings_overlay" style="display:none" onclick="if(event.target===this)closeAppSettings()">
-    <div class="auth-box" style="max-width:440px;width:92%;max-height:90vh;overflow-y:auto">
-        <div class="auth-logo">&#9881;&#65039;</div>
-        <div class="auth-title">App Settings</div>
-        <div class="auth-sub" style="margin-bottom:16px">Reconfigure your dashboard</div>
-
-        <div style="margin-bottom:10px">
-            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">App Name</label>
-            <input class="auth-input" id="appsettings_app_name" type="text" placeholder="My Life Dashboard" style="margin-bottom:0">
-        </div>
-        <div style="margin-bottom:10px">
-            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Currency Symbol</label>
-            <input class="auth-input" id="appsettings_currency" type="text" placeholder="&#8377; or $ or &#8364;" style="margin-bottom:0">
-        </div>
-        <div style="margin-bottom:10px">
-            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Base URL</label>
-            <input class="auth-input" id="appsettings_base_url" type="text" placeholder="https://yourname.github.io/yourrepo/" style="margin-bottom:0">
-        </div>
-
-        <div style="margin-bottom:10px">
-            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Firebase Config JSON</label>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Leave blank to use local-only mode (no sync).</div>
-            <textarea id="appsettings_firebase_config" class="ft" placeholder="{
-  &quot;apiKey&quot;: &quot;...&quot;,
-  &quot;authDomain&quot;: &quot;...&quot;,
-  &quot;databaseURL&quot;: &quot;...&quot;,
-  &quot;projectId&quot;: &quot;...&quot;,
-  &quot;storageBucket&quot;: &quot;...&quot;,
-  &quot;messagingSenderId&quot;: &quot;...&quot;,
-  &quot;appId&quot;: &quot;...&quot;
-}" style="min-height:110px;font-size:11px;font-family:monospace;width:100%;box-sizing:border-box"></textarea>
-        </div>
-
-        <div style="border-top:0.5px solid var(--border);margin:12px 0;padding-top:12px">
-            <div style="font-size:12px;font-weight:700;color:var(--text1);margin-bottom:10px">Change Passwords</div>
-            <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Passwords are stored as SHA-256 hashes &#8212; never in plain text. Leave blank to keep existing password.</div>
-            <div style="margin-bottom:10px">
-                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">New Admin Password</label>
-                <input class="auth-input" id="appsettings_admin_pw" type="password" placeholder="Leave blank to keep current" style="margin-bottom:6px">
-                <input class="auth-input" id="appsettings_admin_pw_confirm" type="password" placeholder="Confirm new admin password" style="margin-bottom:0">
-            </div>
-            <div style="margin-bottom:8px">
-                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">New Read-only Password</label>
-                <input class="auth-input" id="appsettings_ro_pw" type="password" placeholder="Leave blank to keep current" style="margin-bottom:6px">
-                <input class="auth-input" id="appsettings_ro_pw_confirm" type="password" placeholder="Confirm new read-only password" style="margin-bottom:0">
-            </div>
-        </div>
-
-        <div class="auth-err" id="appsettings_err" style="min-height:16px"></div>
-        <button class="btn btn-o" style="width:100%;margin-bottom:8px" onclick="saveAppSettings()">Save Settings</button>
-        <button class="modal-cancel" onclick="closeAppSettings()">Cancel</button>
-    </div>
-</div>
-
 <!-- AUTH MODAL -->
 <div class="auth-overlay" id="auth_overlay">
     <div class="auth-box">
@@ -1471,20 +1261,6 @@
     </div>
 </div>
 
-
-<!-- MONTH PICKER MODAL -->
-<div class="mpicker-overlay" id="mpicker" onclick="if(event.target===this)closePicker()">
-    <div class="mpicker-sheet">
-        <div class="mpicker-title">Select Month</div>
-        <div class="mpicker-year">
-            <button onclick="changePickerYear(-1)">‹</button>
-            <span id="picker_year">2025</span>
-            <button onclick="changePickerYear(1)">›</button>
-        </div>
-        <div class="mpicker-months" id="picker_months"></div>
-        <button class="mpicker-cancel" onclick="closePicker()">Cancel</button>
-    </div>
-</div>
 
 <script>
     // ═══════════════════════════════════════
@@ -1661,11 +1437,9 @@
       'tasks_active_list','tasks_done_list','expenses_list','exp_limits',
       'theme','notif_dismissed',
       'shop_wishlist','shop_bought',
-      'custom_sched_rows','sched_base_edits',
-      'water_log','ql_tabs',
-      'day_type_schedules','day_type_log','tab_visibility',
+      'day_type_log','tab_visibility',
       'recurring_expenses','recurring_logged',
-      'score_weights','day_notes','exp_tags_custom','notes','notes_categories',
+      'score_weights','day_notes','notes','notes_categories',
       'upskill_progress','upskill_notes','upskill_meta','upskill_custom','hidden_tabs',
       'day_type_defs','upskill_overrides','upskill_plan_data','study_sessions',
       'fitness_sessions','fitness_templates','fitness_groups','fitness_day_map','sched_notes',
@@ -1850,22 +1624,6 @@
         });
     }
 
-    // Pull shopping keys fresh from Firebase then re-render
-    function pullShoppingFromFirebase() {
-      if (!_fbRef || !_fbReady) { renderShopping(); return; }
-      _fbRef.once('value').then(function(snap) {
-        var data = snap ? snap.val() : null;
-        if (data && typeof data === 'object') {
-          ['shop_wishlist','shop_bought'].forEach(function(k) {
-            if (Object.prototype.hasOwnProperty.call(data, k)) {
-              try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
-            }
-          });
-        }
-        renderShopping();
-      }).catch(function() { renderShopping(); });
-    }
-
     // ═══════════════════════════════════════
     // TAB SWITCHING
     // ═══════════════════════════════════════
@@ -1900,10 +1658,10 @@
         var tab = document.getElementById('tab_' + name);
         if (tab) { tab.classList.add('active'); tab.setAttribute('aria-selected','true'); }
         if (name === 'overview') { renderScores(); renderWeeklyReport(); renderScoreTrend(30); renderTodayChecklist(); renderOverviewFocus(); }
-        if (name === 'today') { ['sched','tasks'].forEach(function(s){var b=document.getElementById('today_'+s+'_body');var a=document.getElementById('today_'+s+'_arr');if(b)b.style.display='none';if(a)a.textContent='▶';}); buildSched(); renderTasks(); }
+        if (name === 'today') { buildSched(); renderTasks(); }
         if (name === 'health') { fitInit(); }
         if (name === 'upskill') { renderUpskill(); renderPrepTodayCard(); }
-        if (name === 'goals') { ['wish','notes'].forEach(function(s){var b=document.getElementById('g_'+s+'_body');var a=document.getElementById('g_'+s+'_body_arr');if(b)b.style.display='none';if(a)a.textContent='▶';}); renderScoreWeights(); renderShopping(); renderNotes(); }
+        if (name === 'goals') { renderScoreWeights(); renderShopping(); renderNotes(); }
         if (name === 'expenses') { renderExpenses(); renderExpensePattern(); }
     }
 
@@ -2051,67 +1809,6 @@
         ls_set('study_sessions', sessions);
     }
 
-    var _ciStep = 0;
-    var _ciSteps = ['schedule','expense'];
-
-    function openDailyCheckin() {
-        _ciStep = 0;
-        renderCIStep();
-        document.getElementById('ci_overlay').classList.add('open');
-    }
-
-    function closeDailyCheckin() {
-        document.getElementById('ci_overlay').classList.remove('open');
-        renderTodayChecklist();
-        renderScores();
-    }
-
-    function ciNext() {
-        _ciStep++;
-        if (_ciStep >= _ciSteps.length) { closeDailyCheckin(); return; }
-        renderCIStep();
-    }
-
-    function ciSkip() { ciNext(); }
-
-    function renderCIStep() {
-        var step = _ciSteps[_ciStep];
-        var total = _ciSteps.length;
-        var el = document.getElementById('ci_content');
-        var prog = document.getElementById('ci_progress');
-        var today = getTodayISO();
-        if (prog) prog.textContent = 'Step ' + (_ciStep + 1) + ' of ' + total;
-
-        var html = '';
-        if (step === 'schedule') {
-            var dayType = getDayTypeLog()[today];
-            html += '<div style="font-size:22px;text-align:center;margin-bottom:8px">📅</div>';
-            html += '<div style="font-size:16px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--text1)">Did you log your schedule?</div>';
-            if (dayType) {
-                html += '<div style="font-size:12px;color:var(--green);text-align:center;margin-bottom:12px">Already set: ' + dayType + ' day ✅</div>';
-            } else {
-                html += '<div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:12px">Not set yet for today</div>';
-                html += '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px">';
-                var _defs = getDayTypeDefs();
-                _defs.forEach(function(def) {
-                    html += '<button class=\"btn btn-w\" onclick=\"setDayType(\'' + def.id + '\');ciNext()\">' + (def.icon||'📅') + ' ' + esc(def.label) + '</button>';
-                });
-                html += '</div>';
-            }
-        } else if (step === 'expense') {
-            html += '<div style="font-size:22px;text-align:center;margin-bottom:8px">💸</div>';
-            html += '<div style="font-size:16px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--text1)">Quick expense</div>';
-            html += '<div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:12px">Add today\'s spending</div>';
-            html += '<div class=\"form-grid\" style=\"margin-bottom:10px\">';
-            html += '<div class=\"form-group\"><label>What did you spend on?</label><input class=\"fi\" id=\"ci_ex_desc\" placeholder=\"e.g. Lunch, Auto\"></div>';
-            html += '<div class=\"form-group\"><label>Amount (' + getCurSym() + ')</label><input type=\"number\" class=\"fi\" id=\"ci_ex_amt\" placeholder=\"0\"></div>';
-            html += '</div>';
-            html += '<button class=\"btn btn-o\" style=\"width:100%\" onclick=\"var d=document.getElementById(\'ci_ex_desc\').value;var a=document.getElementById(\'ci_ex_amt\').value;if(d&&a){var today=getTodayISO();var ex=getExpenses();var id=newId();ex[id]={id:id,date:today,desc:d,amt:parseFloat(a),type:\'Variable\',vartype:\'Variable\',nature:\'essential\',notes:\'\'};ls_set(\'expenses_list\',ex);ciNext();}else{appToast(\'Fill both fields or skip\');}\">Save & Continue →</button>';
-        }
-        if (el) el.innerHTML = html;
-    }
-
-
     function ls_get(key) {
       try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
     }
@@ -2214,48 +1911,8 @@
 
     // Seed data used only on first run (when day_type_defs is empty)
     var DAY_TYPE_DEFAULTS_SEED = {
-      office:  { label: '🏢 Office',       schedule: [
-        {time:'6:30 AM', task:'Wake up + 500ml water'},
-        {time:'7:00 AM', task:'Morning cardio 30 min'},
-        {time:'9:30 AM', task:'Meal prep + packed'},
-        {time:'10:00 AM', task:'Leave for office'},
-        {time:'1:30 PM', task:'Eat Meal 1 (salad)'},
-        {time:'3:30 PM', task:'Green tea'},
-        {time:'5:00 PM', task:'Pre-workout snack'},
-        {time:'5:30 PM', task:'Gym session'},
-        {time:'8:00 PM', task:'Eat Meal 2'},
-        {time:'10:30 PM', task:'Sleep'}
-      ]},
-      wfh:     { label: '🏠 WFH',           schedule: [
-        {time:'6:30 AM', task:'Wake up + 500ml water'},
-        {time:'7:00 AM', task:'Morning cardio 30 min'},
-        {time:'9:00 AM', task:'Start work'},
-        {time:'1:00 PM', task:'Lunch + 15 min walk'},
-        {time:'5:00 PM', task:'End work focus block'},
-        {time:'5:30 PM', task:'Gym or evening walk'},
-        {time:'8:00 PM', task:'Dinner'},
-        {time:'10:30 PM', task:'Sleep'}
-      ]},
-      weekend: { label: '🌴 Weekend / Holiday', schedule: [
-        {time:'7:30 AM', task:'Wake up (relaxed)'},
-        {time:'8:00 AM', task:'Light walk or stretch'},
-        {time:'9:00 AM', task:'Breakfast'},
-        {time:'11:00 AM', task:'Personal errands / chores'},
-        {time:'1:00 PM', task:'Lunch'},
-        {time:'3:00 PM', task:'Free time / hobby'},
-        {time:'7:00 PM', task:'Dinner'},
-        {time:'11:00 PM', task:'Sleep'}
-      ]},
-      native:  { label: '🏡 WFH from Native', schedule: [
-        {time:'6:30 AM', task:'Wake up + water'},
-        {time:'7:30 AM', task:'Morning walk'},
-        {time:'9:00 AM', task:'Start WFH'},
-        {time:'1:00 PM', task:'Home lunch'},
-        {time:'5:00 PM', task:'End work'},
-        {time:'6:00 PM', task:'Evening activity'},
-        {time:'8:30 PM', task:'Dinner'},
-        {time:'10:30 PM', task:'Sleep'}
-      ]}
+      work:    { label: '🏢 Work',    schedule: [] },
+      holiday: { label: '🌴 Holiday', schedule: [] }
     };
 
     // Returns { key: { label, schedule: [{time, task}] } } — always from day_type_defs.
@@ -2281,12 +1938,12 @@
     function getDayTypeWeekMap() {
       var saved = ls_get('day_type_week_map');
       if (saved && Object.keys(saved).length > 0) return saved;
-      // First run: seed a sensible preset if the familiar office/weekend keys exist
+      // First run: seed a sensible preset if the familiar work/holiday keys exist
       var defs = getDayTypeDefs();
       var map = {};
       DT_WEEK_ORDER.forEach(function(d) { map[d] = null; });
-      if (defs.office) { ['mon','tue','wed','thu','fri'].forEach(function(d){ map[d] = 'office'; }); }
-      if (defs.weekend) { ['sat','sun'].forEach(function(d){ map[d] = 'weekend'; }); }
+      if (defs.work) { ['mon','tue','wed','thu','fri'].forEach(function(d){ map[d] = 'work'; }); }
+      if (defs.holiday) { ['sat','sun'].forEach(function(d){ map[d] = 'holiday'; }); }
       saveDayTypeWeekMap(map);
       return map;
     }
@@ -2608,7 +2265,6 @@
     }
 
     // ── Day Type Manager modal ─────────────────────────────────────────────────
-    function openManageDayTypes() { openDayTypeManager(); } // alias from HTML ⚙️ button
 
     function openDayTypeManager() {
       renderDayTypeManagerList();
@@ -4072,8 +3728,8 @@
     // ERASE / DANGER ZONE (admin-only)
     // ═══════════════════════════════════════
     var _ERASE = {
-      schedule:  { label:'Schedule Logs',               keys:['sched','day_type_log','custom_sched_rows','sched_base_edits','day_type_schedules'], cb:function(){ buildSched(); renderDayTypeOverrideList(); } },
-      daytypedefs: { label:'Day Type Definitions',          keys:['day_type_defs','day_type_schedules','day_type_week_map'],                 cb:function(){ renderDayTypeButtons(); renderDayTypeEditButtons(); renderDayTypeWeekMapList(); renderDayTypeOverrideTypeSelect(); renderDayTypeOverrideList(); buildSched(); } },
+      schedule:  { label:'Schedule Logs',               keys:['sched','day_type_log'], cb:function(){ buildSched(); renderDayTypeOverrideList(); } },
+      daytypedefs: { label:'Day Type Definitions',          keys:['day_type_defs','day_type_week_map'],                 cb:function(){ renderDayTypeButtons(); renderDayTypeEditButtons(); renderDayTypeWeekMapList(); renderDayTypeOverrideTypeSelect(); renderDayTypeOverrideList(); buildSched(); } },
       tasks:     { label:'Tasks',                        keys:['tasks_active_list','tasks_done_list'],                                              cb:function(){ renderTasks(); } },
       daynotes:  { label:'Day Notes',                    keys:['day_notes'],                                                                        cb:function(){ buildSched(); } },
       focus:     { label:'Monthly Focus',                keys:['monthly_focus'],                                                                    cb:function(){ renderFocusDisplay(); } },
@@ -4081,7 +3737,7 @@
       notes:     { label:'Notes',                        keys:['notes'],                                                                            cb:function(){ renderNotes(); } },
       sweights:  { label:'Score Weights',                keys:['score_weights'],                                                                    cb:function(){ renderScoreWeights(); } },
       explimits: { label:'Expense Limits',               keys:['exp_limits'],                                                                       cb:function(){ renderExpenses(); } },
-      expenses:  { label:'All Expense Entries',          keys:['expenses_list','exp_tags_custom'],                                                  cb:function(){ renderExpenses(); renderExpensePattern(); } },
+      expenses:  { label:'All Expense Entries',          keys:['expenses_list'],                                                  cb:function(){ renderExpenses(); renderExpensePattern(); } },
       recurring: { label:'Recurring Expenses',           keys:['recurring_expenses','recurring_logged'],                                            cb:function(){ renderExpenses(); } },
       prep:      { label:'Prep / Upskill Progress',      keys:['upskill_progress','upskill_notes','upskill_meta','upskill_custom'], cb:function(){ renderUpskill(); } },
     };
@@ -4616,195 +4272,10 @@
         }, duration || 2200);
     }
 
-    // ═══════════════════════════════════════
-    // MONTH PICKER
-    // ═══════════════════════════════════════
-    var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    var pickerYear = new Date().getFullYear();
-    var pickerSelectedMonth = null; // 0-indexed
-
-    function openPicker() {
-      pickerYear = new Date().getFullYear();
-      pickerSelectedMonth = null;
-      var cur = document.getElementById('lim_month').value;
-      if (cur && cur.length === 7) {
-        pickerYear = parseInt(cur.slice(0,4));
-        pickerSelectedMonth = parseInt(cur.slice(5,7)) - 1;
-      }
-      renderPickerMonths();
-      document.getElementById('picker_year').textContent = pickerYear;
-      document.getElementById('mpicker').classList.add('open');
-    }
-
-    function closePicker() {
-      document.getElementById('mpicker').classList.remove('open');
-    }
-
-    function changePickerYear(delta) {
-      pickerYear += delta;
-      document.getElementById('picker_year').textContent = pickerYear;
-      renderPickerMonths();
-    }
-
-    function renderPickerMonths() {
-      var html = '';
-      MONTHS.forEach(function(m, i) {
-        var sel = (pickerSelectedMonth === i) ? ' sel' : '';
-        html += '<button class="' + sel + '" onclick="selectPickerMonth(' + i + ')">' + m + '</button>';
-      });
-      document.getElementById('picker_months').innerHTML = html;
-    }
-
-    function selectPickerMonth(idx) {
-      pickerSelectedMonth = idx;
-      var mm = String(idx + 1).padStart(2, '0');
-      var val = pickerYear + '-' + mm;
-      var hiddenInput = document.getElementById('lim_month');
-      if (hiddenInput) hiddenInput.value = val;
-      renderPickerMonths();
-      closePicker();
-    }
-
     // Escape HTML
     function esc(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-
-    // ═══════════════════════════════════════
-    // WATER TRACKER
-    // ═══════════════════════════════════════
-    var WATER_TARGET = 4000; // ml
-    var WATER_UNIT   = 250;  // ml per cup
-
-    function getWaterData() { return ls_get('water_log'); }
-
-    function getTodayWater() {
-      var d = isoD(new Date());
-      var log = getWaterData();
-      return log[d] || 0;
-    }
-
-    function addWater(ml) {
-      var d = isoD(new Date());
-      var log = getWaterData();
-      log[d] = Math.min((log[d] || 0) + ml, WATER_TARGET);
-      ls_set('water_log', log);
-      renderWater();
-    }
-
-    function resetWater() {
-      var d = isoD(new Date());
-      var log = getWaterData();
-      log[d] = 0;
-      ls_set('water_log', log);
-      renderWater();
-    }
-
-    function renderWater() {
-      var cups = Math.floor(WATER_TARGET / WATER_UNIT); // 12 cups
-      var drunk = getTodayWater();
-      var filledCups = Math.round(drunk / WATER_UNIT);
-      var el = document.getElementById('water_cups');
-      var lbl = document.getElementById('water_label');
-      if (!el) return;
-      var isROwater = _authRole === 'readonly';
-      var html = '';
-      for (var i = 0; i < cups; i++) {
-        var filled = i < filledCups;
-        html += '<button class="water-cup' + (filled?' filled':'') + '"' + (isROwater ? ' disabled style="pointer-events:none;opacity:0.6"' : ' onclick="addWater(' + WATER_UNIT + ')"') + '>💧</button>';
-      }
-      el.innerHTML = html;
-      if (lbl) {
-        var pct = Math.round(drunk / WATER_TARGET * 100);
-        lbl.textContent = drunk.toLocaleString('en-IN') + ' / ' + WATER_TARGET.toLocaleString('en-IN') + ' ml (' + pct + '%)';
-        lbl.style.color = drunk >= WATER_TARGET ? 'var(--green)' : drunk >= 2000 ? 'var(--yellow)' : 'var(--text3)';
-      }
-    }
-
-    function renderWaterGraph(days) {
-        days = days || 14;
-        // Highlight active button
-        [7,14,30].forEach(function(n) {
-            var b = document.getElementById('wg_' + n);
-            if (b) { b.style.background = n === days ? 'var(--accent)' : ''; b.style.color = n === days ? '#fff' : ''; b.style.borderColor = n === days ? 'var(--accent)' : ''; }
-        });
-
-        var log = getWaterData();
-        var pts = [];
-        for (var di = days - 1; di >= 0; di--) {
-            var d = new Date(Date.now() - di * 86400000);
-            var ds = isoD(d);
-            pts.push({ ds: ds, ml: log[ds] || 0, isToday: di === 0,
-                label: di === 0 ? 'Today' : d.getDate() + '/' + (d.getMonth()+1) });
-        }
-
-        var W = 340, H = 120, PAD = { t:16, r:10, b:30, l:40 };
-        var gW = W - PAD.l - PAD.r;
-        var gH = H - PAD.t - PAD.b;
-        var maxMl = Math.max(WATER_TARGET, Math.max.apply(null, pts.map(function(p){ return p.ml; })));
-        var step = gW / Math.max(pts.length - 1, 1);
-
-        function xOf(i)  { return PAD.l + i * step; }
-        function yOf(ml) { return PAD.t + gH - (ml / maxMl * gH); }
-
-        // Build polyline points
-        var polyPts = pts.map(function(p, i) { return xOf(i) + ',' + yOf(p.ml); }).join(' ');
-
-        // Fill area path
-        var fillD = 'M' + xOf(0) + ',' + yOf(pts[0].ml);
-        pts.forEach(function(p, i) { if (i > 0) fillD += ' L' + xOf(i) + ',' + yOf(p.ml); });
-        fillD += ' L' + xOf(pts.length-1) + ',' + (PAD.t + gH) + ' L' + xOf(0) + ',' + (PAD.t + gH) + ' Z';
-
-        // Y-axis labels: 0, half, target
-        var yLabels = [0, WATER_TARGET/2, WATER_TARGET];
-
-        var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;min-width:280px;display:block" xmlns="http://www.w3.org/2000/svg">';
-
-        // Gradient def
-        svg += '<defs><linearGradient id="wgFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.03"/></linearGradient></defs>';
-
-        // Grid lines + Y labels
-        yLabels.forEach(function(ml) {
-            var y = yOf(ml);
-            var lbl = ml === 0 ? '0' : ml >= 1000 ? (ml/1000).toFixed(1)+'L' : ml+'ml';
-            svg += '<line x1="' + PAD.l + '" y1="' + y + '" x2="' + (W-PAD.r) + '" y2="' + y + '" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="' + (ml > 0 ? '3,3' : '') + '"/>';
-            svg += '<text x="' + (PAD.l - 4) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="8" fill="var(--text3)">' + lbl + '</text>';
-        });
-
-        // Target line (highlighted)
-        svg += '<line x1="' + PAD.l + '" y1="' + yOf(WATER_TARGET) + '" x2="' + (W-PAD.r) + '" y2="' + yOf(WATER_TARGET) + '" stroke="#4ade80" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>';
-
-        // Fill area
-        svg += '<path d="' + fillD + '" fill="url(#wgFill)"/>';
-
-        // Line
-        svg += '<polyline points="' + polyPts + '" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-
-        // Dots + X labels — only show every Nth label to avoid crowding
-        var showEvery = days <= 7 ? 1 : days <= 14 ? 2 : 5;
-        pts.forEach(function(p, i) {
-            var x = xOf(i), y = yOf(p.ml);
-            var metTarget = p.ml >= WATER_TARGET;
-            var dotColor = metTarget ? '#4ade80' : p.ml > 0 ? '#38bdf8' : 'var(--border)';
-            var r = p.isToday ? 5 : 3.5;
-            svg += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + dotColor + '" stroke="var(--bg2)" stroke-width="1.5"/>';
-            // Tooltip-style value above today's dot
-            if (p.isToday && p.ml > 0) {
-                svg += '<rect x="' + (x-16) + '" y="' + (y-20) + '" width="32" height="14" rx="3" fill="var(--accent)" opacity="0.9"/>';
-                svg += '<text x="' + x + '" y="' + (y-10) + '" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold">' + (p.ml >= 1000 ? (p.ml/1000).toFixed(1)+'L' : p.ml+'ml') + '</text>';
-            }
-            // X-axis labels
-            if (i % showEvery === 0 || p.isToday) {
-                svg += '<text x="' + x + '" y="' + (H - 5) + '" text-anchor="middle" font-size="8" fill="' + (p.isToday ? 'var(--accent)' : 'var(--text3)') + '" font-weight="' + (p.isToday ? 'bold' : 'normal') + '">' + p.label + '</text>';
-            }
-        });
-
-        svg += '</svg>';
-
-        var el = document.getElementById('water_graph');
-        if (el) el.innerHTML = svg;
-    }
-
 
     // ═══════════════════════════════════════
     // WEEKLY REPORT CARD
@@ -4993,146 +4464,11 @@
 
 
     // ═══════════════════════════════════════
-    // QUICK LOG MODAL
-    // ═══════════════════════════════════════
-    var ALL_TABS = [
-      {key:'overview',  label:'🏠 Overview'},
-      {key:'schedule',  label:'📅 My Day'},
-      {key:'tasks',     label:'✅ Tasks'},
-      {key:'expenses',  label:'💸 Expenses'},
-      {key:'goals',     label:'🎯 Goals'},
-    ];
-
-    function getQLTabs() {
-      var saved = ls_get('ql_tabs');
-      if (Object.keys(saved).length === 0) {
-        // Defaults
-        return ['expenses','tasks','schedule','overview'];
-      }
-      return saved.order || ['expenses','tasks','schedule','overview'];
-    }
-
-    function saveQLTabs(order) {
-      ls_set('ql_tabs', {order: order});
-    }
-
-    var _qlEditMode = false;
-
-    function openQuickLog() {
-      _qlEditMode = false;
-      renderQLContent();
-      document.getElementById('ql_overlay').classList.add('open');
-    }
-
-    function renderQLContent() {
-      var el = document.getElementById('ql_date_label');
-      var items = document.getElementById('ql_items');
-      if (!el || !items) return;
-
-      if (_qlEditMode) {
-        el.textContent = 'Customise Quick Log tabs';
-        var order = getQLTabs();
-        var html = '<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Active tabs (tap ✕ to remove):</div>';
-        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
-        order.forEach(function(key) {
-          var tab = ALL_TABS.find(function(t){ return t.key === key; });
-          if (!tab) return;
-          html += '<div style="display:flex;align-items:center;gap:4px;background:var(--bg3);border:0.5px solid var(--accent);border-radius:20px;padding:4px 10px">';
-          html += '<span style="font-size:12px;color:var(--text1)">' + tab.label + '</span>';
-          html += '<button onclick="removeQLTab(\'' + key + '\')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0 2px;font-family:inherit">✕</button>';
-          html += '</div>';
-        });
-        html += '</div>';
-        var inactiveTabs = ALL_TABS.filter(function(t){ return order.indexOf(t.key) === -1; });
-        if (inactiveTabs.length > 0) {
-          html += '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Add tabs:</div>';
-          html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
-          inactiveTabs.forEach(function(t) {
-            html += '<button class="btn btn-w" style="font-size:12px;text-align:left;padding:8px" onclick="addQLTab(\'' + t.key + '\')">' + t.label + ' +</button>';
-          });
-          html += '</div>';
-        } else {
-          html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:6px 0">All tabs added ✓</div>';
-        }
-        html += '<button class="btn btn-o btn-sm" style="width:100%;margin-top:12px" onclick="toggleQLEdit()">✓ Done</button>';
-        items.innerHTML = html;
-      } else {
-        el.textContent = '⚡ Quick Log · ' + isoD(new Date());
-        var html = '';
-
-        // ── Selected navigation tabs from customisation ──────────────
-        var order = getQLTabs().filter(Boolean);
-        if (order.length > 0) {
-          html += '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Quick Navigate</div>';
-          html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
-          order.forEach(function(key) {
-            var tab = ALL_TABS.find(function(t){ return t.key === key; });
-            if (!tab) return;
-            html += '<button class="btn btn-w" style="padding:12px 8px;font-size:13px;text-align:left;border-radius:10px" onclick="closeQuickLog();showTab(\'' + key + '\')">' + tab.label + '</button>';
-          });
-          html += '</div>';
-        }
-
-        // ── Fixed quick-action buttons ────────────────────────────────
-        html += '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Quick Actions</div>';
-        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
-        // Direct action: Quick expense mini-form
-        html += '<button class="btn btn-w" style="padding:12px 8px;font-size:13px;text-align:left;border-radius:10px" onclick="document.getElementById(\'ql_quick_exp\').style.display=document.getElementById(\'ql_quick_exp\').style.display===\'none\'?\'block\':\'none\'">' + '💸 Log Expense</button>';
-        // Direct action: Study session
-        html += '<button class="btn btn-w" style="padding:12px 8px;font-size:13px;text-align:left;border-radius:10px" onclick="document.getElementById(\'ql_quick_study\').style.display=document.getElementById(\'ql_quick_study\').style.display===\'none\'?\'block\':\'none\'">' + '📚 Study Session</button>';
-        // Daily check-in
-        html += '<button class="btn btn-w" style="padding:12px 8px;font-size:13px;text-align:left;border-radius:10px;background:rgba(255,107,0,0.12);border-color:var(--accent)" onclick="closeQuickLog();openDailyCheckin()">✅ Daily Check-in</button>';
-        html += '</div>';
-        // Inline expense mini-form (hidden by default)
-        html += '<div id="ql_quick_exp" style="display:none;background:var(--bg3);border-radius:10px;padding:10px;margin-bottom:8px">';
-        html += '<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Quick Expense</div>';
-        html += '<div style="display:flex;gap:6px;margin-bottom:6px"><input class="fi" id="ql_ex_desc" placeholder="Spent on…" style="flex:2;font-size:12px"><input type="number" class="fi" id="ql_ex_amt" placeholder="' + getCurSym() + '" style="flex:1;font-size:12px"></div>';
-        html += '<button class="btn btn-o btn-sm" style="width:100%" onclick="var d=document.getElementById(\'ql_ex_desc\').value;var a=document.getElementById(\'ql_ex_amt\').value;if(d&&a){var today=getTodayISO();var ex=getExpenses();var id=newId();ex[id]={id:id,date:today,desc:d,amt:parseFloat(a),type:\'Variable\',vartype:\'Variable\',nature:\'essential\',notes:\'\'};ls_set(\'expenses_list\',ex);document.getElementById(\'ql_ex_desc\').value=\'\';document.getElementById(\'ql_ex_amt\').value=\'\';document.getElementById(\'ql_quick_exp\').style.display=\'none\';renderTodayChecklist();renderLimits();renderExpensePattern();appToast(\'💸 Expense saved!\');}else{appToast(\'Fill both fields\');}">+ Save</button>';
-        html += '</div>';
-        // Inline study session form (hidden by default)
-        html += '<div id="ql_quick_study" style="display:none;background:var(--bg3);border-radius:10px;padding:10px;margin-bottom:8px">';
-        html += '<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Log Study Session</div>';
-        html += '<div style="display:flex;gap:6px;margin-bottom:6px"><input class="fi" id="ql_study_topic" placeholder="Topic…" style="flex:2;font-size:12px"><input type="number" class="fi" id="ql_study_hrs" placeholder="hrs" style="flex:1;font-size:12px" step="0.5"></div>';
-        html += '<button class="btn btn-o btn-sm" style="width:100%" onclick="var t=document.getElementById(\'ql_study_topic\').value;var h=document.getElementById(\'ql_study_hrs\').value;if(t&&h){logStudySession(t,h);document.getElementById(\'ql_study_topic\').value=\'\';document.getElementById(\'ql_study_hrs\').value=\'\';document.getElementById(\'ql_quick_study\').style.display=\'none\';appToast(\'Logged: \'+h+\'h on \'+t);}else{appToast(\'Fill both fields\');}">+ Log</button>';
-        html += '</div>';
-        if (_authRole === 'admin') {
-          html += '<button class="btn btn-w btn-sm" style="width:100%;font-size:11px" onclick="toggleQLEdit()">⚙️ Customise</button>';
-        }
-        items.innerHTML = html;
-      }
-    }
-
-    function toggleQLEdit() {
-      _qlEditMode = !_qlEditMode;
-      renderQLContent();
-    }
-
-    function addQLTab(key) {
-      var order = getQLTabs();
-      if (order.indexOf(key) === -1) order.push(key);
-      saveQLTabs(order);
-      renderQLContent();
-    }
-
-    function removeQLTab(key) {
-      var order = getQLTabs().filter(function(k){ return k !== key; });
-      saveQLTabs(order);
-      renderQLContent();
-    }
-
-    function closeQuickLog() {
-      _qlEditMode = false;
-      document.getElementById('ql_overlay').classList.remove('open');
-      renderScores();
-    }
-
-    // ═══════════════════════════════════════
     // AUTHENTICATION
     // ═══════════════════════════════════════
     // Passphrases stored as SHA-256 hashes — run sha256('your passphrase') to get hash
     // Current hashes correspond to your existing passphrases — change these after first login
     var AUTH_ADMIN_HASH    = null; // will be set async on first load
-    var AUTH_READONLY_HASH = null;
     var _authRole = null;
 
     async function sha256(str) {
@@ -5144,7 +4480,6 @@
     (async function() {
       var cfg = getAppConfig();
       AUTH_ADMIN_HASH    = cfg.authAdminHash    || null;
-      AUTH_READONLY_HASH = cfg.authReadonlyHash || null;
     })();
 
     function checkAuth() {
@@ -5176,12 +4511,6 @@
               console.warn('Firebase anon auth failed:', e.message);
             });
           }
-          if (!_fbReady) { initFirebase(); } else { reRenderAll(); }
-        } else if (hash === AUTH_READONLY_HASH) {
-          _authRole = 'readonly';
-          localStorage.setItem('_auth_role', 'readonly');
-          document.getElementById('auth_overlay').classList.remove('open');
-          applyAuthRole();
           if (!_fbReady) { initFirebase(); } else { reRenderAll(); }
         } else {
           err.textContent = 'Invalid code. Try again.';
@@ -5345,7 +4674,6 @@
               try { localStorage.setItem('app_config', JSON.stringify(remoteConfig)); } catch(e) {}
             }            // Reload the derived globals that were read at script-parse time
             AUTH_ADMIN_HASH    = remoteConfig.authAdminHash    || null;
-            AUTH_READONLY_HASH = remoteConfig.authReadonlyHash || null;
             // FIX 2 (audit): FB_CONFIG was evaluated as null at parse time before
             // _bootstrapFromFirebase ran. Re-assign it here so initFirebase() does
             // not short-circuit at the "if (!FB_CONFIG)" guard on line ~1945.
@@ -5489,13 +4817,9 @@
       renderRecurring();
       renderExpensePattern();
       renderLimits();
-      renderWater();
       renderShopping();
       renderNotes();
       renderGoalsTab();
-      // Show FAB for admin only
-      var fab = document.getElementById('ql_fab');
-      if (fab) fab.style.display = 'flex';
 
       // Apply tab visibility rules
       applyTabVisibility();
@@ -6000,9 +5324,6 @@
         closeTabManager();
     }
 
-    // scoreForTracker routes to schedScoreForDate (day-type aware)
-    function scoreForTracker(store, rows, dateStr) { return schedScoreForDate(dateStr); }
-
     // ═══════════════════════════════════════
     // UPSKILL — DATA
     // ═══════════════════════════════════════
@@ -6019,24 +5340,8 @@
     function savePrepPlanData(d){ls_set('upskill_plan_data',d);}
     function getTotalPrepDays(){
         // Returns the user-configured plan duration in calendar days (default 50).
-        // This is separate from getTopicDaysTotal() which sums curriculum topic-days.
         var meta = ls_get('upskill_meta');
         return parseInt(meta.totalDays) || 50;
-    }
-    function getTopicDaysTotal(){
-        // Sum of all topic `days` fields — the full curriculum size in study-days.
-        var plan=getPrepPlanData(),custom=ls_get('upskill_custom'),ov=ls_get('upskill_overrides')||{},tot=0;
-        plan.forEach(function(ph){
-            (ph.topics||[]).forEach(function(tp){var o=ov[tp.id];tot+=Number((o&&o.days!=null)?o.days:(tp.days||1));});
-            (custom[ph.id]||[]).forEach(function(tp){tot+=Number(tp.days||1);});
-        }); return tot;
-    }
-    function getRemainingPrepDays(){
-        var plan=getPrepPlanData(),custom=ls_get('upskill_custom'),prog=ls_get('upskill_progress'),ov=ls_get('upskill_overrides')||{},rem=0;
-        plan.forEach(function(ph){
-            (ph.topics||[]).forEach(function(tp){if(!prog[tp.id]){var o=ov[tp.id];rem+=Number((o&&o.days!=null)?o.days:(tp.days||1));}});
-            (custom[ph.id]||[]).forEach(function(tp){if(!prog[tp.id])rem+=Number(tp.days||1);});
-        }); return rem;
     }
     function openCategoryModal(catId){
         var plan=getPrepPlanData(),cat=catId?plan.find(function(p){return p.id===catId;}):null;
@@ -6123,15 +5428,6 @@
         appToast('✅ Current plan saved as your default! "Reset to Default" will restore this.');
     }
 
-    function quickCompleteTask(id){
-        var tasks=getTasks();if(!tasks[id])return;
-        var done=ls_get('tasks_done_list');
-        tasks[id].status='done';
-        tasks[id].completedDate=getTodayISO();
-        tasks[id].completedOn=getTodayISO(); // match field read by renderTasks done-table
-        done[id]=tasks[id];delete tasks[id];
-        ls_set('tasks_active_list',tasks);ls_set('tasks_done_list',done);appToast('✅ Task completed!');
-    }
     function quickCycleTaskStatus(id){
         var tasks=getTasks();if(!tasks[id])return;
         var cycle=['Todo','In Progress','Blocked'];var cur=tasks[id].status||'Todo';
@@ -6144,10 +5440,6 @@
     function viewTaskInToday(id) {
         showTab('today');
         setTimeout(function() {
-            var body = document.getElementById('today_tasks_body');
-            var arr  = document.getElementById('today_tasks_arr');
-            if (body) { body.style.display = 'block'; }
-            if (arr)  { arr.textContent = '▼'; }
             var wrap = document.getElementById('tasks_active_wrap');
             if (wrap) { wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         }, 80);
@@ -6320,15 +5612,15 @@
                 if (noteLink) html += '<a href="' + noteLink + '" target="_blank" style="font-size:10px;color:var(--teal);background:rgba(45,212,191,0.1);border-radius:20px;padding:1px 8px;text-decoration:none">📝 Notes ↗</a>';
                 html += '</div>';
                 if (noteText) html += '<div style="font-size:11px;color:var(--text2);margin-top:6px;background:var(--bg3);border-radius:8px;padding:6px 10px;line-height:1.5">' + esc(noteText) + '</div>';
-                // Action buttons — horizontal row below the topic content
+                html += '</div>'; // end content
+                // Action buttons — right-aligned column, using the free space to the right of the content
                 if (isAdmin) {
-                    html += '<div style="display:flex;flex-direction:row;gap:6px;margin-top:8px">';
-                    html += '<button class="btn btn-w btn-sm" style="padding:4px 8px;font-size:11px" onclick="openNoteModal(\'' + topic.id + '\',\'' + esc(topic.name).replace(/'/g,"\\'") + '\')">📝 Note</button>';
-                    html += '<button class="btn btn-w btn-sm" style="padding:4px 8px;font-size:11px" onclick="openEditModal(\'' + topic.id + '\',' + isCustom + ',\'' + phase.id + '\')">✏️ Edit</button>';
-                    if (isCustom) html += '<button class="btn btn-r btn-sm" style="padding:4px 8px;font-size:11px" onclick="deleteCustomTopic(\'' + phase.id + '\',\'' + topic.id + '\')">✕ Del</button>';
+                    html += '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:flex-end">';
+                    html += '<button class="btn btn-w btn-sm" style="padding:4px 8px;font-size:11px;white-space:nowrap" onclick="openNoteModal(\'' + topic.id + '\',\'' + esc(topic.name).replace(/'/g,"\\'") + '\')">📝 Note</button>';
+                    html += '<button class="btn btn-w btn-sm" style="padding:4px 8px;font-size:11px;white-space:nowrap" onclick="openEditModal(\'' + topic.id + '\',' + isCustom + ',\'' + phase.id + '\')">✏️ Edit</button>';
+                    if (isCustom) html += '<button class="btn btn-r btn-sm" style="padding:4px 8px;font-size:11px;white-space:nowrap" onclick="deleteCustomTopic(\'' + phase.id + '\',\'' + topic.id + '\')">✕ Del</button>';
                     html += '</div>';
                 }
-                html += '</div>'; // end content
                 html += '</div>';
             });
 
@@ -6514,7 +5806,7 @@
       var el = document.getElementById('auth_sub');
       if (!el) return;
       var hint = getAppConfig().authHint || 'Enter your access code to continue.';
-      el.innerHTML = hint + '<br>Read-only access is available.';
+      el.innerHTML = hint + '<br>Anyone with this link can view in read-only mode.';
     }
 
     // ═══════════════════════
@@ -6548,40 +5840,6 @@
 
     function prevSetupStep(n) {
       nextSetupStep(n);
-    }
-
-    function _showPasswordModal(title, password, onContinue) {
-      var overlay = document.createElement('div');
-      overlay.className = 'auth-overlay';
-      overlay.style.cssText = 'z-index:10002';
-      overlay.innerHTML = [
-        '<div class="auth-box" style="max-width:420px;text-align:center">',
-        '<div class="auth-logo">🔑</div>',
-        '<div class="auth-title">' + title + '</div>',
-        '<p style="color:var(--text2);font-size:13px;margin:8px 0 16px">Share this read-only password with anyone you want to give access. <strong>You will not see it again.</strong></p>',
-        '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px">',
-        '<span id="_pwm_text" style="flex:1;font-size:18px;font-weight:600;letter-spacing:2px;color:var(--accent);word-break:break-all">' + password + '</span>',
-        '<button onclick="_pwmCopy()" style="background:var(--bg4,var(--bg2));border:0.5px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text1);cursor:pointer;font-size:12px" id="_pwm_copy_btn">Copy</button>',
-        '</div>',
-        '<button class="btn btn-o" style="width:100%" onclick="_pwmContinue()">Got it — Continue</button>',
-        '</div>'
-      ].join('');
-      document.body.appendChild(overlay);
-      overlay.classList.add('open');
-      window._pwmCopy = function() {
-        var txt = password;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(txt).then(function() {
-            document.getElementById('_pwm_copy_btn').textContent = 'Copied!';
-          }).catch(function() { _copyFallback(txt); });
-        } else { _copyFallback(txt); }
-      };
-      window._pwmContinue = function() {
-        document.body.removeChild(overlay);
-        delete window._pwmCopy;
-        delete window._pwmContinue;
-        onContinue();
-      };
     }
 
     async function finishSetup() {
@@ -6730,8 +5988,8 @@
         '<summary style="font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;list-style:none">&#9432; What are these passwords for?</summary>',
         '<div style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.8">',
         '<p style="margin:0 0 6px"><strong>Admin password</strong> &mdash; Full access. You can log data, edit entries, change settings, add tasks, etc.</p>',
-        '<p style="margin:0 0 6px"><strong>Read-only password</strong> &mdash; View-only access. Great for sharing with a partner or family member who can see your dashboard but not edit it.</p>',
-        '<p style="margin:0"><strong>No password set</strong> &mdash; The app opens directly without any login screen. Fine for personal local use where only you access the file.</p>',
+        '<p style="margin:0 0 6px"><strong>No admin password entered</strong> &mdash; Anyone who opens this link (or is signed in without the password) gets automatic read-only, view-only access. Great for sharing with a partner or family member who can see your dashboard but not edit it.</p>',
+        '<p style="margin:0"><strong>No password set at all</strong> &mdash; The app opens directly without any login screen. Fine for personal local use where only you access the file.</p>',
         '<p style="margin:4px 0 0"><strong>Tip:</strong> See the README.md in the repository for a full walkthrough with examples.</p>',
         '</div>',
         '</details>',
@@ -6799,14 +6057,12 @@
       var fbMsgId      = getVal('as_fb_msgid');
       var fbAppId      = getVal('as_fb_appid');
       var adminPassNew = getVal('as_admin_pass');
-      var roPassNew    = getVal('as_ro_pass');
 
       var cfg = getAppConfig();
       cfg.currency = currency;
       cfg.authHint = authHint;
 
       if (adminPassNew) cfg.authAdminHash    = await sha256(adminPassNew);
-      if (roPassNew)    cfg.authReadonlyHash = await sha256(roPassNew);
 
       // Update Firebase Auth password if admin password changed
       if (adminPassNew && _fbAuth && _fbAuth.currentUser) {
@@ -6838,15 +6094,8 @@
       saveAppConfig(cfg);
       try { localStorage.setItem('_dashboard_local_setup', '1'); } catch(e) {}
       closeAppSettings();
-      if (roPassNew) {
-        _showPasswordModal('Read-only password updated', roPassNew, function() {
-          appToast('Settings saved. Reloading...');
-          setTimeout(function() { window.location.reload(); }, 1200);
-        });
-      } else {
-        appToast('Settings saved. Reloading...');
-        setTimeout(function() { window.location.reload(); }, 1200);
-      }
+      appToast('Settings saved. Reloading...');
+      setTimeout(function() { window.location.reload(); }, 1200);
     }
 
     function _buildAppSettingsModal() {
@@ -6863,8 +6112,6 @@
         '<input class="fi" id="as_auth_hint" placeholder="Enter your access code to continue." style="margin-top:4px"></div>',
         '<div class="form-group"><label style="font-size:12px;color:var(--text3)">New Admin Password (leave blank to keep)</label>',
         '<input class="fi" id="as_admin_pass" type="password" placeholder="New admin password" style="margin-top:4px"></div>',
-        '<div class="form-group"><label style="font-size:12px;color:var(--text3)">New Read-only Password (leave blank to keep)</label>',
-        '<input class="fi" id="as_ro_pass" type="password" placeholder="New read-only password" style="margin-top:4px"></div>',
         '<div style="font-size:11px;color:var(--text3);margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px">Firebase Config (optional)</div>',
         '<div class="form-group"><input class="fi" id="as_fb_apikey" placeholder="API Key" style="margin-top:4px"></div>',
         '<div class="form-group"><input class="fi" id="as_fb_authdomain" placeholder="Auth Domain" style="margin-top:4px"></div>',
@@ -7707,36 +6954,6 @@
     })();
 
 </script>
-<!-- QUICK LOG FLOATING BUTTON -->
-<button id="ql_fab" onclick="openQuickLog()" style="position:fixed;bottom:24px;right:18px;z-index:400;background:var(--accent);color:#fff;border:none;border-radius:50%;width:52px;height:52px;font-size:22px;cursor:pointer;box-shadow:0 4px 18px var(--accent-glow);display:none;align-items:center;justify-content:center">⚡</button>
-
-<!-- QUICK LOG MODAL -->
-<div class="ql-overlay" id="ql_overlay" onclick="if(event.target===this)closeQuickLog()">
-  <div class="ql-sheet">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div class="ql-title">⚡ Quick Log</div>
-      <button onclick="closeQuickLog()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
-    </div>
-    <div class="ql-sub" id="ql_date_label"></div>
-    <div id="ql_items"></div>
-  </div>
-</div>
-
-<!-- DAILY CHECK-IN MODAL -->
-<div class="ql-overlay" id="ci_overlay" onclick="if(event.target===this)closeDailyCheckin()">
-  <div class="ql-sheet">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div class="ql-title">✅ Daily Check-in</div>
-      <button onclick="closeDailyCheckin()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
-    </div>
-    <div class="ql-sub" id="ci_progress">Step 1 of 4</div>
-    <div id="ci_content"></div>
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="btn btn-w" style="flex:1" onclick="ciSkip()">Skip →</button>
-      <button class="btn btn-o" style="flex:1" onclick="ciNext()">Done ✓</button>
-    </div>
-  </div>
-</div>
 
 <!-- APP-STYLE CONFIRM DIALOG -->
 <div id="app_confirm_overlay" onclick="if(event.target===this)_appConfirmClose()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:3000;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px)">
