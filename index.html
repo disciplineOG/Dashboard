@@ -696,10 +696,6 @@
                 <div class="card-title" style="margin-bottom:0">📅 My Day</div>
                 <input type="date" class="fi view-ok" id="day_date" style="width:auto;padding:5px 10px;font-size:12px" onchange="onDayDateChange()">
             </div>
-            <div style="font-size:11px;color:var(--text3);margin-bottom:10px">What kind of day is it?</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px" id="day_type_btns">
-                <!-- populated dynamically by renderDayTypeButtons() -->
-            </div>
             <div id="day_type_label" style="font-size:12px;color:var(--text3);margin-bottom:10px"></div>
             <div class="tracker-outer" id="day_tracker_wrap"></div>
             <div style="margin-top:12px" id="day_note_wrap">
@@ -727,7 +723,7 @@
             </div>
             <div class="table-wrap" id="tasks_active_wrap">
                 <table id="tasks_active_tbl">
-                    <tr><th>Task</th><th>Category</th><th>Priority</th><th>Target Date</th><th>Days Left</th><th>Status</th><th>Notes</th><th>Actions</th></tr>
+                    <tr><th>Task</th><th>Priority</th><th>Days Left</th><th>Actions</th><th>Status</th><th>Category</th><th>Target Date</th><th>Notes</th></tr>
                 </table>
             </div>
         </div>
@@ -828,21 +824,12 @@
                 </div>
             </div>
             <div class="form-group" style="margin-bottom:8px"><label>Details (optional)</label><textarea class="ft" id="nt_body" placeholder="Any extra context…" style="min-height:70px"></textarea></div>
-            <div class="form-grid" style="margin-bottom:10px">
-                <div class="form-group"><label>Tags (comma-separated, optional)</label><input class="fi" id="nt_tags" placeholder="e.g. dashboard, health"></div>
-                <div class="form-group"><label>Expires / Forget after</label>
-                    <select class="fs" id="nt_expire">
-                        <option value="never">Never (keep until I delete)</option>
-                        <option value="today">Today</option>
-                        <option value="week">This week</option>
-                        <option value="month">This month</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group" style="margin-bottom:10px"><label>Pin this note</label>
-                <select class="fs" id="nt_pin">
-                    <option value="0">No — normal</option>
-                    <option value="1">Yes — show at top</option>
+            <div class="form-group" style="margin-bottom:10px"><label>Expires / Forget after</label>
+                <select class="fs" id="nt_expire">
+                    <option value="never">Never (keep until I delete)</option>
+                    <option value="today">Today</option>
+                    <option value="week">This week</option>
+                    <option value="month">This month</option>
                 </select>
             </div>
             <button class="btn btn-o" onclick="addNote()">+ Save Note</button>
@@ -1049,8 +1036,6 @@
   <div style="background:var(--bg2);border-radius:20px;padding:20px;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto">
     <div style="font-size:14px;font-weight:700;color:var(--text1);margin-bottom:14px">Edit Prep Info</div>
     <div class="form-group" style="margin-bottom:8px"><label>Title</label><input class="fi" id="pm_title" placeholder="e.g. Job Switch Prep"></div>
-    <div class="form-group" style="margin-bottom:8px"><label>Subtitle</label><input class="fi" id="pm_subtitle" placeholder="e.g. Java Dev to Product Company"></div>
-    <div class="form-group" style="margin-bottom:8px"><label>Target Salary</label><input class="fi" id="pm_salary" placeholder="e.g. 25+ LPA"></div>
     <div class="form-group" style="margin-bottom:8px"><label>Start Date</label><input type="date" class="fi" id="pm_start"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
       <div class="form-group" style="margin:0"><label>Total Days (plan duration, default 50)</label><input type="number" class="fi" id="pm_total_days" placeholder="50" min="1"></div>
@@ -1248,6 +1233,15 @@
         <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px">Weekly Plan</div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Preset the default day type for each weekday (e.g. Mon–Fri = 🏢 Office, Sat–Sun = 🌴 Weekend). You can still override any single day from the Today tab.</div>
         <div id="dt_week_map_list"></div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px">Upcoming Overrides</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Know in advance you'll have a different kind of day (e.g. WFH from native for a few days)? Schedule it here — it overrides the Weekly Plan for those dates.</div>
+        <div class="form-grid" style="margin-bottom:8px">
+            <div class="form-group"><label>From</label><input type="date" class="fi" id="dt_ov_from"></div>
+            <div class="form-group"><label>To (optional)</label><input type="date" class="fi" id="dt_ov_to"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:10px"><label>Day Type</label><select class="fs" id="dt_ov_type"></select></div>
+        <button class="btn btn-o btn-sm" onclick="scheduleDayTypeOverride()" style="margin-bottom:12px">+ Schedule</button>
+        <div id="dt_ov_list"></div>
         <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px">Edit Schedule Rows</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="dts_type_btns">
             <!-- populated dynamically by renderDayTypeEditButtons() -->
@@ -2326,6 +2320,66 @@
       appToast('Saved');
     }
 
+    function renderDayTypeOverrideTypeSelect() {
+      var sel = document.getElementById('dt_ov_type');
+      if (!sel) return;
+      var defs = getDayTypeDefs();
+      var keys = Object.keys(defs);
+      sel.innerHTML = keys.map(function(k) { return '<option value="' + k + '">' + esc(defs[k].label || k) + '</option>'; }).join('');
+    }
+
+    function scheduleDayTypeOverride() {
+      var from = document.getElementById('dt_ov_from').value;
+      var to = document.getElementById('dt_ov_to').value || from;
+      var type = document.getElementById('dt_ov_type').value;
+      if (!from) { appToast('Pick a start date.'); return; }
+      if (!type) { appToast('Pick a day type.'); return; }
+      if (to < from) { appToast('"To" date must be on or after "From" date.'); return; }
+      var log = getDayTypeLog();
+      var d = new Date(from + 'T00:00:00');
+      var end = new Date(to + 'T00:00:00');
+      while (d <= end) {
+        log[isoD(d)] = type;
+        d.setDate(d.getDate() + 1);
+      }
+      ls_set('day_type_log', log);
+      document.getElementById('dt_ov_from').value = '';
+      document.getElementById('dt_ov_to').value = '';
+      renderDayTypeOverrideList();
+      var dd = document.getElementById('day_date');
+      if (dd) renderDayTracker(dd.value);
+      appToast('✅ Scheduled');
+    }
+
+    function renderDayTypeOverrideList() {
+      var el = document.getElementById('dt_ov_list');
+      if (!el) return;
+      var log = getDayTypeLog();
+      var defs = getDayTypeDefs();
+      var today = isoD(new Date());
+      var dates = Object.keys(log).filter(function(d) { return d >= today; }).sort();
+      if (dates.length === 0) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">No upcoming overrides scheduled.</div>'; return; }
+      var html = '';
+      dates.forEach(function(d) {
+        var type = log[d];
+        var label = (defs[type] && defs[type].label) || type;
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border)">';
+        html += '<span style="font-size:12px;color:var(--text1)">' + d + ' — ' + esc(label) + '</span>';
+        html += '<button class="btn btn-r btn-sm" style="font-size:10px" onclick="removeDayTypeOverride(\'' + d + '\')">✕</button>';
+        html += '</div>';
+      });
+      el.innerHTML = html;
+    }
+
+    function removeDayTypeOverride(dateStr) {
+      var log = getDayTypeLog();
+      delete log[dateStr];
+      ls_set('day_type_log', log);
+      renderDayTypeOverrideList();
+      var dd = document.getElementById('day_date');
+      if (dd) renderDayTracker(dd.value);
+    }
+
     // Initially null; set to first available key at runtime
     var _selectedDayTypeEdit = null;
 
@@ -2608,6 +2662,8 @@
       renderDayTypeButtons();
       renderDayTypeEditButtons();
       renderDayTypeWeekMapList();
+      renderDayTypeOverrideTypeSelect();
+      renderDayTypeOverrideList();
     }
 
     function renameDayTypeDef(key) {
@@ -2622,6 +2678,8 @@
         renderDayTypeButtons();
         renderDayTypeEditButtons();
         renderDayTypeWeekMapList();
+        renderDayTypeOverrideTypeSelect();
+        renderDayTypeOverrideList();
         buildSched();
         appToast('✅ Renamed to "' + newLabel.trim() + '"');
       });
@@ -2642,11 +2700,17 @@
         var weekMap = getDayTypeWeekMap();
         DT_WEEK_ORDER.forEach(function(d) { if (weekMap[d] === key) weekMap[d] = null; });
         saveDayTypeWeekMap(weekMap);
+        var log = getDayTypeLog();
+        var today = isoD(new Date());
+        Object.keys(log).forEach(function(d) { if (d >= today && log[d] === key) delete log[d]; });
+        ls_set('day_type_log', log);
         renderDayTypeManagerList();
         renderDayTypeButtons();
         renderDayTypeEditButtons();
         renderDayTypeEditList();
         renderDayTypeWeekMapList();
+        renderDayTypeOverrideTypeSelect();
+        renderDayTypeOverrideList();
         buildSched();
       }, '🗑️ Delete Day Type');
     }
@@ -2923,7 +2987,7 @@
           return t.date <= filterDate;
         });
       }
-      var html = '<tr><th>Task</th><th>Category</th><th>Priority</th><th>Target Date</th><th>Days Left</th><th>Status</th><th>Notes</th><th>Actions</th></tr>';
+      var html = '<tr><th>Task</th><th>Priority</th><th>Days Left</th><th>Actions</th><th>Status</th><th>Category</th><th>Target Date</th><th>Notes</th></tr>';
       if (keys.length === 0) {
         html += '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">No active tasks — add one above</td></tr>';
       }
@@ -2938,13 +3002,8 @@
         var stCls = {Todo:'st-todo','In Progress':'st-prog',Blocked:'br'}[t.status] || 'st-todo';
         html += '<tr' + (dl !== null && dl < 0 ? ' style="background:rgba(255,59,48,0.08);border-left:3px solid var(--red)"' : '') + '>';
         html += '<td style="color:#e0e0e0;font-weight:600">' + esc(t.name) + '</td>';
-        html += '<td><span class="badge bw">' + esc(t.cat) + '</span></td>';
         html += '<td class="' + priCls + '">' + t.pri + '</td>';
-        html += '<td style="color:#888">' + (t.date || '—') + '</td>';
         html += '<td>' + dlHtml + '</td>';
-        var statusClick = isRO ? '' : ' style="cursor:pointer" onclick="changeStatus(\'' + id + '\')"';
-        html += '<td><span class="' + stCls + '"' + statusClick + '>' + (t.status||'Todo') + (isRO ? '' : ' ↻') + '</span></td>';
-        html += '<td style="color:var(--text3);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis">' + esc(t.notes||'') + '</td>';
         html += '<td style="white-space:nowrap">';
         if (!isRO) {
           html += '<button class="btn btn-g btn-sm" onclick="completeTask(\'' + id + '\')">✓</button> ';
@@ -2953,7 +3012,13 @@
         } else {
           html += '<span style="font-size:10px;color:var(--text3)">View only</span>';
         }
-        html += '</td></tr>';
+        html += '</td>';
+        var statusClick = isRO ? '' : ' style="cursor:pointer" onclick="changeStatus(\'' + id + '\')"';
+        html += '<td><span class="' + stCls + '"' + statusClick + '>' + (t.status||'Todo') + (isRO ? '' : ' ↻') + '</span></td>';
+        html += '<td><span class="badge bw">' + esc(t.cat) + '</span></td>';
+        html += '<td style="color:#888">' + (t.date || '—') + '</td>';
+        html += '<td style="color:var(--text3);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis">' + esc(t.notes||'') + '</td>';
+        html += '</tr>';
       });
       tbl.innerHTML = html;
 
@@ -4007,8 +4072,8 @@
     // ERASE / DANGER ZONE (admin-only)
     // ═══════════════════════════════════════
     var _ERASE = {
-      schedule:  { label:'Schedule Logs',               keys:['sched','day_type_log','custom_sched_rows','sched_base_edits','day_type_schedules'], cb:function(){ buildSched(); } },
-      daytypedefs: { label:'Day Type Definitions',          keys:['day_type_defs','day_type_schedules','day_type_week_map'],                 cb:function(){ renderDayTypeButtons(); renderDayTypeEditButtons(); renderDayTypeWeekMapList(); buildSched(); } },
+      schedule:  { label:'Schedule Logs',               keys:['sched','day_type_log','custom_sched_rows','sched_base_edits','day_type_schedules'], cb:function(){ buildSched(); renderDayTypeOverrideList(); } },
+      daytypedefs: { label:'Day Type Definitions',          keys:['day_type_defs','day_type_schedules','day_type_week_map'],                 cb:function(){ renderDayTypeButtons(); renderDayTypeEditButtons(); renderDayTypeWeekMapList(); renderDayTypeOverrideTypeSelect(); renderDayTypeOverrideList(); buildSched(); } },
       tasks:     { label:'Tasks',                        keys:['tasks_active_list','tasks_done_list'],                                              cb:function(){ renderTasks(); } },
       daynotes:  { label:'Day Notes',                    keys:['day_notes'],                                                                        cb:function(){ buildSched(); } },
       focus:     { label:'Monthly Focus',                keys:['monthly_focus'],                                                                    cb:function(){ renderFocusDisplay(); } },
@@ -5716,19 +5781,16 @@
         var title  = document.getElementById('nt_title').value.trim();
         var cat    = document.getElementById('nt_cat').value;
         var body   = document.getElementById('nt_body').value.trim();
-        var tags   = document.getElementById('nt_tags').value.trim();
         var expire = document.getElementById('nt_expire').value;
-        var pin    = document.getElementById('nt_pin').value === '1';
         if (!title) { appToast('Enter something to note down.'); return; }
         var notes = getNotes();
         var id = newId();
         notes[id] = {id:id, title:title, cat:cat, body:body,
-            tags: tags ? tags.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [],
-            pin:pin, expire:expire, done:false, created:isoD(new Date())};
+            tags: [],
+            pin:false, expire:expire, done:false, created:isoD(new Date())};
         ls_set('notes', notes);
         document.getElementById('nt_title').value = '';
         document.getElementById('nt_body').value = '';
-        document.getElementById('nt_tags').value = '';
         renderNotes();
     }
 
@@ -6012,8 +6074,6 @@
     function openPrepMetaModal(){
         var meta=ls_get('upskill_meta'),m=document.getElementById('prep_meta_modal');if(!m)return;
         document.getElementById('pm_title').value=meta.title||'';
-        document.getElementById('pm_subtitle').value=meta.subtitle||'';
-        document.getElementById('pm_salary').value=meta.salary||'';
         document.getElementById('pm_start').value=meta.start||'';
         document.getElementById('pm_total_days').value=meta.totalDays||getTotalPrepDays();
         document.getElementById('pm_daily_hrs').value=meta.dailyHrs||'';
@@ -6022,15 +6082,13 @@
     function closePrepMetaModal(){var m=document.getElementById('prep_meta_modal');if(m)m.style.display='none';}
     function savePrepMeta(){
         var title=document.getElementById('pm_title').value.trim();
-        var subtitle=document.getElementById('pm_subtitle').value.trim();
-        var salary=document.getElementById('pm_salary').value.trim();
         var start=document.getElementById('pm_start').value.trim();
         var totalDays=parseInt(document.getElementById('pm_total_days').value)||0;
         var dailyHrs=parseFloat(document.getElementById('pm_daily_hrs').value)||0;
         if(start&&!start.match(/^\d{4}-\d{2}-\d{2}$/)){appToast('⚠️ Start date: YYYY-MM-DD');return;}
         if(totalDays<1&&document.getElementById('pm_total_days').value){appToast('⚠️ Total days must be ≥ 1');return;}
         var meta=ls_get('upskill_meta');
-        if(title)meta.title=title;if(subtitle)meta.subtitle=subtitle;if(salary)meta.salary=salary;if(start)meta.start=start;
+        if(title)meta.title=title;if(start)meta.start=start;
         if(totalDays>0)meta.totalDays=totalDays;
         if(dailyHrs>0)meta.dailyHrs=dailyHrs;
         ls_set('upskill_meta',meta);closePrepMetaModal();renderUpskill();appToast('✅ Prep info saved!');
@@ -7604,6 +7662,8 @@
       renderScoreWeights();
       renderDayTypeEditButtons();
       renderDayTypeWeekMapList();
+      renderDayTypeOverrideTypeSelect();
+      renderDayTypeOverrideList();
       var overlay = document.getElementById('config_mgr_overlay');
       if (overlay) overlay.classList.add('open');
     }
