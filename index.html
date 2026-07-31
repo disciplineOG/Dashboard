@@ -71,7 +71,7 @@
         /* ══════════════════════════════════════
            GLOBAL RESET + BASE
         ══════════════════════════════════════ */
-        *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+        *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
         html{transition:none}
         body{
           font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
@@ -564,15 +564,14 @@
                         🔗 Copy Share Link
                     </button>
                     <div class="smenu-divider"></div>
-                    <!-- Export -->
-                    <button onclick="exportData();closeSettingsMenu()" class="smenu-item admin-only">
-                        💾 Export Backup
+                    <!-- Configuration -->
+                    <button onclick="openConfigManager();closeSettingsMenu()" class="smenu-item admin-only">
+                        ⚙️ Configuration
                     </button>
-                    <!-- Import -->
-                    <button onclick="document.getElementById('import_file').click();closeSettingsMenu()" class="smenu-item admin-only">
-                        📥 Import Backup
+                    <!-- Historical Data -->
+                    <button onclick="openHistoricalData();closeSettingsMenu()" class="smenu-item">
+                        📂 Historical Data
                     </button>
-                    <input type="file" id="import_file" accept=".json" style="display:none" onchange="importData(event)">
                     <div class="smenu-divider admin-only"></div>
                     <!-- Tab Manager -->
                     <button onclick="openTabManager();closeSettingsMenu()" class="smenu-item admin-only">
@@ -581,10 +580,6 @@
                     <!-- App Settings -->
                     <button onclick="openAppSettings();closeSettingsMenu()" class="smenu-item admin-only">
                         ⚙️ App Settings
-                    </button>
-                    <!-- Fitness Muscle Groups -->
-                    <button onclick="openFitGroupManager();closeSettingsMenu()" class="smenu-item admin-only">
-                        🏋️ Manage Muscle Groups
                     </button>
                     <div class="smenu-divider"></div>
                     <!-- Admin Login (visible to all roles) -->
@@ -638,7 +633,7 @@
         <div class="card" id="ov_intentions_card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
                 <div class="card-title" style="margin-bottom:0">🔥 This Month's Focus</div>
-                <button class="btn btn-w btn-sm admin-only" onclick="showTab('goals');setTimeout(function(){var b=document.getElementById('g_focus_body');if(b)b.style.display='block';},200)" style="font-size:10px">✏️ Edit</button>
+                <button class="btn btn-w btn-sm admin-only" onclick="openConfigManager();setTimeout(function(){var b=document.getElementById('g_focus_body');if(b&&b.style.display==='none')toggleGoalsCard('g_focus_body');},200)" style="font-size:10px">✏️ Edit</button>
             </div>
             <div id="ov_focus_display" style="font-size:13px;color:var(--text2);line-height:1.8">
                 <!-- rendered by renderOverviewFocus() -->
@@ -704,9 +699,6 @@
             <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px" id="day_type_btns">
                 <!-- populated dynamically by renderDayTypeButtons() -->
             </div>
-            <div style="margin-bottom:10px">
-                <button class="btn btn-w btn-sm admin-only" onclick="openManageDayTypes()" style="font-size:12px">⚙️ Manage Day Types</button>
-            </div>
             <div id="day_type_label" style="font-size:12px;color:var(--text3);margin-bottom:10px"></div>
             <div class="tracker-outer" id="day_tracker_wrap"></div>
             <div style="margin-top:12px" id="day_note_wrap">
@@ -714,29 +706,6 @@
                 <textarea class="ft admin-only" id="day_note_input" placeholder="Why did I miss things? What went well?" style="min-height:60px;font-size:12px" oninput="saveDayNote()"></textarea>
                 <div id="day_note_saved" style="font-size:10px;color:var(--text3);margin-top:3px;min-height:14px"></div>
             </div>
-        </div>
-
-        <div class="card admin-only">
-            <div class="card-title">⚙️ Manage Day-Type Schedules</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="dts_type_btns">
-                <!-- populated dynamically by renderDayTypeEditButtons() -->
-            </div>
-            <div id="day_type_edit_wrap"></div>
-            <div class="form-grid" style="margin-top:10px" id="add_dt_row_form">
-                <div class="form-group"><label>Time</label><input class="fi" id="dt_row_time" placeholder="e.g. 7:00 AM"></div>
-                <div class="form-group"><label>Task</label><input class="fi" id="dt_row_task" placeholder="e.g. Morning walk 30 min"></div>
-            </div>
-            <button class="btn btn-o btn-sm admin-only" onclick="addDayTypeRow()" style="margin-top:6px">+ Add to Selected Type</button>
-        </div>
-
-        <div class="card">
-            <div class="card-title">📂 Past Day Data</div>
-            <div class="trk-ctrl">
-                <label>From <input type="date" id="sd_s"></label>
-                <label>To <input type="date" id="sd_e"></label>
-                <button class="btn btn-o btn-sm" onclick="buildSchedPast()">Fetch</button>
-            </div>
-            <div class="tracker-outer" id="sched_past_wrap"></div>
         </div>
             </div>
         </div>
@@ -808,57 +777,6 @@
 
     <!-- ═══ GOALS 🎯 ═══ -->
     <div id="sec_goals" class="section">
-        <!-- This Month's Focus — edit form lives here, display is on Overview -->
-        <div class="card admin-only">
-            <div class="card-title" onclick="toggleGoalsCard('g_focus_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-              <span>🔥 Edit Monthly Intentions</span><span id="g_focus_body_arr">▶</span>
-            </div>
-            <div id="g_focus_body" style="display:none;margin-top:10px">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:10px">3 intentions for this month — shown on the Overview tab.</div>
-            <div id="focus_display"></div>
-            <div id="focus_edit">
-                <div class="form-group" style="margin-bottom:8px"><label>Intention 1</label><input class="fi" id="focus_1" placeholder="e.g. Exercise every day without skipping"></div>
-                <div class="form-group" style="margin-bottom:8px"><label>Intention 2</label><input class="fi" id="focus_2" placeholder="e.g. Log food every day"></div>
-                <div class="form-group" style="margin-bottom:10px"><label>Intention 3</label><input class="fi" id="focus_3" placeholder="e.g. Sleep before 11 PM"></div>
-                <button class="btn btn-o btn-sm" onclick="saveFocus()">Save Intentions</button>
-            </div>
-            </div>
-        </div>
-
-        <!-- Expense Limit — set once here -->
-        <div class="card">
-            <div class="card-title" onclick="toggleGoalsCard('g_explim_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-              <span>💸 Monthly Expense Limit</span><span id="g_explim_body_arr">▶</span>
-            </div>
-            <div id="g_explim_body" style="display:none;margin-top:10px">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Set your daily variable spending limit. Once saved for a month it locks — view pattern in Expenses tab.</div>
-            <div id="goal_limit_status" style="margin-bottom:10px"></div>
-            <div id="goal_lim_form">
-                <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Setting limit for: <strong id="goal_lim_month_label" style="color:var(--text1)"></strong></div>
-                <div class="form-grid" style="margin-bottom:8px">
-                    <div class="form-group"><label>Daily Variable Limit (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="goal_lim_amt" placeholder="e.g. 500"></div>
-                <div class="form-group"><label>Monthly Budget (<span class="cur-sym">₹</span>) <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input type="number" class="fi" id="goal_lim_monthly" placeholder="e.g. 15000"></div>
-                </div>
-                <button class="btn btn-g btn-sm admin-only" onclick="saveLimit()">Save Limit for This Month</button>
-            </div>
-            </div>
-        </div>
-
-        <!-- Score Weights -->
-        <div class="card admin-only">
-            <div class="card-title" onclick="toggleGoalsCard('g_score_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-              <span>⚖️ Overall Score Weights</span><span id="g_score_body_arr">▶</span>
-            </div>
-            <div id="g_score_body" style="display:none;margin-top:10px">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Adjust how much each component contributes to your Overall score. Must total 100%.</div>
-            <div id="score_weights_wrap"></div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-                <span style="font-size:12px;color:var(--text3)">Total: <strong id="sw_total" style="color:var(--text1)">100%</strong></span>
-                <button class="btn btn-o btn-sm" onclick="saveScoreWeights()">Save Weights</button>
-            </div>
-            </div>
-        </div>
-
         <!-- Wish List -->
         <div style="margin-bottom:8px">
         <button onclick="(function(){var b=document.getElementById('g_wish_body');var a=document.getElementById('g_wish_body_arr');var h=b.style.display==='none';b.style.display=h?'block':'none';a.textContent=h?'▼':'▶';})()" style="background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:12px 14px;width:100%;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;font-weight:700;color:var(--text1);font-family:inherit;outline:none">
@@ -989,30 +907,6 @@
             <button class="btn btn-o admin-only" onclick="addExpense()">+ Add Expense</button>
         </div>
 
-        <div class="card admin-only">
-            <div class="card-title">🔄 Fixed / Recurring Expenses</div>
-            <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Recurring auto-logs on the set day each month. Once is a one-time fixed amount.</div>
-            <div class="form-grid" style="margin-bottom:8px">
-                <div class="form-group"><label>Name</label><input class="fi" id="rec_name" placeholder="e.g. Rent, Netflix"></div>
-                <div class="form-group"><label>Amount (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="rec_amt" placeholder="e.g. 15000"></div>
-            </div>
-            <div class="form-grid" style="margin-bottom:10px">
-                <div class="form-group">
-                    <label>Type</label>
-                    <select class="fs" id="rec_occurrence" onchange="toggleRecurringDay(this.value)">
-                        <option value="recurring">Recurring (auto-logs monthly)</option>
-                        <option value="once">One-time (log once, stays in history)</option>
-                    </select>
-                </div>
-                <div class="form-group" id="rec_day_wrap">
-                    <label>Day of month (1–28)</label>
-                    <input type="number" class="fi" id="rec_day" placeholder="1" min="1" max="28">
-                </div>
-            </div>
-            <button class="btn btn-o btn-sm" onclick="addRecurring()">+ Add</button>
-            <div id="rec_list" style="margin-top:10px"></div>
-        </div>
-
         <div class="card">
             <div class="card-title">📆 Daily Summary — Last 7 Days</div>
             <div id="exp_daily_wrap"></div>
@@ -1022,46 +916,6 @@
             <div class="card-title">📊 Monthly Summary</div>
             <div id="exp_monthly_wrap"></div>
         </div>
-        <div class="card">
-            <div class="card-title">📂 Fetch Historical Expense Data</div>
-            <div class="trk-ctrl">
-                <label>From <input type="date" id="exp_hist_s"></label>
-                <label>To <input type="date" id="exp_hist_e"></label>
-                <button class="btn btn-o btn-sm" onclick="fetchExpenseHistory()">Fetch</button>
-            </div>
-            <div style="margin-top:8px">
-                <input class="fi" id="exp_hist_search" placeholder="🔍 Search transactions…" oninput="_filterExpHistDb()" style="margin-bottom:8px">
-            </div>
-            <div id="exp_hist_result" style="margin-top:4px"></div>
-        </div>
-
-        <!-- Split & Owed -->
-        <div class="card">
-            <div class="card-title" onclick="toggleSplitCard()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-                <span>💰 Track Money Owed</span><span id="split_arr">▶</span>
-            </div>
-            <div id="split_body" style="display:none;margin-top:12px">
-                <div style="margin-bottom:14px">
-                    <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:10px">Track Money Owed</div>
-                    <div class="form-grid" style="margin-bottom:8px">
-                        <div class="form-group"><label>Direction</label>
-                            <select class="fs" id="ow_direction" onchange="var p=document.getElementById('ow_person');if(p){var d=this.value;p.placeholder=(d==='they_owe'||d==='i_lent')?'e.g. James, Joel, Mike':'e.g. Ravi';}">
-                                <option value="i_owe">I owe them (they paid for me)</option>
-                                <option value="they_owe">They owe me (I paid for them)</option>
-                                <option value="i_lent">I lent cash (they owe me back)</option>
-                                <option value="i_borrowed">I borrowed cash (I owe them back)</option>
-                            </select>
-                        </div>
-                        <div class="form-group"><label>Person</label><input class="fi" id="ow_person" placeholder="e.g. Ravi"></div>
-                        <div class="form-group"><label>What for</label><input class="fi" id="ow_desc" placeholder="e.g. Movie tickets"></div>
-                        <div class="form-group"><label>Amount</label><input type="number" class="fi" id="ow_amount" placeholder="500"></div>
-                        <div class="form-group"><label>Date</label><input type="date" class="fi" id="ow_date"></div>
-                    </div>
-                    <button class="btn btn-o btn-sm admin-only" onclick="addOwed()">+ Track</button>
-                </div>
-                <div id="owed_list_wrap"></div>
-            </div>
-        </div>
 
         <!-- Danger Zone: Expenses — always visible -->
         <div class="card admin-only danger-zone">
@@ -1069,8 +923,6 @@
             <div class="dz-sub">Permanently erase data. Cannot be undone.</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px">
                 <button class="btn-erase" onclick="eraseSection('expenses')">🗑️ All Expense Entries</button>
-                <button class="btn-erase" onclick="eraseSection('recurring')">🗑️ Recurring Expenses</button>
-                <button class="btn-erase" onclick="eraseSection('owed')">🗑️ Owed List</button>
                 <button class="btn-erase" onclick="eraseSection('explimits')">🗑️ Expense Limits</button>
             </div>
         </div>
@@ -1223,7 +1075,7 @@
     <div style="font-size:14px;font-weight:700;color:var(--text1);margin-bottom:4px">📝 Note</div>
     <div style="font-size:12px;color:var(--text3);margin-bottom:14px" id="sched_note_context"></div>
     <input type="hidden" id="sched_note_key">
-    <textarea class="ft" id="sched_note_text" style="min-height:90px;font-size:13px" placeholder="e.g. pre-workout snack: 2 banana"></textarea>
+    <textarea class="ft" id="sched_note_text" style="min-height:90px;font-size:13px" placeholder="e.g. enter a notes"></textarea>
     <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-o" style="flex:1" onclick="saveScheduleNoteModal()">Save</button><button class="btn btn-w" style="flex:1" onclick="closeScheduleNoteModal()">Cancel</button></div>
   </div>
 </div>
@@ -1290,6 +1142,162 @@
     <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px">Weekly Plan</div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Pick which group the Fitness tab suggests by default on each day.</div>
     <div id="fit_day_map_list"></div>
+  </div>
+</div>
+
+<!-- CONFIGURATION HUB (all "set once and done" settings) -->
+<div class="ql-overlay" id="config_mgr_overlay" onclick="if(event.target===this)closeConfigManager()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">⚙️ Configuration</div>
+      <button onclick="closeConfigManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Things you set once and rarely change again.</div>
+
+    <!-- Fixed / Recurring Expenses -->
+    <div class="card" style="margin-bottom:10px">
+        <div class="card-title" onclick="toggleGoalsCard('cfg_rec_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
+          <span>🔄 Fixed / Recurring Expenses</span><span id="cfg_rec_body_arr">▶</span>
+        </div>
+        <div id="cfg_rec_body" style="display:none;margin-top:10px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Recurring auto-logs on the set day each month. Once is a one-time fixed amount.</div>
+        <div class="form-grid" style="margin-bottom:8px">
+            <div class="form-group"><label>Name</label><input class="fi" id="rec_name" placeholder="e.g. Rent, Netflix"></div>
+            <div class="form-group"><label>Amount (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="rec_amt" placeholder="e.g. 15000"></div>
+        </div>
+        <div class="form-grid" style="margin-bottom:10px">
+            <div class="form-group">
+                <label>Type</label>
+                <select class="fs" id="rec_occurrence" onchange="toggleRecurringDay(this.value)">
+                    <option value="recurring">Recurring (auto-logs monthly)</option>
+                    <option value="once">One-time (log once, stays in history)</option>
+                </select>
+            </div>
+            <div class="form-group" id="rec_day_wrap">
+                <label>Day of month (1–28)</label>
+                <input type="number" class="fi" id="rec_day" placeholder="1" min="1" max="28">
+            </div>
+        </div>
+        <button class="btn btn-o btn-sm" onclick="addRecurring()">+ Add</button>
+        <div id="rec_list" style="margin-top:10px"></div>
+        <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border2)">
+            <button class="btn-erase" onclick="eraseSection('recurring')">🗑️ Erase Recurring Expenses</button>
+        </div>
+        </div>
+    </div>
+
+    <!-- Monthly Intentions -->
+    <div class="card" style="margin-bottom:10px">
+        <div class="card-title" onclick="toggleGoalsCard('g_focus_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
+          <span>🔥 Monthly Intentions</span><span id="g_focus_body_arr">▶</span>
+        </div>
+        <div id="g_focus_body" style="display:none;margin-top:10px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">3 intentions for this month — shown on the Overview tab.</div>
+        <div id="focus_display"></div>
+        <div id="focus_edit">
+            <div class="form-group" style="margin-bottom:8px"><label>Intention 1</label><input class="fi" id="focus_1" placeholder="e.g. Exercise every day without skipping"></div>
+            <div class="form-group" style="margin-bottom:8px"><label>Intention 2</label><input class="fi" id="focus_2" placeholder="e.g. Log food every day"></div>
+            <div class="form-group" style="margin-bottom:10px"><label>Intention 3</label><input class="fi" id="focus_3" placeholder="e.g. Sleep before 11 PM"></div>
+            <button class="btn btn-o btn-sm" onclick="saveFocus()">Save Intentions</button>
+        </div>
+        </div>
+    </div>
+
+    <!-- Monthly Expense Limit -->
+    <div class="card" style="margin-bottom:10px">
+        <div class="card-title" onclick="toggleGoalsCard('g_explim_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
+          <span>💸 Monthly Expense Limit</span><span id="g_explim_body_arr">▶</span>
+        </div>
+        <div id="g_explim_body" style="display:none;margin-top:10px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Set your daily variable spending limit. Once saved for a month it locks — view pattern in Expenses tab.</div>
+        <div id="goal_limit_status" style="margin-bottom:10px"></div>
+        <div id="goal_lim_form">
+            <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Setting limit for: <strong id="goal_lim_month_label" style="color:var(--text1)"></strong></div>
+            <div class="form-grid" style="margin-bottom:8px">
+                <div class="form-group"><label>Daily Variable Limit (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="goal_lim_amt" placeholder="e.g. 500"></div>
+            <div class="form-group"><label>Monthly Budget (<span class="cur-sym">₹</span>) <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input type="number" class="fi" id="goal_lim_monthly" placeholder="e.g. 15000"></div>
+            </div>
+            <button class="btn btn-g btn-sm" onclick="saveLimit()">Save Limit for This Month</button>
+        </div>
+        </div>
+    </div>
+
+    <!-- Overall Score Weights -->
+    <div class="card" style="margin-bottom:10px">
+        <div class="card-title" onclick="toggleGoalsCard('g_score_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
+          <span>⚖️ Overall Score Weights</span><span id="g_score_body_arr">▶</span>
+        </div>
+        <div id="g_score_body" style="display:none;margin-top:10px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Adjust how much each component contributes to your Overall score. Must total 100%.</div>
+        <div id="score_weights_wrap"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+            <span style="font-size:12px;color:var(--text3)">Total: <strong id="sw_total" style="color:var(--text1)">100%</strong></span>
+            <button class="btn btn-o btn-sm" onclick="saveScoreWeights()">Save Weights</button>
+        </div>
+        </div>
+    </div>
+
+    <!-- Manage Day-Type Schedules -->
+    <div class="card" style="margin-bottom:10px">
+        <div class="card-title" onclick="toggleGoalsCard('cfg_daytype_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
+          <span>📅 Manage Day-Type Schedules</span><span id="cfg_daytype_body_arr">▶</span>
+        </div>
+        <div id="cfg_daytype_body" style="display:none;margin-top:10px">
+        <button class="btn btn-w btn-sm" onclick="openDayTypeManager()" style="font-size:12px;margin-bottom:10px">📅 Add / Rename / Delete Day Types</button>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="dts_type_btns">
+            <!-- populated dynamically by renderDayTypeEditButtons() -->
+        </div>
+        <div id="day_type_edit_wrap"></div>
+        <div class="form-grid" style="margin-top:10px" id="add_dt_row_form">
+            <div class="form-group"><label>Time</label><input class="fi" id="dt_row_time" placeholder="e.g. 7:00 AM"></div>
+            <div class="form-group"><label>Task</label><input class="fi" id="dt_row_task" placeholder="e.g. Morning walk 30 min"></div>
+        </div>
+        <button class="btn btn-o btn-sm" onclick="addDayTypeRow()" style="margin-top:6px">+ Add to Selected Type</button>
+        <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border2)">
+            <button class="btn-erase" onclick="eraseSection('daytypedefs')">🗑️ Erase Day Type Definitions</button>
+        </div>
+        </div>
+    </div>
+
+    <!-- Manage Muscle Groups (links to its own dedicated manager) -->
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openFitGroupManager()">🏋️ Manage Muscle Groups</button>
+    <!-- Manage Note Categories (links to its own dedicated manager) -->
+    <button class="btn btn-w" style="width:100%" onclick="openNotesCatManager()">📝 Manage Note Categories</button>
+  </div>
+</div>
+
+<!-- HISTORICAL DATA -->
+<div class="ql-overlay" id="hist_data_overlay" onclick="if(event.target===this)closeHistoricalData()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">📂 Historical Data</div>
+      <button onclick="closeHistoricalData()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+
+    <!-- Past Day Data -->
+    <div class="card" style="margin-bottom:10px">
+        <div class="card-title">📅 Past Day Data</div>
+        <div class="trk-ctrl">
+            <label>From <input type="date" id="sd_s"></label>
+            <label>To <input type="date" id="sd_e"></label>
+            <button class="btn btn-o btn-sm" onclick="buildSchedPast()">Fetch</button>
+        </div>
+        <div class="tracker-outer" id="sched_past_wrap"></div>
+    </div>
+
+    <!-- Historical Expense Data -->
+    <div class="card">
+        <div class="card-title">💸 Historical Expense Data</div>
+        <div class="trk-ctrl">
+            <label>From <input type="date" id="exp_hist_s"></label>
+            <label>To <input type="date" id="exp_hist_e"></label>
+            <button class="btn btn-o btn-sm" onclick="fetchExpenseHistory()">Fetch</button>
+        </div>
+        <div style="margin-top:8px">
+            <input class="fi" id="exp_hist_search" placeholder="🔍 Search transactions…" oninput="_filterExpHistDb()" style="margin-bottom:8px">
+        </div>
+        <div id="exp_hist_result" style="margin-top:4px"></div>
+    </div>
   </div>
 </div>
 
@@ -1659,7 +1667,7 @@
       'day_type_schedules','day_type_log','tab_visibility',
       'recurring_expenses','recurring_logged',
       'score_weights','day_notes','exp_tags_custom','notes','notes_categories',
-      'upskill_progress','upskill_notes','upskill_meta','upskill_custom','owed_list','hidden_tabs',
+      'upskill_progress','upskill_notes','upskill_meta','upskill_custom','hidden_tabs',
       'day_type_defs','upskill_overrides','upskill_plan_data','study_sessions',
       'fitness_sessions','fitness_templates','fitness_groups','fitness_day_map','sched_notes'];
 
@@ -1714,7 +1722,6 @@
         renderExpenses();
         renderLimits();
         renderExpensePattern();
-        renderOwed();
         renderScores();
         renderWeeklyReport();
         renderShopping();
@@ -1744,7 +1751,7 @@
             fitRender();
             break;
           case 'expenses':
-            renderExpenses(); renderLimits(); renderExpensePattern(); renderOwed();
+            renderExpenses(); renderLimits(); renderExpensePattern();
             var _lastNat = ls_get('last_expense_meta').nature;
             if (_lastNat) { var _natEl = document.getElementById('ex_nature'); if (_natEl) _natEl.value = _lastNat; }
             break;
@@ -1897,7 +1904,7 @@
         if (name === 'health') { fitInit(); }
         if (name === 'upskill') { renderUpskill(); renderPrepTodayCard(); }
         if (name === 'goals') { renderScoreWeights(); renderShopping(); renderNotes(); }
-        if (name === 'expenses') { renderExpenses(); renderExpensePattern(); renderOwed(); }
+        if (name === 'expenses') { renderExpenses(); renderExpensePattern(); }
     }
 
     function renderTodayChecklist() {
@@ -3773,7 +3780,7 @@
         var monthName = d.toLocaleDateString('en-IN', {month:'long', year:'numeric'});
 
         if (!limits[curMonth]) {
-            el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">No limit set for ' + monthName + '. <span style="color:var(--accent);cursor:pointer" onclick="showTab(\'goals\')">Set it in Goals →</span></div>';
+            el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">No limit set for ' + monthName + '. <span style="color:var(--accent);cursor:pointer" onclick="openConfigManager();setTimeout(function(){var b=document.getElementById(\'g_explim_body\');if(b&&b.style.display===\'none\')toggleGoalsCard(\'g_explim_body\');},200)">Set it in Configuration →</span></div>';
             return;
         }
 
@@ -3947,7 +3954,6 @@
       explimits: { label:'Expense Limits',               keys:['exp_limits'],                                                                       cb:function(){ renderExpenses(); } },
       expenses:  { label:'All Expense Entries',          keys:['expenses_list','exp_tags_custom'],                                                  cb:function(){ renderExpenses(); renderExpensePattern(); } },
       recurring: { label:'Recurring Expenses',           keys:['recurring_expenses','recurring_logged'],                                            cb:function(){ renderExpenses(); } },
-      owed:      { label:'Owed List',                    keys:['owed_list'],                                                                        cb:function(){ renderOwed(); } },
       prep:      { label:'Prep / Upskill Progress',      keys:['upskill_progress','upskill_notes','upskill_meta','upskill_custom'], cb:function(){ renderUpskill(); } },
     };
 
@@ -3961,108 +3967,6 @@
         if (s.cb) s.cb();
       }, '🗑️ Erase', true);
       return; // appConfirm is async
-    }
-
-    // ═══════════════════════════════════════
-    // SPLIT & OWED
-    // ═══════════════════════════════════════
-    function toggleSplitCard() {
-      var b = document.getElementById('split_body');
-      var a = document.getElementById('split_arr');
-      if (!b) return;
-      var open = b.style.display === 'none';
-      b.style.display = open ? 'block' : 'none';
-      a.textContent = open ? '▼' : '▶';
-      if (open) renderOwed();
-    }
-
-    function getOwed() { return ls_get('owed_list'); }
-    function setOwed(val) { ls_set('owed_list', val); }
-
-    function addOwed() {
-      if(document.getElementById('ow_date')&&!document.getElementById('ow_date').value){document.getElementById('ow_date').value=getTodayISO();}
-      var direction=(document.getElementById('ow_direction')||{}).value||'i_owe';
-      var person=document.getElementById('ow_person').value.trim();
-      var desc=document.getElementById('ow_desc').value.trim();
-      var amount=parseFloat(document.getElementById('ow_amount').value);
-      var owDate=(document.getElementById('ow_date')||{}).value||getTodayISO();
-      if(!person||!desc||!amount||amount<=0){appToast('Fill all fields.');return;}
-      var owed=getOwed();
-      if ((direction === 'they_owe' || direction === 'i_lent') && person.indexOf(',') !== -1) {
-        var people = person.split(',').map(function(p){ return p.trim(); }).filter(function(p){ return p.length > 0; });
-        people.forEach(function(p) {
-          var eid = getTodayISO().replace(/-/g,'')+'_'+p.replace(/\s/g,'').slice(0,4)+String(Object.keys(owed).length);
-          owed[eid] = {id:eid, date:owDate, direction:direction, person:p, desc:desc, amount:amount};
-        });
-        appToast(people.length + ' entries added');
-      } else {
-        var newId = getTodayISO().replace(/-/g,'')+'_'+person.slice(0,4)+String(Object.keys(owed).length);
-        owed[newId]={id:newId,date:owDate,direction:direction,person:person,desc:desc,amount:amount};
-      }
-      setOwed(owed);
-      document.getElementById('ow_person').value='';
-      document.getElementById('ow_desc').value='';
-      document.getElementById('ow_amount').value='';
-      document.getElementById('ow_date') && (document.getElementById('ow_date').value='');
-      renderOwed();schedulePush();
-    }
-
-    function settleOwed(id) {
-      var owed=getOwed();if(!owed[id])return;
-      var o=owed[id],dir=o.direction||'i_owe';
-      var iOwe=(dir==='i_owe'||dir==='i_borrowed');
-      var msg = iOwe ? 'Settled to ' + o.person + '? This will add an expense entry.' : 'Mark collected from ' + o.person + '?';
-      appConfirm(msg, function() {
-        if(iOwe){
-          var ex=getExpenses(),eid=getTodayISO()+'_settle_'+o.person.replace(/s/g,'').slice(0,6);
-          ex[eid]={id:eid,date:getTodayISO(),desc:'Settled: '+o.desc+' to '+o.person,amt:o.amount,type:'Variable',vartype:'Variable',nature:'nonessential',notes:'Settlement'};
-          ls_set('expenses_list',ex);
-        }
-        delete owed[id];setOwed(owed);renderOwed();renderExpenses();renderLimits();renderExpensePattern();
-        appToast(iOwe?'Settled & logged':'Marked collected');
-      }, iOwe ? '✅ Settle & Log' : '✅ Mark Collected', false);
-    }
-
-    function deleteOwed(id) {
-      appConfirm('Remove this entry without settling?', function() {
-        var owed = getOwed(); delete owed[id]; setOwed(owed); renderOwed();
-      }, '🗑️ Remove');
-    }
-
-    function renderOwed() {
-      var el=document.getElementById('owed_list_wrap');if(!el)return;
-      var owed=getOwed(),ids=Object.keys(owed);
-      if(!ids.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:10px 0;text-align:center">All settled</div>';return;}
-      var dL={i_owe:'I owe',they_owe:'They owe me',i_lent:'I lent',i_borrowed:'I borrowed'};
-      var iT=0,tT=0;
-      ids.forEach(function(id){var o=owed[id],d=o.direction||'i_owe';if(d==='i_owe'||d==='i_borrowed')iT+=o.amount;else tT+=o.amount;});
-      var h='<div style="display:flex;gap:10px;margin-bottom:10px">';
-      h+='<div style="flex:1;background:rgba(255,59,48,0.1);border-radius:8px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:700;color:var(--red)">'+iT.toFixed(0)+'</div><div style="font-size:10px;color:var(--text3)">I owe</div></div>';
-      h+='<div style="flex:1;background:rgba(52,199,89,0.1);border-radius:8px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:700;color:var(--green)">'+tT.toFixed(0)+'</div><div style="font-size:10px;color:var(--text3)">Owed to me</div></div>';
-      h+='</div><div class="table-wrap"><table><tr><th>Dir</th><th>Who</th><th>What</th><th>Amt</th><th>Date</th><th></th></tr>';
-      ids.forEach(function(id){
-        var o=owed[id],d=o.direction||'i_owe',iO=(d==='i_owe'||d==='i_borrowed');
-        h+='<tr><td><span class="badge '+(iO?'br':'bg')+'" style="font-size:9px">'+(dL[d]||d)+'</span></td>';
-        h+='<td style="font-weight:600">'+esc(o.person)+'</td><td>'+esc(o.desc)+'</td>';
-        h+='<td style="color:'+(iO?'var(--red)':'var(--green)')+';font-weight:600">'+Number(o.amount).toFixed(0)+'</td>';
-        h+='<td style="font-size:10px;color:var(--text3)">'+o.date+'</td>';
-        h+='<td><button class="btn btn-o btn-sm admin-only" style="font-size:10px" onclick="settleOwed(\''+id+'\')">OK</button> <button class="btn btn-w btn-sm admin-only" style="font-size:10px" onclick="deleteOwed(\''+id+'\')">Del</button></td></tr>';
-      });
-      h+='</table></div>';
-      if (iT > 0) {
-        var expD=getExpenses(),todayS=isoD(new Date()),curM=todayS.slice(0,7);
-        var eKs=Object.keys(expD).filter(function(id){return expD[id]&&expD[id].date;});
-        var todayVar=eKs.reduce(function(s,id){var e=expD[id];return e.date===todayS&&e.vartype!=='Fixed'&&e.type!=='Fixed'?s+Number(e.amt||0):s;},0);
-        var monthAll=eKs.reduce(function(s,id){var e=expD[id];return e.date&&e.date.slice(0,7)===curM?s+Number(e.amt||0):s;},0);
-        var lim=getLimitsForMonth(curM),dLim=lim.daily,mBudget=lim.monthly||(dLim?dLim*daysInMonth(curM):null);
-        h+='<div style="margin-top:12px;padding:10px;background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.2);border-radius:10px">';
-        h+='<div style="font-size:11px;font-weight:700;color:var(--yellow);margin-bottom:8px">💡 If you settle all you owe ('+fmtCur(iT)+')</div>';
-        if(dLim){var pDay=todayVar+iT;h+='<div style="font-size:11px;color:var(--text3);margin-bottom:4px">Daily: <span style="color:var(--text2)">'+fmtCur(todayVar)+' today</span> + <span style="color:var(--yellow)">'+fmtCur(iT)+' owed</span> = <span style="font-weight:700;color:'+(pDay>dLim?'var(--red)':'var(--green)')+'">'+fmtCur(pDay)+' / '+fmtCur(dLim)+'</span></div>';}
-        if(mBudget){var pMon=monthAll+iT;h+='<div style="font-size:11px;color:var(--text3)">Monthly: <span style="color:var(--text2)">'+fmtCur(monthAll)+' this month</span> + <span style="color:var(--yellow)">'+fmtCur(iT)+' owed</span> = <span style="font-weight:700;color:'+(pMon>mBudget?'var(--red)':'var(--green)')+'">'+fmtCur(pMon)+' / '+fmtCur(mBudget)+'</span></div>';}
-        if(!dLim&&!mBudget)h+='<div style="font-size:11px;color:var(--text3)">Set a limit in Expense Limits to see budget projection.</div>';
-        h+='</div>';
-      }
-      el.innerHTML=h;
     }
 
     // ═══ TASK NOTIFICATIONS ═══
@@ -4581,64 +4485,6 @@
             el.style.opacity = '0';
             setTimeout(function(){ el.remove(); }, 400);
         }, duration || 2200);
-    }
-
-    function exportData() {
-        var out = {};
-        SYNCED_KEYS.forEach(function(k) {
-            if (k === 'app_config') return;
-            try { var v = localStorage.getItem(k); if (v) out[k] = JSON.parse(v); } catch(e) {}
-        });
-        out._exported = new Date().toISOString();
-        var blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'dashboard_backup_' + isoD(new Date()) + '.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        appToast('💾 Backup downloaded!');
-    }
-
-    function importData(evt) {
-        var file = evt.target.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                var data = JSON.parse(e.target.result);
-                if (typeof data !== 'object' || Array.isArray(data)) throw new Error('invalid');
-                var count = 0;
-                var dk = {};
-                SYNCED_KEYS.forEach(function(k) {
-                    if (k === 'app_config') return;
-                    if (data[k] !== undefined) {
-                        var val = data[k];
-                        // Basic type sanity: known-object keys must be objects
-                        if (['tasks_active_list','tasks_done_list','expenses_list','exp_limits',
-                             'shop_wishlist','shop_bought','owed_list','sched'].indexOf(k) !== -1) {
-                            if (typeof val !== 'object' || Array.isArray(val)) return;
-                        }
-                        try { localStorage.setItem(k, JSON.stringify(val)); dk[k] = true; count++; } catch(er) {}
-                    }
-                });
-                // Mark all imported keys as dirty so they sync to Firebase
-                try {
-                    var now = Date['now']();
-                    localStorage.setItem('_ls_local_ts', String(now));
-                    localStorage.setItem('_ls_dirty_keys', JSON.stringify(dk));
-                    localStorage.setItem('_ls_pending_push', '1');
-                    var kts = _getKeyTs();
-                    Object.keys(dk).forEach(function(k){ kts[k] = now; });
-                    _setKeyTs(kts);
-                } catch(er) {}
-                appToast('📥 Imported ' + count + ' stores — reloading…');
-                setTimeout(function(){ location.reload(); }, 1500);
-            } catch(err) {
-                appToast('⚠️ Import failed — invalid backup file.');
-            }
-        };
-        reader.readAsText(file);
-        evt.target.value = '';
     }
 
     // ═══════════════════════════════════════
@@ -5577,7 +5423,7 @@
         var html = '';
         var hasAny = data['1'] || data['2'] || data['3'];
         if (!hasAny) {
-            html = '<div style="font-size:12px;color:var(--text3)">No intentions set for this month. <button class="btn btn-w btn-sm admin-only" style="font-size:11px;margin-left:6px" onclick="showTab(\'goals\');setTimeout(function(){var b=document.getElementById(\'g_focus_body\');if(b){b.style.display=\'block\';}},200)">+ Set now</button></div>';
+            html = '<div style="font-size:12px;color:var(--text3)">No intentions set for this month. <button class="btn btn-w btn-sm admin-only" style="font-size:11px;margin-left:6px" onclick="openConfigManager();setTimeout(function(){var b=document.getElementById(\'g_focus_body\');if(b&&b.style.display===\'none\'){toggleGoalsCard(\'g_focus_body\');}},200)">+ Set now</button></div>';
         } else {
             ['1','2','3'].forEach(function(n) {
                 if (!data[n]) return;
@@ -7686,6 +7532,54 @@
       if (overlay) overlay.classList.remove('open');
       if (fitState.screen === 'home') fitInit();
     }
+
+    function openConfigManager() {
+      renderRecurring();
+      renderFocusDisplay();
+      renderLimits();
+      renderScoreWeights();
+      renderDayTypeEditButtons();
+      var overlay = document.getElementById('config_mgr_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeConfigManager() {
+      var overlay = document.getElementById('config_mgr_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    function openHistoricalData() {
+      var overlay = document.getElementById('hist_data_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeHistoricalData() {
+      var overlay = document.getElementById('hist_data_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    // ── Fitness: swipe left/right between exercises while logging ──
+    (function() {
+      var startX = 0, startY = 0, tracking = false;
+      var fitApp = document.getElementById('fit_app');
+      if (!fitApp) return;
+      fitApp.addEventListener('touchstart', function(e) {
+        if (fitState.screen !== 'logging') { tracking = false; return; }
+        if (e.target.closest('input, select, textarea, button')) { tracking = false; return; }
+        var t = e.touches[0];
+        startX = t.clientX; startY = t.clientY;
+        tracking = true;
+      }, {passive: true});
+      fitApp.addEventListener('touchend', function(e) {
+        if (!tracking) return;
+        tracking = false;
+        var t = e.changedTouches[0];
+        var dx = t.clientX - startX, dy = t.clientY - startY;
+        if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        var idx = fitState.currentIdx;
+        if (idx === null || !fitState.session) return;
+        if (dx < 0) fitGotoEx(fitNextIncompleteIdx(idx));
+        else fitGotoEx(fitPrevIncompleteIdx(idx));
+      }, {passive: true});
+    })();
 
 </script>
 <!-- QUICK LOG FLOATING BUTTON -->
