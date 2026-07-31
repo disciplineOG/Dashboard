@@ -5270,7 +5270,11 @@
     // auto-mark it as missed (state=2) before rendering.
     // ═══════════════════════════════════════
     function autoMarkMissed() {
-      var todayMs = new Date(isoD(new Date()) + 'T00:00:00').getTime();
+      var todayIso = isoD(new Date());
+      // The result only changes once per calendar day (todayMs only advances daily),
+      // so skip the full-history scan on every reopen and run it once per day.
+      try { if (localStorage.getItem('_automiss_last') === todayIso) return; } catch(e) {}
+      var todayMs = new Date(todayIso + 'T00:00:00').getTime();
       var twoDaysMs = 2 * 86400000;
 
       // -- Schedule tracker: store "sched", keys like sched_{dayType}_{ri}_{YYYY-MM-DD}
@@ -5292,6 +5296,7 @@
         });
         if (changed) ls_set('sched', data);
       })();
+      try { localStorage.setItem('_automiss_last', todayIso); } catch(e) {}
     }
 
     // ═══════════════════════════════════════
@@ -5311,14 +5316,18 @@
       });
       if (isSetupDone()) {
         // Config is already in localStorage — decide routing immediately
-        if (checkAuth()) {
-          initFirebase();
-        } else {
+        if (!checkAuth()) {
           // No stored role — auto-grant readonly (in-memory only); admin can log in via settings menu
           _authRole = 'readonly';
           applyAuthRole();
-          initFirebase();
         }
+        // Render immediately from local cache instead of waiting on a Firebase
+        // round trip (or its 4s timeout) — everything needed is already in
+        // localStorage. initFirebase()'s _initDone guard makes it reconcile via
+        // reRenderAll()/reRenderActiveTab() once server data arrives, instead of
+        // re-running initDashboard().
+        if (!_initDone) { _initDone = true; initDashboard(); }
+        initFirebase();
       } else {
         // No local app_config — try to pull it from Firebase before deciding.
         // This handles User B (fresh browser, shared link) when User A has
@@ -5494,13 +5503,10 @@
       var sd = document.getElementById('score_date');
       if (sd) sd.value = yesterday;
 
-      // Show overview first
+      // Show overview first (renders renderOverviewFocus/renderScores/renderWeeklyReport internally)
       showTab('overview');
-      renderOverviewFocus();
 
-      // Build trackers (3-day auto view)
-      renderDayTypeButtons();
-      renderDayTypeEditButtons();
+      // Build trackers (3-day auto view) — buildSched() renders the day-type buttons internally
       buildSched();
       renderTasks();
       renderExpenses();
@@ -5508,8 +5514,6 @@
       renderRecurring();
       renderExpensePattern();
       renderLimits();
-      renderScores();
-      renderWeeklyReport();
       renderWater();
       renderShopping();
       renderNotes();
