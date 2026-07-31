@@ -710,11 +710,6 @@
                 <!-- rendered by JS -->
             </div>
             <div id="cons_breakdown" style="margin-top:12px"></div>
-            <div style="text-align:center;margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-                <button class="btn btn-w btn-sm" onclick="setScoreDate(-1)">◀ Prev day</button>
-                <button class="btn btn-w btn-sm" onclick="setScoreDate(0)">Today</button>
-                <button class="btn btn-w btn-sm" onclick="shareScore()">📤 Share</button>
-            </div>
             <div id="streak_warn" style="margin-top:8px"></div>
             <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:8px;line-height:1.6">
                 Circles show score for selected date. Select any past date to view history.
@@ -821,6 +816,9 @@
       <div class="hist-ex-chips" id="gym_muscle_history_chips"></div>
     </div>
   </div>
+
+  <!-- Exercise jump nav (chips) -->
+  <div id="gym_ex_chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
 
   <!-- Exercise blocks -->
   <div id="gym_ex_blocks"></div>
@@ -1188,7 +1186,7 @@
                     <button class="btn btn-w btn-sm admin-only" onclick="openNotesCatManager()" style="font-size:11px">⚙️ Categories</button>
                 </div>
             </div>
-            <div id="notes_filter_row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+            <select id="notes_filter_row" class="fs" style="margin-bottom:10px" onchange="setNotesFilter(this.value)"></select>
             <div id="notes_list"></div>
         </div>
         </div>
@@ -1339,21 +1337,9 @@
 
         <!-- Header -->
         <div class="card" style="background:linear-gradient(135deg,rgba(255,107,0,0.12),rgba(255,107,0,0.04));border:0.5px solid rgba(255,107,0,0.3)">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-                <div>
-                    <div id="up_plan_title" style="font-size:18px;font-weight:800;color:var(--text1)">🚀 Prep</div>
-                    <div id="up_plan_sub" style="font-size:12px;color:var(--text3);margin-top:2px">Tap "Edit Info" to set your goal, then "+ New Category" below to start building your plan.</div>
-                </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <div class="sum-box" style="min-width:68px"><div class="sv" id="up_days_left" style="color:var(--accent)">—</div><div class="sl">Days left</div></div>
-                    <div class="sum-box" style="min-width:68px"><div class="sv" id="up_pct_done" style="color:var(--green)">0%</div><div class="sl">Complete</div></div>
-                    <div class="sum-box" style="min-width:68px"><div class="sv" id="up_topics_done" style="color:var(--teal)">0/0</div><div class="sl">Topics</div></div>
-                    <div class="sum-box" style="min-width:68px"><div class="sv" id="up_mocks_done" style="color:var(--yellow)">0</div><div class="sl">Mocks</div></div>
-                    <div class="sum-box" style="min-width:80px"><div class="sv" id="up_total_days" style="color:var(--text3)">—</div><div class="sl">Total days</div></div>
-                </div>
-            </div>
-            <div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;margin-bottom:10px">
-                <div id="up_prog_bar" style="height:100%;width:0%;background:var(--accent);border-radius:4px;transition:width .5s"></div>
+            <div style="margin-bottom:12px">
+                <div id="up_plan_title" style="font-size:18px;font-weight:800;color:var(--text1)">🚀 Prep</div>
+                <div id="up_plan_sub" style="font-size:12px;color:var(--text3);margin-top:2px">Tap "Edit Info" to set your goal, then "+ New Category" below to start building your plan.</div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <div style="font-size:11px;color:var(--text3)">Started: <strong id="up_start_label" style="color:var(--text2)">Not set</strong></div>
@@ -1365,7 +1351,6 @@
                     <button id="up_f_done" class="btn btn-w btn-sm" onclick="setUpFilter('done')" style="font-size:11px">✅ Done</button>
                 </div>
             </div>
-            <div style="font-size:11px;color:var(--text3);margin-top:6px;display:flex;gap:16px;flex-wrap:wrap">Expected: <strong id="up_est_finish" style="color:var(--green)">—</strong> Actual: <strong id="up_act_finish" style="color:var(--teal)">—</strong></div>
         </div>
 
         <!-- Phases rendered by JS -->
@@ -1396,34 +1381,6 @@
                 </div>
             </div>
             <button class="btn btn-o btn-sm" onclick="addCustomTopic()">+ Add Topic</button>
-        </div>
-
-        <!-- Mock Interview Log -->
-        <div class="card admin-only">
-            <div class="card-title">🎙️ Mock Interview Log</div>
-            <div class="form-grid" style="margin-bottom:8px">
-                <div class="form-group"><label>Date</label><input type="date" class="fi" id="mock_date"></div>
-                <div class="form-group"><label>Round Type</label>
-                    <select class="fs" id="mock_type">
-                        <option>DSA</option><option>Core Java</option><option>Spring / Framework</option>
-                        <option>System Design</option><option>Behavioral / HR</option><option>Full Loop</option>
-                    </select>
-                </div>
-                <div class="form-group"><label>Platform / Company</label><input class="fi" id="mock_company" placeholder="Pramp / friend / company"></div>
-                <div class="form-group"><label>Result</label>
-                    <select class="fs" id="mock_result">
-                        <option value="good">✅ Went well</option>
-                        <option value="ok">🟡 Okay</option>
-                        <option value="bad">❌ Struggled</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group" style="margin-bottom:8px">
-                <label>What to improve / notes</label>
-                <textarea class="ft" id="mock_notes" style="min-height:55px;font-size:12px" placeholder="Topics to revisit, mistakes made…"></textarea>
-            </div>
-            <button class="btn btn-o btn-sm" onclick="addMockLog()">+ Log Mock</button>
-            <div id="mock_log_list" style="margin-top:12px"></div>
         </div>
 
         <!-- Note / Remark modal -->
@@ -1508,6 +1465,16 @@
     <div class="form-group" style="margin-bottom:8px"><label>Name</label><input class="fi" id="prep_cat_label" placeholder="e.g. Master Kafka"></div>
     <div class="form-group" style="margin-bottom:12px"><label>Description</label><input class="fi" id="prep_cat_desc" placeholder="e.g. Kafka deep dive"></div>
     <div style="display:flex;gap:8px"><button class="btn btn-o" style="flex:1" onclick="saveCategoryModal()">Save</button><button class="btn btn-w" style="flex:1" onclick="closeCategoryModal()">Cancel</button></div>
+  </div>
+</div>
+<!-- SCHEDULE NOTE MODAL -->
+<div id="sched_note_modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border-radius:20px;padding:20px;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.5)">
+    <div style="font-size:14px;font-weight:700;color:var(--text1);margin-bottom:4px">📝 Note</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px" id="sched_note_context"></div>
+    <input type="hidden" id="sched_note_key">
+    <textarea class="ft" id="sched_note_text" style="min-height:90px;font-size:13px" placeholder="e.g. pre-workout snack: 2 banana"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-o" style="flex:1" onclick="saveScheduleNoteModal()">Save</button><button class="btn btn-w" style="flex:1" onclick="closeScheduleNoteModal()">Cancel</button></div>
   </div>
 </div>
 <!-- TAB MANAGER MODAL -->
@@ -1922,7 +1889,7 @@
       'day_type_schedules','day_type_log','tab_visibility',
       'recurring_expenses','recurring_logged',
       'score_weights','day_notes','exp_tags_custom','notes','notes_categories',
-      'upskill_progress','upskill_notes','upskill_mocks','upskill_meta','upskill_custom','owed_list','hidden_tabs',
+      'upskill_progress','upskill_notes','upskill_meta','upskill_custom','owed_list','hidden_tabs',
       'day_type_defs','upskill_overrides','upskill_plan_data','study_sessions',
       'gym_sessions','gym_templates','sched_notes'];
 
@@ -2170,40 +2137,7 @@
     function renderTodayChecklist() {
         var el = document.getElementById('today_checklist');
         if (!el) return;
-        var today = getTodayISO();
         var html = '';
-
-        // ── SECTION A: Today's logging ──────────────────────────────
-        var schedData = ls_get('sched');
-        var dayType = getDayTypeLog()[today];
-        var schedLogged = false;
-        if (dayType) {
-            (getDayTypeSchedules()[dayType] || []).forEach(function(row, ri) {
-                if (schedData['sched_' + dayType + '_' + ri + '_' + today]) schedLogged = true;
-            });
-        }
-        var expenses = getExpenses();
-        var expLogged = Object.keys(expenses).some(function(id){ return expenses[id].date === today; });
-
-        var logItems = [
-            {done: schedLogged, icon:'📅', label:'Log today\'s schedule', tab:'today'},
-            {done: expLogged,   icon:'💸', label:'Log today\'s expenses', tab:'expenses'},
-        ];
-        var logAllDone = logItems.every(function(i){ return i.done; });
-
-        html += '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Today\'s Logging</div>';
-        logItems.forEach(function(item) {
-            var chk = item.done ? '✅' : '⬜';
-            var txtStyle = item.done ? 'color:var(--text3);text-decoration:line-through' : 'color:var(--text1);font-weight:600';
-            html += '<div onclick="showTab(\'' + item.tab + '\')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border2);cursor:pointer">';
-            html += '<span style="font-size:16px">' + chk + '</span>';
-            html += '<span style="font-size:13px;' + txtStyle + '">' + item.icon + ' ' + item.label + '</span>';
-            html += '<span style="margin-left:auto;font-size:11px;color:var(--text3)">→</span>';
-            html += '</div>';
-        });
-        if (logAllDone) {
-            html += '<div style="font-size:12px;color:var(--green);padding:6px 0 2px">All logged today 🎉</div>';
-        }
 
         // ── SECTION B: Urgent tasks (overdue or ≤ 2 days) ──────────
         var tasks = getTasks();
@@ -2676,6 +2610,7 @@
         var k = 'sched_' + type + '_' + ri + '_' + dateStr;
         var state = data[k] || 0;
         var isMissedPast = (state===0) && typeof dateStr==='string' && dateStr>='2020-01-01' && dateStr<getTodayISO();
+        var noteVal = schedNotes[k] || '';
         html += '<tr>';
         html += '<td class="s1" style="color:var(--accent);font-weight:700;font-size:10px">' + esc(row.time||'') + '</td>';
         html += '<td class="s2">' + esc(row.task||'') + '</td>';
@@ -2686,7 +2621,13 @@
         } else {
           html += '<td class="dc"><button class="tri-btn" style="' + triStyle(state) + '" data-k="' + k + '" data-store="sched" data-flash="fl_sched" onclick="triClick(this)"></button></td>';
         }
-        html += '<td class="s3"><input class="fi" style="font-size:11px;padding:6px 8px" placeholder="e.g. pre-workout snack: 2 banana" value="' + esc(schedNotes[k]||'') + '"' + (isReadOnly?' disabled':' onchange="saveScheduleNote(\'' + k + '\', this.value)"') + '></td>';
+        html += '<td class="s3">';
+        if (isReadOnly) {
+          html += noteVal ? '<span style="font-size:11px;color:var(--text2)">' + esc(noteVal) + '</span>' : '<span style="font-size:11px;color:var(--text3)">—</span>';
+        } else {
+          html += '<button class="btn btn-w btn-sm" style="font-size:10px;width:100%;text-align:left;white-space:normal;line-height:1.4" onclick="openScheduleNoteModal(\'' + k + '\', \'' + esc(row.time||'').replace(/'/g,"\\'") + '\', \'' + esc(row.task||'').replace(/'/g,"\\'") + '\', \'' + dateStr + '\')">' + (noteVal ? '📝 ' + esc(noteVal) : '+ Add note') + '</button>';
+        }
+        html += '</td>';
         html += '</tr>';
       });
       html += '</tbody></table></div>';
@@ -2694,11 +2635,30 @@
       if (wrap) wrap.innerHTML = html;
     }
 
-    function saveScheduleNote(k, value) {
+    function openScheduleNoteModal(k, time, task, dateStr) {
+      document.getElementById('sched_note_key').value = k;
+      var schedNotes = ls_get('sched_notes');
+      document.getElementById('sched_note_text').value = schedNotes[k] || '';
+      var dateObj = new Date(dateStr + 'T00:00:00');
+      var fmtDate = dateObj.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dateObj.getMonth()];
+      var dayLabel = dateStr === getTodayISO() ? 'Today' : fmtDate;
+      document.getElementById('sched_note_context').textContent = (time ? time + ' · ' : '') + task + ' — ' + dayLabel;
+      document.getElementById('sched_note_modal').style.display = 'flex';
+    }
+
+    function closeScheduleNoteModal() {
+      document.getElementById('sched_note_modal').style.display = 'none';
+    }
+
+    function saveScheduleNoteModal() {
+      var k = document.getElementById('sched_note_key').value;
+      var value = document.getElementById('sched_note_text').value.trim();
       var notes = ls_get('sched_notes');
-      value = (value || '').trim();
       if (value) { notes[k] = value; } else { delete notes[k]; }
       ls_set('sched_notes', notes);
+      closeScheduleNoteModal();
+      var d = document.getElementById('day_date');
+      if (d) renderDayTracker(d.value);
     }
 
     function buildSched() {
@@ -3717,15 +3677,6 @@
         + '</svg>';
     }
 
-    function setScoreDate(offsetDays) {
-      var d = new Date();
-      d.setDate(d.getDate() + offsetDays);
-      var val = d.toISOString().slice(0,10);
-      var el = document.getElementById('score_date');
-      if (el) { el.value = val; renderScores(); }
-    }
-
-
     var _consBreakdown = [];
 
     // Consistency score: % of last 7 days where user logged something in any tracker
@@ -4161,67 +4112,6 @@
     }
 
     // ═══════════════════════════════════════
-    // SHARE SCORE
-    // ═══════════════════════════════════════
-    function shareScore() {
-        var dateInput = document.getElementById('score_date');
-        var d = dateInput ? dateInput.value : isoD(new Date());
-        var row = document.getElementById('score_row');
-        var circles = row ? row.querySelectorAll('.score-circle') : [];
-        var labels  = ['📅 My Day','💸 Expenses','🔄 Consistency'];
-        var scores  = [];
-        var vals = [];
-        circles.forEach(function(c, i) {
-            var txt = c.querySelector('text');
-            var val = txt ? txt.textContent : '—';
-            scores.push({ label: labels[i], val: val });
-            var n = parseInt(val);
-            if (!isNaN(n)) vals.push(n);
-        });
-
-        // Overall = weighted average of the 3 circle scores (no separate Overall circle anymore)
-        var overallScore = vals.length > 0 ? Math.round(vals.reduce(function(a,b){return a+b;},0) / vals.length) : 0;
-        var stars = '';
-        var starCount = Math.round(overallScore / 20);
-        for (var i = 0; i < 5; i++) stars += i < starCount ? '★' : '☆';
-
-        var bar = '▓'.repeat(Math.round(overallScore/10)) + '░'.repeat(10-Math.round(overallScore/10));
-
-        var lines = [
-            '🏆 Health Score Report — ' + d,
-            '──────────────────────',
-            ''
-        ];
-        scores.forEach(function(s) { lines.push(s.label + ':  ' + s.val); });
-        lines.push('');
-        lines.push('Overall  ' + stars + '  ' + overallScore + '/100');
-        lines.push('[' + bar + ']');
-        lines.push('');
-        lines.push('📊 Full dashboard & details:');
-        lines.push((getAppConfig().baseUrl) || window.location.origin + '/');
-        lines.push('');
-        lines.push('🔥 No Negotiation. No Excuses. Track everything.');
-
-        var text = lines.join('\n');
-
-        if (navigator.share) {
-            navigator.share({
-                title: 'My Health Score — ' + d,
-                text: text,
-                url: (getAppConfig().baseUrl) || window.location.origin + '/'
-            }).catch(function(){});
-        } else {
-            var ta = document.createElement('textarea');
-            ta.value = text;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            appToast('📋 Score copied to clipboard!');
-        }
-    }
-
-    // ═══════════════════════════════════════
     // NOTIFICATIONS (PWA — must be added to Home Screen)
     // ═══════════════════════════════════════
 
@@ -4292,7 +4182,7 @@
       expenses:  { label:'All Expense Entries',          keys:['expenses_list','exp_tags_custom'],                                                  cb:function(){ renderExpenses(); renderExpensePattern(); } },
       recurring: { label:'Recurring Expenses',           keys:['recurring_expenses','recurring_logged'],                                            cb:function(){ renderExpenses(); } },
       owed:      { label:'Owed List',                    keys:['owed_list'],                                                                        cb:function(){ renderOwed(); } },
-      prep:      { label:'Prep / Upskill Progress',      keys:['upskill_progress','upskill_notes','upskill_mocks','upskill_meta','upskill_custom'], cb:function(){ renderUpskill(); } },
+      prep:      { label:'Prep / Upskill Progress',      keys:['upskill_progress','upskill_notes','upskill_meta','upskill_custom'], cb:function(){ renderUpskill(); } },
     };
 
     function eraseSection(sectionKey) {
@@ -6090,24 +5980,19 @@
         var el = document.getElementById('notes_filter_row');
         if (!el) return;
         var list = getNotesCategories().filter(function(c){ return !c.hidden; });
-        var html = '<button class="btn btn-w btn-sm" id="ntf_all" onclick="setNotesFilter(\'all\')">All</button>';
+        var html = '<option value="all">All</option>';
         list.forEach(function(c) {
-            html += '<button class="btn btn-w btn-sm" id="ntf_' + c.key + '" onclick="setNotesFilter(\'' + c.key + '\')">' + c.icon + ' ' + esc(c.label) + '</button>';
+            html += '<option value="' + c.key + '">' + c.icon + ' ' + esc(c.label) + '</option>';
         });
         el.innerHTML = html;
-        highlightNotesFilter(_notesFilter);
+        el.value = _notesFilter;
     }
 
-    function highlightNotesFilter(cat) {
+    function setNotesFilter(cat) {
+        _notesFilter = cat;
         var el = document.getElementById('notes_filter_row');
-        if (!el) return;
-        var btns = el.querySelectorAll('button');
-        btns.forEach(function(btn) {
-            var isActive = btn.id === 'ntf_' + cat;
-            btn.style.background = isActive ? 'var(--accent)' : '';
-            btn.style.color = isActive ? '#fff' : '';
-            btn.style.borderColor = isActive ? 'var(--accent)' : '';
-        });
+        if (el) el.value = cat;
+        renderNotes();
     }
 
     // One-time migration from the old separate Things + Sparks storage
@@ -6134,7 +6019,7 @@
     function wipeDefaultPrepPlan() {
         var wipedKey = 'prep_wiped_v1';
         if (localStorage.getItem(wipedKey)) return;
-        ['upskill_progress','upskill_notes','upskill_mocks','upskill_meta','upskill_custom','upskill_plan_data','upskill_overrides'].forEach(function(k){
+        ['upskill_progress','upskill_notes','upskill_meta','upskill_custom','upskill_plan_data','upskill_overrides'].forEach(function(k){
             ls_set(k, {});
         });
         localStorage.setItem(wipedKey, '1');
@@ -6177,11 +6062,6 @@
         renderNotes();
     }
 
-    function setNotesFilter(cat) {
-        _notesFilter = cat;
-        highlightNotesFilter(cat);
-        renderNotes();
-    }
 
     function renderNotes() {
         var el = document.getElementById('notes_list');
@@ -6485,7 +6365,7 @@
     }
     function eraseAllPrepData(){
         appConfirm('Delete ALL prep data (progress, notes, categories, mocks)?', function() {
-            ['upskill_progress','upskill_notes','upskill_mocks','upskill_meta','upskill_custom','upskill_plan_data','upskill_overrides'].forEach(function(k){
+            ['upskill_progress','upskill_notes','upskill_meta','upskill_custom','upskill_plan_data','upskill_overrides'].forEach(function(k){
                 try{ls_set(k,{});}catch(e){}
             });
             schedulePush();renderUpskill();appToast('🗑️ All prep data erased');
@@ -6574,10 +6454,7 @@
     // UPSKILL — MAIN RENDER
     // ═══════════════════════════════════════
     function renderUpskill() {
-        var prog = ls_get('upskill_progress');
         var meta = ls_get('upskill_meta');
-        var custom = ls_get('upskill_custom'); // {phaseId: [{id,name,source,url,hours,diff}, ...]}
-        var mocks = ls_get('upskill_mocks');
 
         // Update header title + subtitle from saved meta
         var titleEl = document.getElementById('up_plan_title');
@@ -6592,58 +6469,19 @@
             subEl.textContent = parts.length > 0 ? parts.join(' · ') : 'Tap "Edit Info" to set your goal, then "+ New Category" below to start building your plan.';
         }
 
-        // Count all topics including custom
-        var allTopics = [];
-        var plan=getPrepPlanData();
-        plan.forEach(function(ph) {
-            allTopics = allTopics.concat(ph.topics);
-            if (custom[ph.id]) allTopics = allTopics.concat(custom[ph.id]);
-        });
-        var done = allTopics.filter(function(t) { return prog[t.id]; }).length;
-        var total = allTopics.length;
-        var pct = total > 0 ? Math.round(done / total * 100) : 0;
-
         // Days calc
         var PLAN_DAYS    = getTotalPrepDays(); // user-configured plan duration (e.g. 50)
-        var daysLeftEl   = document.getElementById('up_days_left');
         var startLbl     = document.getElementById('up_start_label');
         if (meta.start) {
             var sd  = new Date(meta.start + 'T00:00:00');
-            var ed  = new Date(sd.getTime() + (PLAN_DAYS - 1) * 86400000);
             var now = new Date(); now.setHours(0,0,0,0);
-            var dl  = Math.max(0, Math.ceil((ed - now) / 86400000));
             var dn  = Math.min(PLAN_DAYS, Math.max(1, Math.ceil((now - sd) / 86400000) + 1));
-            if (daysLeftEl) daysLeftEl.textContent = dl;
             if (startLbl)   startLbl.textContent = meta.start + '  (Day ' + dn + ' of ' + PLAN_DAYS + ')';
         } else {
-            if (daysLeftEl) daysLeftEl.textContent = PLAN_DAYS;
             if (startLbl)   startLbl.textContent = 'Not set';
         }
 
-        var _tDays=PLAN_DAYS, _rDays=getRemainingPrepDays();
-        var _tdEl=document.getElementById('up_total_days'),_efEl=document.getElementById('up_est_finish'),_afEl=document.getElementById('up_act_finish');
-        if(_tdEl)_tdEl.textContent=_tDays+'d';
-        if(meta.start){
-            var _sd=new Date(meta.start+'T00:00:00');
-            var _ee=new Date(_sd.getTime()+(_tDays-1)*86400000);
-            var _nowiso=getTodayISO();
-            var _nd=new Date(_nowiso+'T00:00:00');
-            var _ae=new Date(_nd.getTime()+_rDays*86400000);
-            if(_efEl)_efEl.textContent=isoD(_ee);
-            if(_afEl)_afEl.textContent=isoD(_ae);
-        }else{if(_efEl)_efEl.textContent='—';if(_afEl)_afEl.textContent='—';}
-
-        var pctEl     = document.getElementById('up_pct_done');
-        var topicsEl  = document.getElementById('up_topics_done');
-        var barEl     = document.getElementById('up_prog_bar');
-        var mocksEl   = document.getElementById('up_mocks_done');
-        if (pctEl)    pctEl.textContent    = pct + '%';
-        if (topicsEl) topicsEl.textContent = done + '/' + total;
-        if (barEl)    barEl.style.width    = pct + '%';
-        if (mocksEl)  mocksEl.textContent  = Array.isArray(mocks) ? mocks.length : 0;
-
         renderUpskillPhases();
-        renderMockLog();
         // Sync the "Add Topic" phase dropdown with current plan (includes custom categories)
         (function(){
             var sel = document.getElementById('ct_phase');
@@ -6760,15 +6598,15 @@
                 if (noteLink) html += '<a href="' + noteLink + '" target="_blank" style="font-size:10px;color:var(--teal);background:rgba(45,212,191,0.1);border-radius:20px;padding:1px 8px;text-decoration:none">📝 Notes ↗</a>';
                 html += '</div>';
                 if (noteText) html += '<div style="font-size:11px;color:var(--text2);margin-top:6px;background:var(--bg3);border-radius:8px;padding:6px 10px;line-height:1.5">' + esc(noteText) + '</div>';
-                html += '</div>';
-                // Action buttons
+                // Action buttons — horizontal row below the topic content
                 if (isAdmin) {
-                    html += '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
-                    html += '<button class="btn btn-w btn-sm" style="padding:4px 8px;font-size:11px" onclick="openNoteModal(\'' + topic.id + '\',\'' + esc(topic.name).replace(/'/g,"\\'") + '\')">📝</button>';
-                    html += '<button class="btn btn-w btn-sm" style="padding:4px 8px;font-size:11px" onclick="openEditModal(\'' + topic.id + '\',' + isCustom + ',\'' + phase.id + '\')">✏️</button>';
-                    if (isCustom) html += '<button class="btn btn-r btn-sm" style="padding:4px 8px;font-size:11px" onclick="deleteCustomTopic(\'' + phase.id + '\',\'' + topic.id + '\')">✕</button>';
+                    html += '<div style="display:flex;flex-direction:row;gap:6px;margin-top:8px">';
+                    html += '<button class="btn btn-w btn-sm" style="padding:4px 8px;font-size:11px" onclick="openNoteModal(\'' + topic.id + '\',\'' + esc(topic.name).replace(/'/g,"\\'") + '\')">📝 Note</button>';
+                    html += '<button class="btn btn-w btn-sm" style="padding:4px 8px;font-size:11px" onclick="openEditModal(\'' + topic.id + '\',' + isCustom + ',\'' + phase.id + '\')">✏️ Edit</button>';
+                    if (isCustom) html += '<button class="btn btn-r btn-sm" style="padding:4px 8px;font-size:11px" onclick="deleteCustomTopic(\'' + phase.id + '\',\'' + topic.id + '\')">✕ Del</button>';
                     html += '</div>';
                 }
+                html += '</div>'; // end content
                 html += '</div>';
             });
 
@@ -6932,59 +6770,6 @@
             renderUpskill();
             appToast('✅ Start date saved!');
         });
-    }
-
-    // ═══════════════════════════════════════
-    // MOCK LOG
-    // ═══════════════════════════════════════
-    function addMockLog() {
-        var date    = (document.getElementById('mock_date')   ||{}).value || '';
-        var type    = (document.getElementById('mock_type')   ||{}).value || '';
-        var company = ((document.getElementById('mock_company')||{}).value||'').trim();
-        var result  = (document.getElementById('mock_result') ||{}).value || 'ok';
-        var notes   = ((document.getElementById('mock_notes') ||{}).value||'').trim();
-        if (!date || !type) { appToast('⚠️ Select date and type'); return; }
-        var mocks = ls_get('upskill_mocks');
-        if (!Array.isArray(mocks)) mocks = [];
-        mocks.unshift({id:newId(), date:date, type:type, company:company, result:result, notes:notes});
-        ls_set('upskill_mocks', mocks);
-        document.getElementById('mock_company').value = '';
-        document.getElementById('mock_notes').value   = '';
-        renderUpskill();
-        appToast('🎙️ Mock logged!');
-    }
-
-    function deleteMockLog(id) {
-        var mocks = ls_get('upskill_mocks');
-        if (!Array.isArray(mocks)) return;
-        ls_set('upskill_mocks', mocks.filter(function(m){ return m.id !== id; }));
-        renderUpskill();
-    }
-
-    function renderMockLog() {
-        var el = document.getElementById('mock_log_list');
-        if (!el) return;
-        var mocks = ls_get('upskill_mocks');
-        if (!Array.isArray(mocks) || mocks.length === 0) {
-            el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:10px 0">No mocks logged yet — book your first one on Pramp today.</div>';
-            return;
-        }
-        var rClr = {good:'var(--green)', ok:'var(--yellow)', bad:'var(--red)'};
-        var rLbl = {good:'✅ Went well', ok:'🟡 Okay', bad:'❌ Struggled'};
-        el.innerHTML = mocks.map(function(m) {
-            return '<div style="padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:8px">'
-                + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
-                + '<div><span style="font-size:13px;font-weight:700;color:var(--text1)">' + esc(m.type) + '</span>'
-                + (m.company ? '<span style="font-size:11px;color:var(--text3);margin-left:6px">@ ' + esc(m.company) + '</span>' : '')
-                + '</div>'
-                + '<div style="display:flex;align-items:center;gap:8px">'
-                + '<span style="font-size:11px;font-weight:700;color:' + (rClr[m.result]||'var(--text3)') + '">' + (rLbl[m.result]||m.result) + '</span>'
-                + '<span style="font-size:11px;color:var(--text3)">' + m.date + '</span>'
-                + '<button class="btn btn-r btn-sm admin-only" style="padding:3px 7px" onclick="deleteMockLog(\'' + m.id + '\')">✕</button>'
-                + '</div></div>'
-                + (m.notes ? '<div style="font-size:12px;color:var(--text2);line-height:1.5;margin-top:4px">' + esc(m.notes) + '</div>' : '')
-                + '</div>';
-        }).join('');
     }
 
     // Apply overrides on load
@@ -7454,6 +7239,7 @@ function showGymTab(name){
 // ─── STATE ────────────────────────────────────────────────────────────────────
 var _gymEx=[];   // [{name,muscle,sets:[...],prev}]
 var _gymMuscles=new Set();
+var _gymExpandedIdx=null; // index of the currently expanded exercise block (accordion)
 
 // ─── MUSCLE GROUPS & UPPER/LOWER SPLIT ───────────────────────────────────────
 var GYM_MUSCLE_DEFS=[
@@ -7558,6 +7344,7 @@ function renderGymMuscleHistorySuggestions(){
 function quickAddGymExercise(name,muscle){
   var prev=getGymPrevForExercise(name);
   _gymEx.push({name:name,muscle:muscle,sets:[],prev:prev});
+  _gymExpandedIdx=_gymEx.length-1;
   // Mark muscle as selected
   _gymMuscles.add(muscle);
   document.querySelectorAll('[data-muscle="'+muscle+'"]').forEach(function(b){b.classList.add('sel');});
@@ -7576,6 +7363,7 @@ function addGymExerciseManual(){
   if(!name){appToast('⚠️ Enter exercise name');return;}
   var prev=getGymPrevForExercise(name);
   _gymEx.push({name:name,muscle:muscle,sets:[],prev:prev});
+  _gymExpandedIdx=_gymEx.length-1;
   _gymMuscles.add(muscle);
   document.querySelectorAll('[data-muscle="'+muscle+'"]').forEach(function(b){b.classList.add('sel');});
   document.getElementById('gym_new_ex_name').value='';
@@ -7599,7 +7387,21 @@ function getGymPrevForExercise(name){
 // ─── RENDER EXERCISES ─────────────────────────────────────────────────────────
 function renderGymExercises(){
   var wrap=document.getElementById('gym_ex_blocks');
-  if(_gymEx.length===0){wrap.innerHTML='';return;}
+  var chipsWrap=document.getElementById('gym_ex_chips');
+  if(_gymEx.length===0){wrap.innerHTML='';if(chipsWrap)chipsWrap.innerHTML='';return;}
+
+  // Accordion: only one exercise block expanded at a time — keeps long sessions scrollable.
+  // Defaults to the most-recently-added exercise.
+  if(_gymExpandedIdx===null||_gymExpandedIdx>=_gymEx.length)_gymExpandedIdx=_gymEx.length-1;
+
+  if(chipsWrap){
+    chipsWrap.innerHTML=_gymEx.map(function(ex,ei){
+      var active=ei===_gymExpandedIdx;
+      var setsCount=ex.sets.length;
+      return '<button class="btn btn-sm" style="font-size:11px;'+(active?'background:var(--accent);color:#fff;border-color:var(--accent)':'background:var(--bg3);color:var(--text2);border:.5px solid var(--border)')+'" onclick="expandGymExercise('+ei+')">'+esc(ex.name)+(setsCount>0?' ('+setsCount+')':'')+'</button>';
+    }).join('');
+  }
+
   var html='';
   _gymEx.forEach(function(ex,ei){
     var cardio=isCardio(ex.muscle);
@@ -7609,29 +7411,39 @@ function renderGymExercises(){
       var prevMaxW=ex.prev?Math.max.apply(null,ex.prev.sets.map(function(s){return parseFloat(s.weight)||0;})):0;
       isPR=maxW>prevMaxW&&prevMaxW>0;
     }
+    var expanded=ei===_gymExpandedIdx;
 
     html+='<div class="ex-block">';
-    html+='<div class="ex-header">';
-    html+='<div class="ex-name">'+esc(ex.name)+(isPR?' <span class="pr-badge">🏆 PR!</span>':'')+'</div>';
+    html+='<div class="ex-header" style="cursor:pointer" onclick="expandGymExercise('+ei+')">';
+    html+='<span style="font-size:11px;color:var(--text3);flex-shrink:0">'+(expanded?'▼':'▶')+'</span>';
+    html+='<div class="ex-name">'+esc(ex.name)+(isPR?' <span class="pr-badge">🏆 PR!</span>':'')+(!expanded&&ex.sets.length>0?' <span style="font-size:11px;color:var(--text3);font-weight:400">('+ex.sets.length+' sets)</span>':'')+'</div>';
     html+='<span class="ex-muscle-tag '+(cardio?'tag-cardio':'tag-strength')+'">'+esc(ex.muscle)+'</span>';
-    html+='<button class="del-btn" onclick="removeGymExercise('+ei+')">✕</button>';
+    html+='<button class="del-btn" onclick="event.stopPropagation();removeGymExercise('+ei+')">✕</button>';
     html+='</div>';
 
-    // Previous session badge
-    if(ex.prev){
-      var prevStr=fmtSetsShort({muscle:ex.muscle,sets:ex.prev.sets});
-      html+='<div class="prev-badge">📅 Last ('+ex.prev.date+'): '+esc(prevStr)+'</div>';
-    }
+    if(expanded){
+      // Previous session badge
+      if(ex.prev){
+        var prevStr=fmtSetsShort({muscle:ex.muscle,sets:ex.prev.sets});
+        html+='<div class="prev-badge">📅 Last ('+ex.prev.date+'): '+esc(prevStr)+'</div>';
+      }
 
-    if(cardio){
-      html+=renderGymCardioBlock(ex,ei);
-    } else {
-      html+=renderGymStrengthBlock(ex,ei);
+      if(cardio){
+        html+=renderGymCardioBlock(ex,ei);
+      } else {
+        html+=renderGymStrengthBlock(ex,ei);
+      }
     }
     html+='</div>';
   });
   wrap.innerHTML=html;
 }
+
+function expandGymExercise(ei){
+  _gymExpandedIdx=(_gymExpandedIdx===ei)?null:ei;
+  renderGymExercises();
+}
+
 
 // ─── STRENGTH BLOCK ───────────────────────────────────────────────────────────
 
@@ -7720,7 +7532,12 @@ function updateSet(ei,si,field,value){
   else if(field==='rpe'){var rpe=parseInt(value);if(rpe>=1&&rpe<=10)set.rpe=rpe;else delete set.rpe;}
   renderGymExercises();
 }
-function removeGymExercise(ei){_gymEx.splice(ei,1);renderGymExercises();renderGymMuscleHistorySuggestions();}
+function removeGymExercise(ei){
+  _gymEx.splice(ei,1);
+  if(_gymExpandedIdx===ei)_gymExpandedIdx=null;
+  else if(_gymExpandedIdx>ei)_gymExpandedIdx--;
+  renderGymExercises();renderGymMuscleHistorySuggestions();
+}
 
 function updateGymSuggestions(){
   var names=getAllExerciseNames();
@@ -7841,7 +7658,7 @@ function _commitGymSession(sessions,session,choice,existingIdx){
   saveSessions(sessions);
 
   // Reset form
-  _gymEx=[];_gymMuscles=new Set();
+  _gymEx=[];_gymMuscles=new Set();_gymExpandedIdx=null;
   document.querySelectorAll('.muscle-btn.sel').forEach(function(b){b.classList.remove('sel');});
   document.getElementById('gym_log_name').value='';
   document.getElementById('gym_log_notes').value='';
@@ -8332,6 +8149,7 @@ function loadTemplate(id) {
   if (!tpl) return;
   _gymEx = [];
   _gymMuscles = new Set();
+  _gymExpandedIdx = null;
   // Switch to 'all' split so every muscle in the template can be shown/selected
   _gymSplit = 'all';
   renderGymMuscleRow();
