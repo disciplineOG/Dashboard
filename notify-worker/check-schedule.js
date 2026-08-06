@@ -101,10 +101,10 @@ async function main() {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: sub.keys },
           JSON.stringify({
-            title: '⏰ ' + (row.task || 'Scheduled item'),
-            body: (row.time ? row.time + ' · ' : '') + dayLabel,
+            title: 'Did you do: ' + (row.task || 'this') + '?',
+            body: 'Due ' + (row.time || 'now') + (dayLabel ? ' · ' + dayLabel : '') + ' — tap to mark',
             tag: schedKey,
-            data: { key: schedKey, dbUrl: FB_DB_URL, apiKey: FB_API_KEY }
+            data: { key: schedKey, dbUrl: FB_DB_URL, apiKey: FB_API_KEY, task: row.task || 'Scheduled item' }
           })
         );
         sentUpdates[sentKey] = true;
