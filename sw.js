@@ -1,4 +1,4 @@
-const CACHE = 'dashboard-v6';
+const CACHE = 'dashboard-v7';
 // Derive base path dynamically so this SW works at any deployment path (not just /Dashboard/)
 const BASE = new URL('./', self.location.href).pathname;
 const ASSETS = [
@@ -66,3 +66,55 @@ self.addEventListener('message', function(e) {
     });
   }
 });
+
+// ═══ SCHEDULE PUSH NOTIFICATIONS ═══
+self.addEventListener('push', function(e) {
+  var payload = {};
+  try { payload = e.data ? e.data.json() : {}; } catch (err) {}
+  var title = payload.title || 'Schedule Reminder';
+  var options = {
+    body: payload.body || '',
+    tag: payload.tag || 'sched-reminder',
+    data: payload.data || {},
+    icon: BASE + 'icon-192.png',
+    actions: [
+      { action: 'done', title: '✅ Done' },
+      { action: 'skip', title: '⏭️ Skip' }
+    ]
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', function(e) {
+  var data = e.notification.data || {};
+  e.notification.close();
+  if (e.action === 'done' || e.action === 'skip') {
+    e.waitUntil(writeSchedState(data, e.action === 'done' ? 1 : 2));
+    return;
+  }
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {
+      for (var i = 0; i < list.length; i++) {
+        if ('focus' in list[i]) return list[i].focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(BASE);
+    })
+  );
+});
+
+function writeSchedState(data, state) {
+  if (!data.dbUrl || !data.apiKey || !data.key) return Promise.resolve();
+  return fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + data.apiKey, {
+    method: 'POST',
+    body: JSON.stringify({ returnSecureToken: true })
+  }).then(function(r) { return r.json(); }).then(function(auth) {
+    var token = auth.idToken;
+    var base = data.dbUrl.replace(/\/$/, '');
+    var schedPatch = {};
+    schedPatch[data.key] = state;
+    return Promise.all([
+      fetch(base + '/dashboard/data/sched.json?auth=' + token, { method: 'PATCH', body: JSON.stringify(schedPatch) }),
+      fetch(base + '/dashboard/data/_key_ts.json?auth=' + token, { method: 'PATCH', body: JSON.stringify({ sched: Date.now() }) })
+    ]);
+  }).catch(function() {});
+}

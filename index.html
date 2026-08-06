@@ -307,10 +307,11 @@
         .score-circle svg{display:block;overflow:visible}
         .score-sm svg{width:68px;height:68px}
         .score-md svg{width:116px;height:116px}
+        .score-md.cons-big svg{width:145px;height:145px}
         .score-lg svg{width:108px;height:108px}
         .s-label{text-align:center;font-size:8px;font-weight:600;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-        @media(max-width:420px){.score-sm svg{width:48px;height:48px}.score-md svg{width:84px;height:84px}.score-lg svg{width:76px;height:76px}}
-        @media(max-width:360px){.score-sm svg{width:42px;height:42px}.score-md svg{width:72px;height:72px}.score-lg svg{width:66px;height:66px}}
+        @media(max-width:420px){.score-sm svg{width:48px;height:48px}.score-md svg{width:84px;height:84px}.score-lg svg{width:76px;height:76px}.score-md.cons-big svg{width:105px;height:105px}}
+        @media(max-width:360px){.score-sm svg{width:42px;height:42px}.score-md svg{width:72px;height:72px}.score-lg svg{width:66px;height:66px}.score-md.cons-big svg{width:90px;height:90px}}
 
         /* ══════════════════════════════════════
            TRI-STATE BUTTON
@@ -370,6 +371,7 @@
         .ql-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1500;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px)}
         .ql-overlay.open{display:flex}
         .ql-overlay.ql-nested{z-index:1600}
+        .ql-overlay.ql-nested2{z-index:1700}
         .ql-sheet{background:var(--bg2);border-radius:22px 22px 0 0;padding:18px 16px 36px;width:100%;max-width:480px;max-height:82vh;overflow-y:auto}
         .ql-title{font-size:15px;font-weight:700;color:var(--text1);margin-bottom:4px}
         .ql-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)}
@@ -420,6 +422,7 @@
           .score-sm svg{width:60px;height:60px}
           .score-md svg{width:88px;height:88px}
           .score-lg svg{width:94px;height:94px}
+          .score-md.cons-big svg{width:110px;height:110px}
         }
 
         .smenu-item {
@@ -566,7 +569,7 @@
         <div class="card" id="ov_intentions_card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
                 <div class="card-title" style="margin-bottom:0">🔥 This Month's Focus</div>
-                <button class="btn btn-w btn-sm admin-only" onclick="openConfigManager();setTimeout(function(){var b=document.getElementById('g_focus_body');if(b&&b.style.display==='none')toggleGoalsCard('g_focus_body');},200)" style="font-size:10px">✏️ Edit</button>
+                <button class="btn btn-w btn-sm admin-only" onclick="openFocusManager()" style="font-size:10px">✏️ Edit</button>
             </div>
             <div id="ov_focus_display" style="font-size:13px;color:var(--text2);line-height:1.8">
                 <!-- rendered by renderOverviewFocus() -->
@@ -621,7 +624,10 @@
         <div class="card list-card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
                 <div class="card-title" style="margin-bottom:0">📅 My Day</div>
-                <input type="date" class="fi view-ok" id="day_date" style="width:auto;padding:5px 10px;font-size:12px" onchange="onDayDateChange()">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <input type="date" class="fi view-ok" id="day_date" style="width:auto;padding:5px 10px;font-size:12px" onchange="onDayDateChange()">
+                    <button class="btn btn-o btn-sm admin-only" onclick="openDayTypeHub()">✏️ Edit Schedule</button>
+                </div>
             </div>
             <div id="day_type_label" style="font-size:12px;color:var(--text3);margin-bottom:10px"></div>
             <div class="tracker-outer" id="day_tracker_wrap"></div>
@@ -847,16 +853,6 @@
             </div>
         </div>
 
-        <!-- Log Study Session -->
-        <div class="card add-card admin-only">
-            <div class="card-title">📚 Log Study Session</div>
-            <div style="display:flex;gap:8px">
-                <input class="fi" id="up_study_topic" placeholder="Topic…" style="flex:2">
-                <input type="number" class="fi" id="up_study_hrs" placeholder="hrs" style="flex:1" step="0.5">
-                <button class="btn btn-o btn-sm" onclick="var t=document.getElementById('up_study_topic').value;var h=document.getElementById('up_study_hrs').value;if(t&&h){logStudySession(t,h);document.getElementById('up_study_topic').value='';document.getElementById('up_study_hrs').value='';appToast('Logged: '+h+'h on '+t);}else{appToast('Fill both fields');}">+ Log</button>
-            </div>
-        </div>
-
         <!-- Phases rendered by JS -->
         <div id="up_phases_wrap"></div>
 
@@ -993,7 +989,7 @@
 </div>
 
 <!-- DAY TYPE MANAGER MODAL -->
-<div class="ql-overlay ql-nested" id="dt_mgr_overlay" onclick="if(event.target===this)closeDayTypeManager()">
+<div class="ql-overlay ql-nested2" id="dt_mgr_overlay" onclick="if(event.target===this)closeDayTypeManager()">
   <div class="ql-sheet">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div class="ql-title">📅 Manage Day Types</div>
@@ -1045,6 +1041,160 @@
   </div>
 </div>
 
+<!-- RECURRING EXPENSES MANAGER -->
+<div class="ql-overlay ql-nested" id="rec_exp_mgr_overlay" onclick="if(event.target===this)closeRecExpManager()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">🔄 Manage Recurring Expenses</div>
+      <button onclick="closeRecExpManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Recurring auto-logs on the set day each month. Once is a one-time fixed amount.</div>
+    <div class="form-grid" style="margin-bottom:8px">
+        <div class="form-group"><label>Name</label><input class="fi" id="rec_name" placeholder="e.g. Rent, Netflix"></div>
+        <div class="form-group"><label>Amount (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="rec_amt" placeholder="e.g. 15000"></div>
+    </div>
+    <div class="form-grid" style="margin-bottom:10px">
+        <div class="form-group">
+            <label>Type</label>
+            <select class="fs" id="rec_occurrence" onchange="toggleRecurringDay(this.value)">
+                <option value="recurring">Recurring (auto-logs monthly)</option>
+                <option value="once">One-time (log once, stays in history)</option>
+            </select>
+        </div>
+        <div class="form-group" id="rec_day_wrap">
+            <label>Day of month (1–28)</label>
+            <input type="number" class="fi" id="rec_day" placeholder="1" min="1" max="28">
+        </div>
+    </div>
+    <button class="btn btn-o btn-sm" onclick="addRecurring()">+ Add</button>
+    <div id="rec_list" style="margin-top:10px"></div>
+    <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border2)">
+        <button class="btn-erase" onclick="eraseSection('recurring')">🗑️ Erase Recurring Expenses</button>
+    </div>
+  </div>
+</div>
+
+<!-- MONTHLY INTENTIONS MANAGER -->
+<div class="ql-overlay ql-nested" id="focus_mgr_overlay" onclick="if(event.target===this)closeFocusManager()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">🔥 Manage Monthly Intentions</div>
+      <button onclick="closeFocusManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">3 intentions for this month — shown on the Overview tab.</div>
+    <div id="focus_display"></div>
+    <div id="focus_edit">
+        <div class="form-group" style="margin-bottom:8px"><label>Intention 1</label><input class="fi" id="focus_1" placeholder="e.g. Exercise every day without skipping"></div>
+        <div class="form-group" style="margin-bottom:8px"><label>Intention 2</label><input class="fi" id="focus_2" placeholder="e.g. Log food every day"></div>
+        <div class="form-group" style="margin-bottom:10px"><label>Intention 3</label><input class="fi" id="focus_3" placeholder="e.g. Sleep before 11 PM"></div>
+        <button class="btn btn-o btn-sm" onclick="saveFocus()">Save Intentions</button>
+    </div>
+  </div>
+</div>
+
+<!-- MONTHLY EXPENSE LIMIT MANAGER -->
+<div class="ql-overlay ql-nested" id="exp_limit_mgr_overlay" onclick="if(event.target===this)closeExpLimitManager()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">💸 Manage Monthly Expense Limit</div>
+      <button onclick="closeExpLimitManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Set your daily variable spending limit. Once saved for a month it locks — view pattern in Expenses tab.</div>
+    <div id="goal_limit_status" style="margin-bottom:10px"></div>
+    <div id="goal_lim_form">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Setting limit for: <strong id="goal_lim_month_label" style="color:var(--text1)"></strong></div>
+        <div class="form-grid" style="margin-bottom:8px">
+            <div class="form-group"><label>Daily Variable Limit (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="goal_lim_amt" placeholder="e.g. 500"></div>
+        <div class="form-group"><label>Monthly Budget (<span class="cur-sym">₹</span>) <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input type="number" class="fi" id="goal_lim_monthly" placeholder="e.g. 15000"></div>
+        </div>
+        <button class="btn btn-g btn-sm" onclick="saveLimit()">Save Limit for This Month</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCORE WEIGHTS MANAGER -->
+<div class="ql-overlay ql-nested" id="score_wt_mgr_overlay" onclick="if(event.target===this)closeScoreWeightsManager()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">⚖️ Manage Score Weights</div>
+      <button onclick="closeScoreWeightsManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Adjust how much each component contributes to your Overall score. Must total 100%.</div>
+    <div id="score_weights_wrap"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+        <span style="font-size:12px;color:var(--text3)">Total: <strong id="sw_total" style="color:var(--text1)">100%</strong></span>
+        <button class="btn btn-o btn-sm" onclick="saveScoreWeights()">Save Weights</button>
+    </div>
+  </div>
+</div>
+
+<!-- DAY-TYPE SCHEDULES HUB -->
+<div class="ql-overlay ql-nested" id="daytype_hub_overlay" onclick="if(event.target===this)closeDayTypeHub()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">📅 Manage Day-Type Schedules</div>
+      <button onclick="closeDayTypeHub()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Everything about how your day types and schedule rows are structured.</div>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeManager()">📅 Add / Rename / Delete Day Types</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeWeekManager()">📆 Weekly Plan</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeOverrideManager()">🗓️ Upcoming Overrides</button>
+    <button class="btn btn-w" style="width:100%" onclick="openDayTypeEditRowsManager()">✏️ Edit Schedule Rows</button>
+    <div style="margin-top:16px;padding-top:10px;border-top:0.5px solid var(--border2)">
+        <button class="btn-erase" onclick="eraseSection('daytypedefs')">🗑️ Erase Day Type Definitions</button>
+    </div>
+  </div>
+</div>
+
+<!-- DAY-TYPE: WEEKLY PLAN -->
+<div class="ql-overlay ql-nested2" id="dt_week_mgr_overlay" onclick="if(event.target===this)closeDayTypeWeekManager()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">📆 Weekly Plan</div>
+      <button onclick="closeDayTypeWeekManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Preset the default day type for each weekday (e.g. Mon–Fri = 🏢 Office, Sat–Sun = 🌴 Weekend). You can still override any single day from the Today tab.</div>
+    <div id="dt_week_map_list"></div>
+  </div>
+</div>
+
+<!-- DAY-TYPE: UPCOMING OVERRIDES -->
+<div class="ql-overlay ql-nested2" id="dt_override_mgr_overlay" onclick="if(event.target===this)closeDayTypeOverrideManager()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">🗓️ Upcoming Overrides</div>
+      <button onclick="closeDayTypeOverrideManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Know in advance you'll have a different kind of day (e.g. WFH from native for a few days)? Schedule it here — it overrides the Weekly Plan for those dates.</div>
+    <div class="form-grid" style="margin-bottom:8px">
+        <div class="form-group"><label>From</label><input type="date" class="fi" id="dt_ov_from"></div>
+        <div class="form-group"><label>To (optional)</label><input type="date" class="fi" id="dt_ov_to"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label>Day Type</label><select class="fs" id="dt_ov_type"></select></div>
+    <button class="btn btn-o btn-sm" onclick="scheduleDayTypeOverride()" style="margin-bottom:12px">+ Schedule</button>
+    <div id="dt_ov_list"></div>
+  </div>
+</div>
+
+<!-- DAY-TYPE: EDIT SCHEDULE ROWS -->
+<div class="ql-overlay ql-nested2" id="dt_editrows_mgr_overlay" onclick="if(event.target===this)closeDayTypeEditRowsManager()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">✏️ Edit Schedule Rows</div>
+      <button onclick="closeDayTypeEditRowsManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="dts_type_btns">
+        <!-- populated dynamically by renderDayTypeEditButtons() -->
+    </div>
+    <div id="day_type_edit_wrap"></div>
+    <div class="form-grid" style="margin-top:10px" id="add_dt_row_form">
+        <div class="form-group"><label>Time</label><input class="fi" id="dt_row_time" placeholder="e.g. 7:00 AM"></div>
+        <div class="form-group"><label>Task</label><input class="fi" id="dt_row_task" placeholder="e.g. Morning walk 30 min"></div>
+    </div>
+    <button class="btn btn-o btn-sm" onclick="addDayTypeRow()" style="margin-top:6px">+ Add to Selected Type</button>
+  </div>
+</div>
+
 <!-- CONFIGURATION HUB (all "set once and done" settings) -->
 <div class="ql-overlay" id="config_mgr_overlay" onclick="if(event.target===this)closeConfigManager()">
   <div class="ql-sheet">
@@ -1054,128 +1204,29 @@
     </div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Things you set once and rarely change again.</div>
 
-    <!-- Fixed / Recurring Expenses -->
-    <div class="card" style="margin-bottom:10px">
-        <div class="card-title" onclick="toggleGoalsCard('cfg_rec_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-          <span>🔄 Fixed / Recurring Expenses</span><span id="cfg_rec_body_arr">▶</span>
-        </div>
-        <div id="cfg_rec_body" style="display:none;margin-top:10px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Recurring auto-logs on the set day each month. Once is a one-time fixed amount.</div>
-        <div class="form-grid" style="margin-bottom:8px">
-            <div class="form-group"><label>Name</label><input class="fi" id="rec_name" placeholder="e.g. Rent, Netflix"></div>
-            <div class="form-group"><label>Amount (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="rec_amt" placeholder="e.g. 15000"></div>
-        </div>
-        <div class="form-grid" style="margin-bottom:10px">
-            <div class="form-group">
-                <label>Type</label>
-                <select class="fs" id="rec_occurrence" onchange="toggleRecurringDay(this.value)">
-                    <option value="recurring">Recurring (auto-logs monthly)</option>
-                    <option value="once">One-time (log once, stays in history)</option>
-                </select>
-            </div>
-            <div class="form-group" id="rec_day_wrap">
-                <label>Day of month (1–28)</label>
-                <input type="number" class="fi" id="rec_day" placeholder="1" min="1" max="28">
-            </div>
-        </div>
-        <button class="btn btn-o btn-sm" onclick="addRecurring()">+ Add</button>
-        <div id="rec_list" style="margin-top:10px"></div>
-        <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border2)">
-            <button class="btn-erase" onclick="eraseSection('recurring')">🗑️ Erase Recurring Expenses</button>
-        </div>
-        </div>
-    </div>
-
-    <!-- Monthly Intentions -->
-    <div class="card" style="margin-bottom:10px">
-        <div class="card-title" onclick="toggleGoalsCard('g_focus_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-          <span>🔥 Monthly Intentions</span><span id="g_focus_body_arr">▶</span>
-        </div>
-        <div id="g_focus_body" style="display:none;margin-top:10px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">3 intentions for this month — shown on the Overview tab.</div>
-        <div id="focus_display"></div>
-        <div id="focus_edit">
-            <div class="form-group" style="margin-bottom:8px"><label>Intention 1</label><input class="fi" id="focus_1" placeholder="e.g. Exercise every day without skipping"></div>
-            <div class="form-group" style="margin-bottom:8px"><label>Intention 2</label><input class="fi" id="focus_2" placeholder="e.g. Log food every day"></div>
-            <div class="form-group" style="margin-bottom:10px"><label>Intention 3</label><input class="fi" id="focus_3" placeholder="e.g. Sleep before 11 PM"></div>
-            <button class="btn btn-o btn-sm" onclick="saveFocus()">Save Intentions</button>
-        </div>
-        </div>
-    </div>
-
-    <!-- Monthly Expense Limit -->
-    <div class="card" style="margin-bottom:10px">
-        <div class="card-title" onclick="toggleGoalsCard('g_explim_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-          <span>💸 Monthly Expense Limit</span><span id="g_explim_body_arr">▶</span>
-        </div>
-        <div id="g_explim_body" style="display:none;margin-top:10px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Set your daily variable spending limit. Once saved for a month it locks — view pattern in Expenses tab.</div>
-        <div id="goal_limit_status" style="margin-bottom:10px"></div>
-        <div id="goal_lim_form">
-            <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Setting limit for: <strong id="goal_lim_month_label" style="color:var(--text1)"></strong></div>
-            <div class="form-grid" style="margin-bottom:8px">
-                <div class="form-group"><label>Daily Variable Limit (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="goal_lim_amt" placeholder="e.g. 500"></div>
-            <div class="form-group"><label>Monthly Budget (<span class="cur-sym">₹</span>) <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input type="number" class="fi" id="goal_lim_monthly" placeholder="e.g. 15000"></div>
-            </div>
-            <button class="btn btn-g btn-sm" onclick="saveLimit()">Save Limit for This Month</button>
-        </div>
-        </div>
-    </div>
-
-    <!-- Overall Score Weights -->
-    <div class="card" style="margin-bottom:10px">
-        <div class="card-title" onclick="toggleGoalsCard('g_score_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-          <span>⚖️ Overall Score Weights</span><span id="g_score_body_arr">▶</span>
-        </div>
-        <div id="g_score_body" style="display:none;margin-top:10px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Adjust how much each component contributes to your Overall score. Must total 100%.</div>
-        <div id="score_weights_wrap"></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-            <span style="font-size:12px;color:var(--text3)">Total: <strong id="sw_total" style="color:var(--text1)">100%</strong></span>
-            <button class="btn btn-o btn-sm" onclick="saveScoreWeights()">Save Weights</button>
-        </div>
-        </div>
-    </div>
-
-    <!-- Manage Day-Type Schedules -->
-    <div class="card" style="margin-bottom:10px">
-        <div class="card-title" onclick="toggleGoalsCard('cfg_daytype_body')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-          <span>📅 Manage Day-Type Schedules</span><span id="cfg_daytype_body_arr">▶</span>
-        </div>
-        <div id="cfg_daytype_body" style="display:none;margin-top:10px">
-        <button class="btn btn-w btn-sm" onclick="openDayTypeManager()" style="font-size:12px;margin-bottom:10px">📅 Add / Rename / Delete Day Types</button>
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px">Weekly Plan</div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Preset the default day type for each weekday (e.g. Mon–Fri = 🏢 Office, Sat–Sun = 🌴 Weekend). You can still override any single day from the Today tab.</div>
-        <div id="dt_week_map_list"></div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px">Upcoming Overrides</div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Know in advance you'll have a different kind of day (e.g. WFH from native for a few days)? Schedule it here — it overrides the Weekly Plan for those dates.</div>
-        <div class="form-grid" style="margin-bottom:8px">
-            <div class="form-group"><label>From</label><input type="date" class="fi" id="dt_ov_from"></div>
-            <div class="form-group"><label>To (optional)</label><input type="date" class="fi" id="dt_ov_to"></div>
-        </div>
-        <div class="form-group" style="margin-bottom:10px"><label>Day Type</label><select class="fs" id="dt_ov_type"></select></div>
-        <button class="btn btn-o btn-sm" onclick="scheduleDayTypeOverride()" style="margin-bottom:12px">+ Schedule</button>
-        <div id="dt_ov_list"></div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px">Edit Schedule Rows</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="dts_type_btns">
-            <!-- populated dynamically by renderDayTypeEditButtons() -->
-        </div>
-        <div id="day_type_edit_wrap"></div>
-        <div class="form-grid" style="margin-top:10px" id="add_dt_row_form">
-            <div class="form-group"><label>Time</label><input class="fi" id="dt_row_time" placeholder="e.g. 7:00 AM"></div>
-            <div class="form-group"><label>Task</label><input class="fi" id="dt_row_task" placeholder="e.g. Morning walk 30 min"></div>
-        </div>
-        <button class="btn btn-o btn-sm" onclick="addDayTypeRow()" style="margin-top:6px">+ Add to Selected Type</button>
-        <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border2)">
-            <button class="btn-erase" onclick="eraseSection('daytypedefs')">🗑️ Erase Day Type Definitions</button>
-        </div>
-        </div>
-    </div>
-
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openRecExpManager()">🔄 Manage Recurring Expenses</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openFocusManager()">🔥 Manage Monthly Intentions</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openExpLimitManager()">💸 Manage Monthly Expense Limit</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openScoreWeightsManager()">⚖️ Manage Score Weights</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeHub()">📅 Manage Day-Type Schedules</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openNotifSchedManager()">🔔 Schedule Notifications</button>
     <!-- Manage Muscle Groups (links to its own dedicated manager) -->
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openFitGroupManager()">🏋️ Manage Muscle Groups</button>
     <!-- Manage Note Categories (links to its own dedicated manager) -->
     <button class="btn btn-w" style="width:100%" onclick="openNotesCatManager()">📝 Manage Note Categories</button>
+  </div>
+</div>
+
+<!-- SCHEDULE NOTIFICATIONS MANAGER -->
+<div class="ql-overlay ql-nested" id="notif_sched_mgr_overlay" onclick="if(event.target===this)closeNotifSchedManager()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">🔔 Schedule Notifications</div>
+      <button onclick="closeNotifSchedManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Get a push notification at the exact time of each item in today's day-type schedule. Tap ✅ Done or ⏭️ Skip right from the notification. On iPhone, add this app to your Home Screen first (Share → Add to Home Screen) — notifications only work from the installed app, not a regular Safari tab.</div>
+    <div id="notif_sched_status" style="font-size:12px;margin-bottom:12px"></div>
+    <button class="btn btn-g btn-sm" id="notif_sched_btn" onclick="toggleScheduleNotifications()">Enable</button>
   </div>
 </div>
 
@@ -1310,6 +1361,10 @@
     var _rawFbCfg = getAppConfig().firebase || null;
     var FB_CONFIG = _rawFbCfg && _rawFbCfg.apiKey ? _rawFbCfg : null;
 
+    // Public VAPID key for schedule push notifications (safe to expose — pairs with a
+    // private key held only by the GitHub Actions worker that sends the pushes)
+    var VAPID_PUBLIC_KEY = 'BBq6CS69OUYBNTnWX_uojqxqMdC-au-GO0Ip6A1YaWs0h9wNV9Q_ha_mjuoP3EnikrUGH_QKhL_mvP7ZMSdab14';
+
     var _fbApp = null, _fbDb = null, _fbRef = null, _fbReady = false, _fbAuth = null;
     var _syncTimer = null;
     var _localChangeTime = 0;   // timestamp of last local edit
@@ -1441,7 +1496,7 @@
       'recurring_expenses','recurring_logged',
       'score_weights','day_notes','notes','notes_categories',
       'upskill_progress','upskill_notes','upskill_meta','upskill_custom','hidden_tabs',
-      'day_type_defs','upskill_overrides','upskill_plan_data','study_sessions',
+      'day_type_defs','upskill_overrides','upskill_plan_data',
       'fitness_sessions','fitness_templates','fitness_groups','fitness_day_map','sched_notes',
       'day_type_week_map'];
 
@@ -1771,42 +1826,15 @@
         var actualPct = totalTopics > 0 ? Math.round((doneTopic / totalTopics) * 100) : 0;
         var paceOk = actualPct >= expectedPct - 5;
 
-        // Study streak
-        var streak = calcPrepStreak();
-
-        var html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+        var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
         html += '<div class="sum-box"><div class="sv" style="color:var(--accent)">Day ' + dayNum + '</div><div class="sl">of ' + TOTAL_DAYS + '</div></div>';
         html += '<div class="sum-box"><div class="sv" style="color:' + (paceOk ? 'var(--green)' : 'var(--red)') + '">' + (paceOk ? 'On pace' : 'Behind') + '</div><div class="sl">' + actualPct + '% done · need ' + expectedPct + '%</div></div>';
-        html += '<div class="sum-box"><div class="sv" style="color:var(--yellow)">🔥' + streak + '</div><div class="sl">Study streak</div></div>';
         html += '</div>';
         if (!paceOk) {
             var behind = Math.ceil((expectedPct - actualPct) / 100 * totalTopics);
             html += '<div style="background:rgba(255,59,48,0.1);border:0.5px solid rgba(255,59,48,0.3);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--red);margin-bottom:8px">⚠️ ' + behind + ' topics behind expected pace. Pick up speed.</div>';
         }
         el.innerHTML = html;
-    }
-
-    function calcPrepStreak() {
-        var streak = 0;
-        for (var i = 0; i < 60; i++) {
-            var d = isoD(new Date(Date.now() - i * 86400000));
-            var sessions = ls_get('study_sessions');
-            if (sessions[d] && sessions[d].length > 0) {
-                streak++;
-            } else if (i > 0) {
-                break;
-            }
-        }
-        return streak;
-    }
-
-    function logStudySession(topicName, hours) {
-        if (!topicName || !hours) return;
-        var today = getTodayISO();
-        var sessions = ls_get('study_sessions');
-        if (!Array.isArray(sessions[today])) sessions[today] = [];
-        sessions[today].push({topic: topicName, hours: parseFloat(hours), ts: Date.now()});
-        ls_set('study_sessions', sessions);
     }
 
     function ls_get(key) {
@@ -3240,57 +3268,41 @@
     // Consistency score: % of last 7 days where user logged something in any tracker
     function consistencyScore() {
       _consBreakdown = []; // reset before each call — prevents unbounded growth
-      //  1. Logged My Day (any sched entry touched)
-      //  2. My Day score ≥ 70%
-      //  3. Logged expenses
-      //  4. Under daily expense limit (or no limit set but expenses logged)
-      //  5. Logged a fitness session
-      //  6. Logged prep/study time
-      var FACTORS = 6;
+      //  1. My Day score ≥ 70%
+      //  2. Under daily expense limit (or no limit set but expenses logged)
+      //  3. Logged a fitness session
+      var FACTORS = 3;
       var totalPoints = 0, totalDays = 0;
       var fitSessions = fitSessionsList();
-      var studySessions = ls_get('study_sessions');
 
       for (var i = 0; i <= 6; i++) {
         var d = isoD(new Date(Date.now() - i * 86400000));
         var points = 0;
 
-        // 1 & 2: My Day
-        var schedData = ls_get('sched');
-        var schedType = getDayTypeLog()[d] || getDayTypeForDate(d);
-        var schedRows = (getDayTypeSchedules()[schedType] || []);
-        var anySchedLogged = false;
-        schedRows.forEach(function(row, ri) {
-          var v = schedData['sched_' + schedType + '_' + ri + '_' + d] || 0;
-          if (v !== 0) anySchedLogged = true;
-        });
-        if (anySchedLogged) { points++; } // factor 1
+        // 1: My Day score ≥ 70%
         var dayScore = schedScoreForDate(d);
-        if (dayScore !== null && dayScore >= 70) { points++; } // factor 2
+        var schedOk = dayScore !== null && dayScore >= 70;
+        if (schedOk) { points++; }
 
-        // 3 & 4: Expenses
+        // 2: Under expense limit
         var expenses = getExpenses();
         var dayExpenses = Object.keys(expenses).filter(function(id){ return expenses[id].date === d; });
-        if (dayExpenses.length > 0) { points++; } // factor 3
-        var limits = ls_get('exp_limits');
         var month = d.slice(0, 7);
         var limit = getLimitsForMonth(month).daily || null;
+        var limitOk = false;
         if (limit) {
           var spent = dayExpenses.reduce(function(sum, id){ return sum + Number(expenses[id].amt||0); }, 0);
-          if (spent <= limit) { points++; } // factor 4: under limit
+          limitOk = spent <= limit;
         } else if (dayExpenses.length > 0) {
-          points++; // no limit set — give benefit of doubt if they logged expenses
+          limitOk = true; // no limit set — give benefit of doubt if they logged expenses
         }
+        if (limitOk) { points++; }
 
-        // 5: Fitness session logged
-        var gymLogged = fitSessions.some(function(s){ return s.date === d && s.finishedAt && (s.exercises||[]).length > 0; });
-        if (gymLogged) { points++; } // factor 5
+        // 3: Fitness session logged
+        var gymOk = fitSessions.some(function(s){ return s.date === d && s.finishedAt && (s.exercises||[]).length > 0; });
+        if (gymOk) { points++; }
 
-        // 6: Prep/study session logged
-        var studyLogged = Array.isArray(studySessions[d]) && studySessions[d].length > 0;
-        if (studyLogged) { points++; } // factor 6
-
-        _consBreakdown.push({d:d, points:points, factors:FACTORS});
+        _consBreakdown.push({d:d, sched:schedOk, limit:limitOk, gym:gymOk, points:points, factors:FACTORS});
         totalPoints += points;
         totalDays++;
       }
@@ -3323,55 +3335,48 @@
       if (!row) return;
       row.innerHTML =
         '<div class="score-circle score-md">' + makeCircleSVG(schedPct, 'DAY', 'md', false) + '<div class="s-label">My Day</div></div>' +
-        '<div class="score-circle score-md">' + makeCircleSVG(expScore, 'SPEND', 'md', false) + '<div class="s-label">Expenses</div></div>' +
-        '<div class="score-circle score-md">' + makeCircleSVG(consPct, 'HABIT', 'md', false) + '<div class="s-label">Consistency</div></div>';
-        // Consistency breakdown tooltip
+        '<div class="score-circle score-md cons-big">' + makeCircleSVG(consPct, 'HABIT', 'md', false) + '<div class="s-label">Consistency</div></div>' +
+        '<div class="score-circle score-md">' + makeCircleSVG(expScore, 'SPEND', 'md', false) + '<div class="s-label">Expenses</div></div>';
+        // Consistency breakdown: 7-day heatmap + current streak
         var consEl = document.getElementById('cons_breakdown');
         if (consEl && _consBreakdown.length > 0) {
-            var factorNames = ['Logged My Day','My Day ≥70%','Logged Expenses','Under Limit','Gym Session','Prep Logged'];
-            var factorTotals = [0,0,0,0,0,0];
-            _consBreakdown.forEach(function(day) { /* breakdown per-day not stored per-factor here */ });
-            // Simple: show last 7 days summary
-            var bHtml = '<div style="background:var(--bg3);border-radius:10px;padding:10px;margin-top:4px">';
-            bHtml += '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">🔍 Consistency — Last 7 Days</div>';
-            bHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
-            var factorData = [
-                {icon:'📅', lbl:'My Day logged'},
-                {icon:'🏆', lbl:'My Day ≥70%'},
-                {icon:'💸', lbl:'Expenses logged'},
-                {icon:'✅', lbl:'Under limit'},
-                {icon:'🏋️', lbl:'Gym session'},
-                {icon:'📚', lbl:'Prep logged'}
-            ];
-            // Recompute per-factor counts
-            var factorCounts = [0,0,0,0,0,0];
-            var gymSess = fitSessionsList();
-            var studySess = ls_get('study_sessions');
-            for (var fi = 1; fi <= 7; fi++) {
-                var fd = isoD(new Date(Date.now() - fi * 86400000));
-                var schedD = ls_get('sched');
-                var schedT = getDayTypeLog()[fd] || getDayTypeForDate(fd);
-                var schedR = getDayTypeSchedules()[schedT]||[];
-                var anyS = false; schedR.forEach(function(r,ri){ if((schedD['sched_'+schedT+'_'+ri+'_'+fd]||0)!==0) anyS=true; });
-                if (anyS) factorCounts[0]++;
-                var ds = schedScoreForDate(fd); if (ds!==null && ds>=70) factorCounts[1]++;
-                var exps = getExpenses(); var dayEx = Object.keys(exps).filter(function(id){return exps[id].date===fd;});
-                if (dayEx.length>0) factorCounts[2]++;
-                var lim = getLimitsForMonth(fd.slice(0,7)).daily;
-                if (lim) { var sp = dayEx.reduce(function(s,id){return s+Number(exps[id].amt||0);},0); if(sp<=lim) factorCounts[3]++; }
-                else if (dayEx.length>0) factorCounts[3]++;
-                if (gymSess.some(function(s){ return s.date===fd && s.finishedAt && (s.exercises||[]).length>0; })) factorCounts[4]++;
-                if (Array.isArray(studySess[fd]) && studySess[fd].length>0) factorCounts[5]++;
+            var WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            var orderedDays = _consBreakdown.slice().reverse(); // oldest -> today, left to right
+            var todayStr = isoD(new Date());
+
+            // Current streak: consecutive days (ending today) hitting all 3 factors
+            var consStreak = 0;
+            for (var si = 0; si < _consBreakdown.length; si++) {
+                if (_consBreakdown[si].points === _consBreakdown[si].factors) consStreak++;
+                else break;
             }
-            factorData.forEach(function(f, idx) {
-                var cnt = factorCounts[idx];
-                var clr = cnt>=6?'var(--green)':cnt>=4?'var(--yellow)':'var(--red)';
-                bHtml += '<div style="display:flex;align-items:center;gap:6px">';
-                bHtml += '<div style="width:28px;height:4px;background:var(--bg4);border-radius:2px;flex-shrink:0">';
-                bHtml += '<div style="height:100%;width:'+(cnt/7*100)+'%;background:'+clr+';border-radius:2px"></div></div>';
-                bHtml += '<span style="font-size:10px;color:var(--text2)">'+f.icon+' '+f.lbl+'</span>';
-                bHtml += '<span style="font-size:10px;font-weight:700;color:'+clr+';margin-left:auto">'+cnt+'/7</span>';
-                bHtml += '</div>';
+
+            var rows = [
+                {key:'sched', icon:'📅', lbl:'My Day ≥70%'},
+                {key:'limit', icon:'✅', lbl:'Under limit'},
+                {key:'gym',   icon:'🏋️', lbl:'Gym session'}
+            ];
+
+            var bHtml = '<div style="background:var(--bg3);border-radius:10px;padding:10px;margin-top:4px">';
+            bHtml += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+            bHtml += '<span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">🔍 Consistency — Last 7 Days</span>';
+            bHtml += '<span style="font-size:11px;font-weight:700;color:var(--accent)">🔥 ' + consStreak + ' day streak</span>';
+            bHtml += '</div>';
+
+            bHtml += '<div style="display:grid;grid-template-columns:76px repeat(7,1fr);gap:4px;align-items:center">';
+            bHtml += '<div></div>';
+            orderedDays.forEach(function(day) {
+                var isToday = day.d === todayStr;
+                var wd = WEEKDAYS[new Date(day.d + 'T00:00:00').getDay()];
+                bHtml += '<div style="text-align:center;font-size:9px;font-weight:700;color:' + (isToday ? 'var(--accent)' : 'var(--text3)') + '">' + wd + '</div>';
+            });
+            rows.forEach(function(r) {
+                bHtml += '<div style="font-size:10px;color:var(--text2);white-space:nowrap">' + r.icon + ' ' + r.lbl + '</div>';
+                orderedDays.forEach(function(day) {
+                    var hit = !!day[r.key];
+                    var clr = hit ? 'var(--green)' : 'var(--red)';
+                    bHtml += '<div style="display:flex;justify-content:center"><div style="width:16px;height:16px;border-radius:5px;background:' + clr + ';opacity:' + (hit ? '0.85' : '0.35') + '"></div></div>';
+                });
             });
             bHtml += '</div></div>';
             consEl.innerHTML = consPct !== null ? bHtml : '';
@@ -3565,7 +3570,7 @@
         var monthName = d.toLocaleDateString('en-IN', {month:'long', year:'numeric'});
 
         if (!limits[curMonth]) {
-            el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">No limit set for ' + monthName + '. <span style="color:var(--accent);cursor:pointer" onclick="openConfigManager();setTimeout(function(){var b=document.getElementById(\'g_explim_body\');if(b&&b.style.display===\'none\')toggleGoalsCard(\'g_explim_body\');},200)">Set it in Configuration →</span></div>';
+            el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">No limit set for ' + monthName + '. <span style="color:var(--accent);cursor:pointer" onclick="openExpLimitManager()">Set it in Configuration →</span></div>';
             return;
         }
 
@@ -4876,7 +4881,7 @@
         var html = '';
         var hasAny = data['1'] || data['2'] || data['3'];
         if (!hasAny) {
-            html = '<div style="font-size:12px;color:var(--text3)">No intentions set for this month. <button class="btn btn-w btn-sm admin-only" style="font-size:11px;margin-left:6px" onclick="openConfigManager();setTimeout(function(){var b=document.getElementById(\'g_focus_body\');if(b&&b.style.display===\'none\'){toggleGoalsCard(\'g_focus_body\');}},200)">+ Set now</button></div>';
+            html = '<div style="font-size:12px;color:var(--text3)">No intentions set for this month. <button class="btn btn-w btn-sm admin-only" style="font-size:11px;margin-left:6px" onclick="openFocusManager()">+ Set now</button></div>';
         } else {
             ['1','2','3'].forEach(function(n) {
                 if (!data[n]) return;
@@ -6903,19 +6908,176 @@
     }
 
     function openConfigManager() {
-      renderRecurring();
-      renderFocusDisplay();
-      renderLimits();
-      renderScoreWeights();
-      renderDayTypeEditButtons();
-      renderDayTypeWeekMapList();
-      renderDayTypeOverrideTypeSelect();
-      renderDayTypeOverrideList();
       var overlay = document.getElementById('config_mgr_overlay');
       if (overlay) overlay.classList.add('open');
     }
     function closeConfigManager() {
       var overlay = document.getElementById('config_mgr_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    // ═══ SCHEDULE PUSH NOTIFICATIONS ═══
+    function _simpleHash(str) {
+      var h = 0;
+      for (var i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) | 0; }
+      return 'sub_' + Math.abs(h);
+    }
+
+    function urlB64ToUint8Array(base64String) {
+      var padding = '='.repeat((4 - base64String.length % 4) % 4);
+      var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      var rawData = atob(base64);
+      var outputArray = new Uint8Array(rawData.length);
+      for (var i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+      return outputArray;
+    }
+
+    function openNotifSchedManager() {
+      var overlay = document.getElementById('notif_sched_mgr_overlay');
+      if (overlay) overlay.classList.add('open');
+      renderNotifSchedStatus();
+    }
+    function closeNotifSchedManager() {
+      var overlay = document.getElementById('notif_sched_mgr_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    function renderNotifSchedStatus() {
+      var statusEl = document.getElementById('notif_sched_status');
+      var btnEl = document.getElementById('notif_sched_btn');
+      if (!statusEl || !btnEl) return;
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !FB_CONFIG) {
+        statusEl.innerHTML = !FB_CONFIG
+          ? '⚠️ Connect Firebase sync first (Settings) — schedule notifications need it to deliver pushes.'
+          : '⚠️ Push notifications aren\'t supported in this browser.';
+        btnEl.style.display = 'none';
+        return;
+      }
+      btnEl.style.display = '';
+      navigator.serviceWorker.ready.then(function(reg) {
+        return reg.pushManager.getSubscription();
+      }).then(function(sub) {
+        if (sub) {
+          statusEl.innerHTML = '✅ Enabled on this device.';
+          btnEl.textContent = 'Disable';
+          btnEl.className = 'btn btn-o btn-sm';
+        } else {
+          statusEl.innerHTML = 'Not enabled on this device.';
+          btnEl.textContent = 'Enable';
+          btnEl.className = 'btn btn-g btn-sm';
+        }
+      });
+    }
+
+    function toggleScheduleNotifications() {
+      navigator.serviceWorker.ready.then(function(reg) {
+        return reg.pushManager.getSubscription().then(function(sub) {
+          if (sub) {
+            var id = _simpleHash(sub.endpoint);
+            return sub.unsubscribe().then(function() {
+              if (_fbRef) _fbRef.child('push_subscriptions/' + id).remove();
+            });
+          }
+          return Notification.requestPermission().then(function(perm) {
+            if (perm !== 'granted') { appToast('Notification permission denied.'); return; }
+            return reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+            }).then(function(newSub) {
+              var id = _simpleHash(newSub.endpoint);
+              var payload = newSub.toJSON();
+              payload.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+              payload.savedAt = Date.now();
+              if (_fbRef) _fbRef.child('push_subscriptions/' + id).set(payload);
+              appToast('Schedule notifications enabled.');
+            });
+          });
+        });
+      }).then(function() {
+        renderNotifSchedStatus();
+      }).catch(function() {
+        appToast('Could not update notification settings.');
+        renderNotifSchedStatus();
+      });
+    }
+
+    function openRecExpManager() {
+      renderRecurring();
+      var overlay = document.getElementById('rec_exp_mgr_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeRecExpManager() {
+      var overlay = document.getElementById('rec_exp_mgr_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    function openFocusManager() {
+      renderFocusDisplay();
+      var overlay = document.getElementById('focus_mgr_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeFocusManager() {
+      var overlay = document.getElementById('focus_mgr_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    function openExpLimitManager() {
+      renderLimits();
+      var overlay = document.getElementById('exp_limit_mgr_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeExpLimitManager() {
+      var overlay = document.getElementById('exp_limit_mgr_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    function openScoreWeightsManager() {
+      renderScoreWeights();
+      var overlay = document.getElementById('score_wt_mgr_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeScoreWeightsManager() {
+      var overlay = document.getElementById('score_wt_mgr_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    function openDayTypeHub() {
+      var overlay = document.getElementById('daytype_hub_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeDayTypeHub() {
+      var overlay = document.getElementById('daytype_hub_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    function openDayTypeWeekManager() {
+      renderDayTypeWeekMapList();
+      var overlay = document.getElementById('dt_week_mgr_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeDayTypeWeekManager() {
+      var overlay = document.getElementById('dt_week_mgr_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    function openDayTypeOverrideManager() {
+      renderDayTypeOverrideTypeSelect();
+      renderDayTypeOverrideList();
+      var overlay = document.getElementById('dt_override_mgr_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeDayTypeOverrideManager() {
+      var overlay = document.getElementById('dt_override_mgr_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+
+    function openDayTypeEditRowsManager() {
+      renderDayTypeEditButtons();
+      var overlay = document.getElementById('dt_editrows_mgr_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeDayTypeEditRowsManager() {
+      var overlay = document.getElementById('dt_editrows_mgr_overlay');
       if (overlay) overlay.classList.remove('open');
     }
 
