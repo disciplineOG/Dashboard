@@ -1,4 +1,4 @@
-const CACHE = 'dashboard-v7';
+const CACHE = 'dashboard-v8';
 // Derive base path dynamically so this SW works at any deployment path (not just /Dashboard/)
 const BASE = new URL('./', self.location.href).pathname;
 const ASSETS = [
@@ -94,10 +94,16 @@ self.addEventListener('notificationclick', function(e) {
   }
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {
+      var msg = { type: 'NOTIF_TAP', key: data.key || '', task: data.task || '' };
       for (var i = 0; i < list.length; i++) {
-        if ('focus' in list[i]) return list[i].focus();
+        if ('focus' in list[i]) {
+          list[i].postMessage(msg);
+          return list[i].focus();
+        }
       }
-      if (self.clients.openWindow) return self.clients.openWindow(BASE);
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(BASE + '?notif=' + encodeURIComponent(data.key || '') + '&notifTask=' + encodeURIComponent(data.task || ''));
+      }
     })
   );
 });

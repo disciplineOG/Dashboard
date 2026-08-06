@@ -190,6 +190,8 @@
           border:0.5px solid var(--border);border-radius:10px;max-height:420px;
           transition:border-color .35s;
         }
+        /* My Day card should show every scheduled item, not just the first 420px worth */
+        #day_tracker_wrap{max-height:none;overflow-y:visible}
         .trk{border-collapse:separate;border-spacing:0;font-size:11px;white-space:nowrap;min-width:100%}
         .trk th,.trk td{border-bottom:0.5px solid var(--border2);border-right:0.5px solid var(--border2);padding:7px 8px}
         .trk th{
@@ -1188,7 +1190,15 @@
     </div>
     <div id="day_type_edit_wrap"></div>
     <div class="form-grid" style="margin-top:10px" id="add_dt_row_form">
-        <div class="form-group"><label>Time</label><input class="fi" id="dt_row_time" placeholder="e.g. 7:00 AM"></div>
+        <div class="form-group"><label>Time</label>
+          <div style="display:flex;gap:6px">
+            <input class="fi" id="dt_row_time" placeholder="e.g. 7:00" style="flex:1">
+            <select class="fi" id="dt_row_ampm" style="flex:0 0 72px">
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group"><label>Task</label><input class="fi" id="dt_row_task" placeholder="e.g. Morning walk 30 min"></div>
     </div>
     <button class="btn btn-o btn-sm" onclick="addDayTypeRow()" style="margin-top:6px">+ Add to Selected Type</button>
@@ -1227,6 +1237,21 @@
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Get a push notification at the exact time of each item in today's day-type schedule. Tap ✅ Done or ⏭️ Skip right from the notification. On iPhone, add this app to your Home Screen first (Share → Add to Home Screen) — notifications only work from the installed app, not a regular Safari tab.</div>
     <div id="notif_sched_status" style="font-size:12px;margin-bottom:12px"></div>
     <button class="btn btn-g btn-sm" id="notif_sched_btn" onclick="toggleScheduleNotifications()">Enable</button>
+  </div>
+</div>
+
+<!-- NOTIFICATION QUICK-CONFIRM (iOS doesn't render action buttons on the push itself) -->
+<div class="ql-overlay ql-nested2" id="notif_confirm_overlay" onclick="if(event.target===this)closeNotifConfirm()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">⏰ Schedule Reminder</div>
+      <button onclick="closeNotifConfirm()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="font-size:14px;margin-bottom:16px" id="notif_confirm_task"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-g" style="flex:1" onclick="confirmNotifAction(1)">✅ Done</button>
+      <button class="btn btn-o" style="flex:1" onclick="confirmNotifAction(2)">⏭️ Skip</button>
+    </div>
   </div>
 </div>
 
@@ -2170,7 +2195,7 @@
       var fmtDate = dateObj.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dateObj.getMonth()];
 
       var html = '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px"><span class="flash" id="fl_sched">✓</span></div>';
-      html += '<div class="tracker-outer"><table class="trk"><thead><tr>';
+      html += '<table class="trk"><thead><tr>';
       html += '<th class="s1">Time</th><th class="s2">Task</th>';
       html += '<th class="dc" style="' + (dateStr===TODAY_ISO?'color:var(--accent);font-weight:700':'') + '">' + (dateStr===TODAY_ISO?'Today':fmtDate) + '</th>';
       html += '<th class="s3">Note</th>';
@@ -2200,7 +2225,7 @@
         html += '</td>';
         html += '</tr>';
       });
-      html += '</tbody></table></div>';
+      html += '</tbody></table>';
       var wrap = document.getElementById('day_tracker_wrap');
       if (wrap) wrap.innerHTML = html;
     }
@@ -2419,7 +2444,9 @@
     }
 
     function addDayTypeRow() {
-      var time = (document.getElementById('dt_row_time')||{}).value.trim();
+      var timeRaw = (document.getElementById('dt_row_time')||{}).value.trim();
+      var ampm = (document.getElementById('dt_row_ampm')||{}).value || 'AM';
+      var time = (timeRaw && !/AM|PM/i.test(timeRaw)) ? timeRaw + ' ' + ampm : timeRaw;
       var task = (document.getElementById('dt_row_task')||{}).value.trim();
       if (!task) { appToast('Enter a task.'); return; }
       var schedules = getDayTypeSchedules();
@@ -4615,10 +4642,27 @@
       navigator.serviceWorker.register((getAppConfig().swPath) || 'sw.js').catch(function(err){
         console.warn('Service worker registration failed:', err);
       });
+      navigator.serviceWorker.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'NOTIF_TAP') showNotifConfirm(e.data.key, e.data.task);
+      });
     }
 
     window.addEventListener('load', function() {
       initAppTitle();
+      // A push notification tap with no open window falls back to opening
+      // this URL with ?notif=<key>&notifTask=<task> — pick it up once, then
+      // strip it so a page refresh doesn't reopen the popup.
+      (function() {
+        var params = new URLSearchParams(location.search);
+        var notifKey = params.get('notif');
+        if (notifKey) {
+          showNotifConfirm(notifKey, params.get('notifTask') || '');
+          params.delete('notif');
+          params.delete('notifTask');
+          var qs = params.toString();
+          history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+        }
+      })();
       // Back-button support: restore tab from history state
       window.addEventListener('popstate', function(e) {
         if (e.state && e.state.tab) showTab(e.state.tab, true);
@@ -6999,6 +7043,34 @@
         appToast('Could not update notification settings.');
         renderNotifSchedStatus();
       });
+    }
+
+    // Quick-confirm popup: iOS doesn't render custom action buttons on the push
+    // notification itself, so tapping it opens the app and we ask here instead.
+    var _notifConfirmKey = null;
+    function showNotifConfirm(key, task) {
+      if (!key) return;
+      _notifConfirmKey = key;
+      var taskEl = document.getElementById('notif_confirm_task');
+      if (taskEl) taskEl.textContent = task || 'Scheduled item';
+      var overlay = document.getElementById('notif_confirm_overlay');
+      if (overlay) overlay.classList.add('open');
+    }
+    function closeNotifConfirm() {
+      _notifConfirmKey = null;
+      var overlay = document.getElementById('notif_confirm_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+    function confirmNotifAction(state) {
+      if (!_notifConfirmKey) return;
+      var data = ls_get('sched');
+      if (state === 0) { delete data[_notifConfirmKey]; } else { data[_notifConfirmKey] = state; }
+      ls_set('sched', data);
+      closeNotifConfirm();
+      var dd = document.getElementById('day_date');
+      renderDayTracker(dd && dd.value ? dd.value : TODAY_ISO);
+      renderScores();
+      appToast(state === 1 ? '✅ Marked done.' : '⏭️ Marked skipped.');
     }
 
     function openRecExpManager() {
