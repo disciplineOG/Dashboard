@@ -18,6 +18,11 @@ const VAPID_SUBJECT = (process.env.VAPID_SUBJECT || 'mailto:admin@example.com').
 // notif_sent_log dedupes by schedKey+subId, so re-checking an already-sent item is a no-op.
 const LOOKBACK_MINUTES = 15;
 
+// Task due-date reminders fire once daily at this local time (per subscriber's own
+// timezone), not continuously — tasks only carry a due DATE, not a time of day.
+const TASK_NOTIFY_HOUR = 9;
+const TASK_NOTIFY_MINUTE = 0;
+
 // Consecutive Web Push failures (any non-404/410 error) before we drop a subscription.
 // 404/410 mean "gone" and are removed immediately; other errors could be transient
 // (rate limits, brief outages), so we give them a few tries before giving up.
@@ -54,6 +59,12 @@ function nowPartsInTz(tz) {
   return { dateStr: dateStr, mins: hour * 60 + minute, weekday: weekday };
 }
 
+// Day-only diff, immune to DST/timezone-offset drift since both sides are parsed as UTC.
+function ymdToUTC(ymd) {
+  var p = String(ymd).split('-').map(Number);
+  return Date.UTC(p[0], p[1] - 1, p[2]);
+}
+
 async function signInAnon() {
   const res = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FB_API_KEY, {
     method: 'POST',
@@ -65,10 +76,10 @@ async function signInAnon() {
 }
 
 // Fetches only the subtrees this worker actually needs instead of the whole
-// dashboard/data tree (which also holds tasks/expenses/notes/fitness history —
+// dashboard/data tree (which also holds expenses/notes/fitness history —
 // unrelated data that only adds bandwidth and latency to every run).
 async function fetchNeededData(base, token) {
-  const keys = ['push_subscriptions', 'day_type_defs', 'day_type_log', 'day_type_week_map', 'sched', 'notif_sent_log', 'push_failure_counts'];
+  const keys = ['push_subscriptions', 'day_type_defs', 'day_type_log', 'day_type_week_map', 'sched', 'notif_sent_log', 'push_failure_counts', 'tasks_active_list'];
   const results = await Promise.all(keys.map(function(k) {
     return fetch(base + '/dashboard/data/' + k + '.json?auth=' + token).then(function(r) { return r.json(); });
   }));
@@ -119,11 +130,38 @@ async function main() {
   const sched = data.sched;
   const sentLog = data.notif_sent_log;
   const failureCounts = data.push_failure_counts;
+  const tasks = data.tasks_active_list;
 
   const sentUpdates = {};
   const subRemovals = [];
   const failureUpdates = {};
   let sentCount = 0;
+
+  // Shared send/failure-tracking path for both the schedule loop and the task loop below —
+  // a subscription that's gone (404/410) or repeatedly failing should be dropped regardless
+  // of which kind of notification triggered the failure.
+  async function sendAndTrack(subId, sub, payload) {
+    try {
+      await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, JSON.stringify(payload));
+      sentCount++;
+      failureUpdates[subId] = 0; // reset on any successful send
+      return true;
+    } catch (err) {
+      console.error('Push failed for ' + subId + ':', err.statusCode || err.message);
+      if (err.statusCode === 404 || err.statusCode === 410) {
+        subRemovals.push(subId);
+      } else {
+        const prevFails = failureUpdates[subId] != null ? failureUpdates[subId] : (failureCounts[subId] || 0);
+        const nextFails = prevFails + 1;
+        failureUpdates[subId] = nextFails;
+        if (nextFails >= MAX_CONSECUTIVE_FAILURES) {
+          console.error('Dropping ' + subId + ' after ' + nextFails + ' consecutive failures.');
+          subRemovals.push(subId);
+        }
+      }
+      return false;
+    }
+  }
 
   for (const [subId, sub] of Object.entries(subs)) {
     if (!sub || !sub.endpoint || !sub.keys) continue;
@@ -147,34 +185,54 @@ async function main() {
       const state = sched[schedKey] || 0;
       if (state !== 0) { sentUpdates[sentKey] = true; continue; } // already marked done/skipped
 
-      try {
-        await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: sub.keys },
-          JSON.stringify({
-            title: '⏰ ' + (row.task || 'Reminder'),
-            body: (row.time || 'now') + (dayLabel ? ' · ' + dayLabel : '') + ' — mark it done below',
-            tag: schedKey,
-            renotify: true,
-            data: { key: schedKey, dbUrl: FB_DB_URL, apiKey: FB_API_KEY, task: row.task || 'Scheduled item' }
-          })
-        );
+      const ok = await sendAndTrack(subId, sub, {
+        title: '⏰ ' + (row.task || 'Reminder'),
+        body: (row.time || 'now') + (dayLabel ? ' · ' + dayLabel : '') + ' — mark it done below',
+        tag: schedKey,
+        renotify: true,
+        data: { type: 'sched', key: schedKey, dbUrl: FB_DB_URL, apiKey: FB_API_KEY, task: row.task || 'Scheduled item' }
+      });
+      if (ok) {
         sentUpdates[sentKey] = true;
-        sentCount++;
-        failureUpdates[subId] = 0; // reset on any successful send
         console.log('Sent: ' + schedKey + ' -> ' + subId);
-      } catch (err) {
-        console.error('Push failed for ' + subId + ':', err.statusCode || err.message);
-        if (err.statusCode === 404 || err.statusCode === 410) {
-          subRemovals.push(subId);
-        } else {
-          const prevFails = failureUpdates[subId] != null ? failureUpdates[subId] : (failureCounts[subId] || 0);
-          const nextFails = prevFails + 1;
-          failureUpdates[subId] = nextFails;
-          if (nextFails >= MAX_CONSECUTIVE_FAILURES) {
-            console.error('Dropping ' + subId + ' after ' + nextFails + ' consecutive failures.');
-            subRemovals.push(subId);
-          }
-        }
+      }
+    }
+  }
+
+  // Task due-date reminders — fire once per subscriber per day, at TASK_NOTIFY_HOUR local
+  // time: 5 days out, 2 days out, on the due day, then daily for every day it's overdue
+  // until the task is marked complete (which removes it from tasks_active_list entirely).
+  const taskTargetMins = TASK_NOTIFY_HOUR * 60 + TASK_NOTIFY_MINUTE;
+  for (const [subId, sub] of Object.entries(subs)) {
+    if (!sub || !sub.endpoint || !sub.keys) continue;
+    const tz = sub.tz || 'UTC';
+    const { dateStr, mins: nowMins } = nowPartsInTz(tz);
+    if (nowMins < taskTargetMins || nowMins >= taskTargetMins + LOOKBACK_MINUTES) continue;
+
+    for (const [taskId, task] of Object.entries(tasks)) {
+      if (!task || !task.name || !task.date) continue;
+      const daysLeft = Math.round((ymdToUTC(task.date) - ymdToUTC(dateStr)) / 86400000);
+
+      let title, body;
+      if (daysLeft === 5) { title = '📅 ' + task.name; body = 'Due in 5 days (' + task.date + ')'; }
+      else if (daysLeft === 2) { title = '📅 ' + task.name; body = 'Due in 2 days (' + task.date + ')'; }
+      else if (daysLeft === 0) { title = '📅 ' + task.name; body = 'Due today'; }
+      else if (daysLeft < 0) { title = '⚠️ ' + task.name; body = 'Overdue by ' + Math.abs(daysLeft) + ' day' + (Math.abs(daysLeft) === 1 ? '' : 's'); }
+      else continue; // no milestone for other day counts (e.g. 4, 3, 1 days out)
+
+      const sentKey = 'task_' + taskId + '_' + dateStr + '__' + subId;
+      if (sentLog[sentKey]) continue;
+
+      const ok = await sendAndTrack(subId, sub, {
+        title: title,
+        body: body,
+        tag: 'task-' + taskId,
+        renotify: true,
+        data: { type: 'task', dbUrl: FB_DB_URL, apiKey: FB_API_KEY, task: task.name }
+      });
+      if (ok) {
+        sentUpdates[sentKey] = true;
+        console.log('Sent: ' + sentKey);
       }
     }
   }
