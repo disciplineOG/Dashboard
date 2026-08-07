@@ -5,17 +5,24 @@ on:
     - cron: '*/5 * * * *'
   workflow_dispatch: {}
 
+concurrency:
+  group: schedule-notification-check
+  cancel-in-progress: false
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          cache-dependency-path: notify-worker/package-lock.json
       - name: Install dependencies
         working-directory: notify-worker
-        run: npm install
+        run: npm ci
       - name: Check schedule and send notifications
         working-directory: notify-worker
         run: node check-schedule.js
