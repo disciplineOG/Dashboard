@@ -1,4 +1,4 @@
-const CACHE = 'dashboard-v10';
+const CACHE = 'dashboard-v11';
 // Separate, never-purged cache used as tiny key/value storage. Service workers keep no
 // in-memory state between restarts, so config handed over via postMessage() (Firebase
 // project + VAPID key) would otherwise be lost by the time a pushsubscriptionchange
@@ -165,32 +165,49 @@ self.addEventListener('pushsubscriptionchange', function(e) {
   );
 });
 
-// ═══ SCHEDULE PUSH NOTIFICATIONS ═══
+// ═══ PUSH NOTIFICATIONS (day-type schedule + task due dates) ═══
 self.addEventListener('push', function(e) {
   var payload = {};
   try { payload = e.data ? e.data.json() : {}; } catch (err) {}
-  var title = payload.title || 'Schedule Reminder';
+  var data = payload.data || {};
+  var title = payload.title || 'Reminder';
+  var isSched = data.type === 'sched';
   var options = {
     body: payload.body || '',
-    tag: payload.tag || 'sched-reminder',
+    tag: payload.tag || 'reminder',
     renotify: !!payload.renotify,
-    data: payload.data || {},
+    data: data,
     icon: BASE + 'icon-192.png',
     badge: BASE + 'icon-192.png',
-    vibrate: [200, 100, 200],
-    actions: [
+    vibrate: [200, 100, 200]
+  };
+  // Done/Skip only make sense for a day-type schedule item (they write to `sched`) —
+  // a task due-date reminder has nothing equivalent to mark from the notification itself.
+  if (isSched) {
+    options.actions = [
       { action: 'done', title: '✅ Done' },
       { action: 'skip', title: '⏭️ Skip' }
-    ]
-  };
+    ];
+  }
   e.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', function(e) {
   var data = e.notification.data || {};
   e.notification.close();
-  if (e.action === 'done' || e.action === 'skip') {
+  if (data.type === 'sched' && (e.action === 'done' || e.action === 'skip')) {
     e.waitUntil(writeSchedState(data, e.action === 'done' ? 1 : 2));
+    return;
+  }
+  if (data.type === 'task') {
+    e.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {
+        for (var i = 0; i < list.length; i++) {
+          if ('focus' in list[i]) return list[i].focus();
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(BASE + '?tab=today');
+      })
+    );
     return;
   }
   e.waitUntil(

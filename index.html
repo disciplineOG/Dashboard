@@ -474,6 +474,7 @@
 </head>
 <body>
 
+
 <div class="header">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <div class="header-title" id="app_title_header" onclick="showTab('overview')" style="cursor:pointer">GBC</div>
@@ -570,28 +571,6 @@
             <div id="streak_warn" style="margin-top:8px"></div>
             <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:8px;line-height:1.6">
                 Circles show score for selected date. Select any past date to view history.
-            </div>
-        </div>
-
-        <!-- IDENTITY STATEMENT (persistent, not monthly) -->
-        <div class="card" id="ov_identity_card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                <div class="card-title" style="margin-bottom:0">🧭 Identity</div>
-                <button class="btn btn-w btn-sm admin-only" onclick="editIdentityStatement()" style="font-size:10px">✏️ Edit</button>
-            </div>
-            <div id="ov_identity_display" style="font-size:13px;color:var(--text2);line-height:1.6;font-style:italic">
-                <!-- rendered by renderIdentityStatement() -->
-            </div>
-        </div>
-
-        <!-- MONTHLY INTENTIONS (moved from Goals) -->
-        <div class="card" id="ov_intentions_card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-                <div class="card-title" style="margin-bottom:0">🔥 This Month's Focus</div>
-                <button class="btn btn-w btn-sm admin-only" onclick="openFocusManager()" style="font-size:10px">✏️ Edit</button>
-            </div>
-            <div id="ov_focus_display" style="font-size:13px;color:var(--text2);line-height:1.8">
-                <!-- rendered by renderOverviewFocus() -->
             </div>
         </div>
 
@@ -718,9 +697,9 @@
 
     <!-- ═══ GOALS 🎯 ═══ -->
     <div id="sec_goals" class="section">
-        <!-- Wish List -->
+        <!-- Bucket List -->
         <div class="card add-card">
-            <div class="card-title">🛍️ Add to Wish List</div>
+            <div class="card-title">🛍️ Add to Bucket List</div>
             <div class="form-grid">
                 <div class="form-group"><label>Item</label><input class="fi" id="sh_item" list="sh_item_dl" placeholder="e.g. Sky blue T-shirt"><datalist id="sh_item_dl"></datalist></div>
                 <div class="form-group"><label>For Whom</label>
@@ -735,11 +714,11 @@
                 <div class="form-group"><label>Budget (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="sh_budget" placeholder="e.g. 800"></div>
             </div>
             <div class="form-group" style="margin-bottom:10px"><label>Notes</label><input class="fi" id="sh_notes" placeholder="Size, colour, brand..."></div>
-            <button class="btn btn-o admin-only" onclick="addShopItem()">+ Add to Wish List</button>
+            <button class="btn btn-o admin-only" onclick="addShopItem()">+ Add to Bucket List</button>
         </div>
         <div class="card list-card">
             <div class="shop-sum" id="sh_summary"></div>
-            <div class="card-title">🎯 Wish List — To Buy</div>
+            <div class="card-title">🎯 Bucket List — To Do</div>
             <div class="table-wrap"><table id="sh_tobuy_tbl"><tr><th>Item</th><th>For</th><th>Priority</th><th>Budget <span class="cur-sym">₹</span></th><th>Notes</th><th>Actions</th></tr></table></div>
         </div>
         <div class="card list-card" id="sh_bought_card" style="display:none">
@@ -783,8 +762,7 @@
             <div class="dz-title">⚠️ Danger Zone</div>
             <div class="dz-sub">Permanently erase data. Cannot be undone.</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px">
-                <button class="btn-erase" onclick="eraseSection('focus')">🗑️ Monthly Focus</button>
-                <button class="btn-erase" onclick="eraseSection('wishlist')">🗑️ Wish List</button>
+                <button class="btn-erase" onclick="eraseSection('wishlist')">🗑️ Bucket List</button>
                 <button class="btn-erase" onclick="eraseSection('notes')">🗑️ Notes</button>
                 <button class="btn-erase" onclick="eraseSection('sweights')">🗑️ Score Weights</button>
                 <button class="btn-erase" onclick="eraseSection('explimits')">🗑️ Expense Limits</button>
@@ -896,6 +874,7 @@
                 <div class="form-group"><label>URL</label><input class="fi" id="ct_url" placeholder="https://…"></div>
                 <div class="form-group"><label>Days needed</label><input type="number" class="fi" id="ct_days" placeholder="e.g. 2" min="1" max="60"></div>
                 <div class="form-group"><label>Hours estimate</label><input type="number" class="fi" id="ct_hours" placeholder="2" min="1" max="20"></div>
+                <div class="form-group"><label>Due Date (optional)</label><input type="date" class="fi" id="ct_due"></div>
                 <div class="form-group"><label>Difficulty</label>
                     <select class="fs" id="ct_diff">
                         <option>Easy</option><option selected>Medium</option><option>Hard</option>
@@ -936,6 +915,7 @@
                     <div class="form-group"><label>Difficulty</label>
                         <select class="fs" id="edit_diff"><option>Easy</option><option>Medium</option><option>Hard</option></select>
                     </div>
+                    <div class="form-group"><label>Due Date (optional)</label><input type="date" class="fi" id="edit_due"></div>
                 </div>
                 <div style="display:flex;gap:8px">
                     <button class="btn btn-o" style="flex:1" onclick="saveEditTopic()">Save Changes</button>
@@ -1096,24 +1076,6 @@
   </div>
 </div>
 
-<!-- MONTHLY INTENTIONS MANAGER -->
-<div class="ql-overlay ql-nested" id="focus_mgr_overlay" onclick="if(event.target===this)closeFocusManager()">
-  <div class="ql-sheet">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="ql-title">🔥 Manage Monthly Intentions</div>
-      <button onclick="closeFocusManager()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
-    </div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">3 intentions for this month — shown on the Overview tab.</div>
-    <div id="focus_display"></div>
-    <div id="focus_edit">
-        <div class="form-group" style="margin-bottom:8px"><label>Intention 1</label><input class="fi" id="focus_1" placeholder="e.g. Exercise every day without skipping"></div>
-        <div class="form-group" style="margin-bottom:8px"><label>Intention 2</label><input class="fi" id="focus_2" placeholder="e.g. Log food every day"></div>
-        <div class="form-group" style="margin-bottom:10px"><label>Intention 3</label><input class="fi" id="focus_3" placeholder="e.g. Sleep before 11 PM"></div>
-        <button class="btn btn-o btn-sm" onclick="saveFocus()">Save Intentions</button>
-    </div>
-  </div>
-</div>
-
 <!-- MONTHLY EXPENSE LIMIT MANAGER -->
 <div class="ql-overlay ql-nested" id="exp_limit_mgr_overlay" onclick="if(event.target===this)closeExpLimitManager()">
   <div class="ql-sheet">
@@ -1232,7 +1194,7 @@
       <div class="ql-title">🔍 Search</div>
       <button onclick="closeGlobalSearch()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
     </div>
-    <input class="fi" id="gs_input" placeholder="Search tasks, expenses, notes, wishlist, exercises…" style="margin-bottom:12px" oninput="runGlobalSearch()">
+    <input class="fi" id="gs_input" placeholder="Search tasks, expenses, notes, bucket list, exercises…" style="margin-bottom:12px" oninput="runGlobalSearch()">
     <div id="gs_results" style="font-size:13px;color:var(--text2)"></div>
   </div>
 </div>
@@ -1253,7 +1215,6 @@
     </div>
 
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openRecExpManager()">🔄 Manage Recurring Expenses</button>
-    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openFocusManager()">🔥 Manage Monthly Intentions</button>
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openExpLimitManager()">💸 Manage Monthly Expense Limit</button>
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openScoreWeightsManager()">⚖️ Manage Score Weights</button>
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeHub()">📅 Manage Day-Type Schedules</button>
@@ -1265,9 +1226,6 @@
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="exportAllData()">⬇️ Backup All Data (JSON)</button>
     <button class="btn btn-w" style="width:100%" onclick="document.getElementById('restore_file_input').click()">⬆️ Restore from Backup</button>
     <input type="file" id="restore_file_input" accept="application/json" style="display:none" onchange="importAllDataFile(this)">
-
-    <div style="font-size:11px;color:var(--text3);margin:16px 0 8px">Recently erased (Danger Zone) — restorable on this device only</div>
-    <div id="erase_trash_list"></div>
   </div>
 </div>
 
@@ -1348,26 +1306,6 @@
 </div>
 
 <!-- TASK REMINDER MODAL -->
-<div class="modal-overlay" id="task_notif_modal" onclick="if(event.target===this)closeNotifModal()">
-    <div class="modal-sheet">
-        <div class="modal-title" id="tnm_title">Set Reminder</div>
-        <div class="modal-sub">Choose how often to be reminded about this task</div>
-        <div class="modal-options">
-            <button class="modal-opt" onclick="selectNotifOpt('2h',this)">⏱ Every 2 hrs</button>
-            <button class="modal-opt" onclick="selectNotifOpt('4h',this)">⏱ Every 4 hrs</button>
-            <button class="modal-opt" onclick="selectNotifOpt('8h',this)">⏱ Every 8 hrs</button>
-            <button class="modal-opt" onclick="selectNotifOpt('off',this)">🔕 Cancel reminder</button>
-        </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;text-align:center">— or pick a specific time —</div>
-        <div class="modal-dt-row">
-            <input type="date" class="fi" id="tnm_date" style="flex:1">
-            <input type="time" class="fi" id="tnm_time" style="flex:1">
-        </div>
-        <button class="btn btn-o" style="width:100%;margin-bottom:8px" onclick="confirmNotifModal()">Set Reminder</button>
-        <button class="btn" style="width:100%;margin-bottom:8px;background:var(--bg3);border:0.5px solid var(--border);color:var(--text1)" onclick="exportTaskToCalendar()">📅 Add to Calendar (works offline)</button>
-        <button class="modal-cancel" onclick="closeNotifModal()">Cancel</button>
-    </div>
-</div>
 
 <!-- AUTH MODAL -->
 <div class="auth-overlay" id="auth_overlay">
@@ -1495,6 +1433,7 @@
 
         // Fetch once from server → per-key merge → init
         _fbRef.once('value').then(function(snap) {
+          _lastSyncTime = Date['now']();
           var data = snap.val();
           if (!data || typeof data !== 'object') {
             if (!_initDone) { _initDone = true; initDashboard(); }
@@ -1536,6 +1475,7 @@
         _fbRef.on('value', function(snap) {
           if (!_initDone) return;
           if (_pendingPush) return;
+          _lastSyncTime = Date['now']();
           var data = snap.val();
           if (!data || typeof data !== 'object') return;
           var serverKeyTs = data._key_ts || {};
@@ -1562,7 +1502,6 @@
     }
 
     var SYNCED_KEYS = ['app_config','sched',
-      'monthly_focus','identity_statement',
       'tasks_active_list','tasks_done_list','expenses_list','exp_limits',
       'theme','notif_dismissed',
       'shop_wishlist','shop_bought',
@@ -1721,8 +1660,6 @@
         renderShopping();
         renderNotes();
         applyTabVisibility();
-        renderOverviewFocus();
-        renderIdentityStatement();
       } finally {
         _reRendering = false;
       }
@@ -1737,7 +1674,7 @@
         switch (_activeTab) {
           case 'overview':
             renderScores(); renderWeeklyReport();
-            renderTodayChecklist(); renderOverviewFocus(); renderIdentityStatement();
+            renderTodayChecklist();
             break;
           case 'today':
             buildSched(); renderTasks();
@@ -1880,7 +1817,7 @@
         if (sec) sec.style.display = 'block';
         var tab = document.getElementById('tab_' + name);
         if (tab) { tab.classList.add('active'); tab.setAttribute('aria-selected','true'); }
-        if (name === 'overview') { renderScores(); renderWeeklyReport(); renderScoreTrend(30); renderTodayChecklist(); renderOverviewFocus(); renderIdentityStatement(); }
+        if (name === 'overview') { renderScores(); renderWeeklyReport(); renderScoreTrend(30); renderTodayChecklist(); }
         if (name === 'today') { buildSched(); renderTasks(); }
         if (name === 'health') { fitInit(); }
         if (name === 'upskill') { renderUpskill(); renderPrepTodayCard(); }
@@ -1928,7 +1865,6 @@
                 html+='</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
                 html+='<button class="btn btn-g btn-sm admin-only" style="font-size:10px;padding:3px 8px" onclick="completeTask(\''+t.id+'\')">✓ Done</button>';
                 html+='<button class="btn btn-w btn-sm admin-only" style="font-size:10px;padding:3px 8px;color:'+statusColor+'" onclick="quickCycleTaskStatus(\''+t.id+'\');renderTodayChecklist()">'+statusLabel+' ↻</button>';
-                html+='<button class="btn btn-w btn-sm admin-only" style="font-size:10px;padding:3px 8px" onclick="showNotifOptions(\''+t.id+'\')">🔔 Remind</button>';
                 html+='<button class="btn btn-w btn-sm" style="font-size:10px;padding:3px 8px" onclick="viewTaskInToday(\''+t.id+'\')">View →</button>';
                 html+='</div></div>';
             });
@@ -2872,7 +2808,6 @@
         html += '<td style="white-space:nowrap">';
         if (!isRO) {
           html += '<button class="btn btn-g btn-sm" onclick="completeTask(\'' + id + '\')">✓</button> ';
-          html += '<button class="btn btn-w btn-sm" onclick="showNotifOptions(\'' + id + '\')">🔔</button> ';
           html += '<button class="btn btn-r btn-sm" onclick="deleteTask(\'' + id + '\')">✕</button>';
         } else {
           html += '<span style="font-size:10px;color:var(--text3)">View only</span>';
@@ -4010,8 +3945,7 @@
       daytypedefs: { label:'Day Type Definitions',          keys:['day_type_defs','day_type_week_map'],                 cb:function(){ renderDayTypeButtons(); renderDayTypeEditButtons(); renderDayTypeWeekMapList(); renderDayTypeOverrideTypeSelect(); renderDayTypeOverrideList(); buildSched(); } },
       tasks:     { label:'Tasks',                        keys:['tasks_active_list','tasks_done_list'],                                              cb:function(){ renderTasks(); } },
       daynotes:  { label:'Day Notes',                    keys:['day_notes'],                                                                        cb:function(){ buildSched(); } },
-      focus:     { label:'Monthly Focus',                keys:['monthly_focus'],                                                                    cb:function(){ renderFocusDisplay(); } },
-      wishlist:  { label:'Wish List',                    keys:['shop_wishlist','shop_bought'],                                                      cb:function(){ renderShopping(); } },
+      wishlist:  { label:'Bucket List',                    keys:['shop_wishlist','shop_bought'],                                                      cb:function(){ renderShopping(); } },
       notes:     { label:'Notes',                        keys:['notes'],                                                                            cb:function(){ renderNotes(); } },
       sweights:  { label:'Score Weights',                keys:['score_weights'],                                                                    cb:function(){ renderScoreWeights(); } },
       explimits: { label:'Expense Limits',               keys:['exp_limits'],                                                                       cb:function(){ renderExpenses(); } },
@@ -4020,391 +3954,16 @@
       prep:      { label:'Prep / Upskill Progress',      keys:['upskill_progress','upskill_notes','upskill_meta','upskill_custom'], cb:function(){ renderUpskill(); } },
     };
 
-    // ═══ DANGER ZONE SAFETY NET — snapshot what's about to be erased before it's gone ═══
-    // Deliberately kept OUT of SYNCED_KEYS: this is a local-device safety net, not app
-    // data, and syncing it would let one device's erase overwrite another's trash log.
-    var ERASE_TRASH_KEY = '_erase_trash_log';
-    var ERASE_TRASH_MAX = 5;
-
-    function _pushEraseTrash(sectionKey, label, snapshot) {
-      var log;
-      try { log = JSON.parse(localStorage.getItem(ERASE_TRASH_KEY) || '[]'); } catch(e) { log = []; }
-      log.unshift({ sectionKey: sectionKey, label: label, at: Date.now(), data: snapshot });
-      if (log.length > ERASE_TRASH_MAX) log = log.slice(0, ERASE_TRASH_MAX);
-      try { localStorage.setItem(ERASE_TRASH_KEY, JSON.stringify(log)); } catch(e) {}
-    }
-
-    function _downloadEraseSnapshot(label, snapshot) {
-      try {
-        var dump = { _exportedAt: new Date().toISOString(), _app: 'dashboard-lite', _erasedSection: label, data: snapshot };
-        var blob = new Blob([JSON.stringify(dump, null, 2)], {type:'application/json'});
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url; a.download = 'dashboard-erased-' + label.toLowerCase().replace(/[^a-z0-9]+/g,'-') + '-' + isoD(new Date()) + '.json';
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a);
-        setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
-      } catch(e) {}
-    }
-
-    function getEraseTrash() {
-      try { return JSON.parse(localStorage.getItem(ERASE_TRASH_KEY) || '[]'); } catch(e) { return []; }
-    }
-
-    function restoreErasedSection(index) {
-      var log = getEraseTrash();
-      var entry = log[index];
-      if (!entry) return;
-      appConfirm('Restore "' + entry.label + '"? This overwrites any data currently in that section.', function() {
-        Object.keys(entry.data).forEach(function(k) { ls_set(k, entry.data[k]); });
-        log.splice(index, 1);
-        try { localStorage.setItem(ERASE_TRASH_KEY, JSON.stringify(log)); } catch(e) {}
-        reRenderAll();
-        renderEraseTrash();
-        appToast('✅ Restored ' + entry.label);
-      }, '♻️ Restore', false);
-    }
-
-    function renderEraseTrash() {
-      var el = document.getElementById('erase_trash_list');
-      if (!el) return;
-      var log = getEraseTrash();
-      if (log.length === 0) { el.innerHTML = '<div style="font-size:11px;color:var(--text3)">Nothing erased recently.</div>'; return; }
-      el.innerHTML = log.map(function(entry, i) {
-        var when = new Date(entry.at).toLocaleString();
-        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)">' +
-          '<div style="font-size:12px"><div>' + entry.label + '</div><div style="font-size:10px;color:var(--text3)">' + when + '</div></div>' +
-          '<button class="btn btn-o btn-sm" onclick="restoreErasedSection(' + i + ')">♻️ Restore</button>' +
-          '</div>';
-      }).join('');
-    }
-
     function eraseSection(sectionKey) {
       var s = _ERASE[sectionKey];
       if (!s) return;
       var _confirmMsg = '⚠️ Erase all "' + s.label + '" data? This cannot be undone.';
       document.getElementById('app_confirm_sub').textContent = 'All data in this section will be permanently deleted.';
       appConfirm(_confirmMsg, function() {
-        var snapshot = {};
-        s.keys.forEach(function(k) { snapshot[k] = ls_get(k); });
-        _pushEraseTrash(sectionKey, s.label, snapshot);
-        _downloadEraseSnapshot(s.label, snapshot);
         s.keys.forEach(function(k) { try { ls_set(k, {}); } catch(e) {} });
         if (s.cb) s.cb();
-        renderEraseTrash();
       }, '🗑️ Erase', true);
       return; // appConfirm is async
-    }
-
-    // ═══ TASK NOTIFICATIONS ═══
-    var taskTimers = {};
-
-    var _notifTaskId = null;
-    var _notifChoice = null;
-
-    function showNotifOptions(taskId) {
-      var tasks = getTasks();
-      if (!tasks[taskId]) return;
-      _notifTaskId = taskId;
-      _notifChoice = null;
-      document.getElementById('tnm_title').textContent = '🔔 Remind: ' + tasks[taskId].name;
-      document.querySelectorAll('.modal-opt').forEach(function(b){ b.classList.remove('sel'); });
-      var today = new Date().toISOString().slice(0,10);
-      document.getElementById('tnm_date').value = today;
-      document.getElementById('tnm_time').value = '10:00';
-      document.getElementById('task_notif_modal').classList.add('open');
-    }
-
-    function selectNotifOpt(val, btn) {
-      _notifChoice = val;
-      document.querySelectorAll('.modal-opt').forEach(function(b){ b.classList.remove('sel'); });
-      btn.classList.add('sel');
-    }
-
-    function closeNotifModal() {
-      document.getElementById('task_notif_modal').classList.remove('open');
-      _notifTaskId = null; _notifChoice = null;
-    }
-
-    function confirmNotifModal() {
-      if (!_notifTaskId) return;
-      var tasks = getTasks();
-      var name = tasks[_notifTaskId] ? tasks[_notifTaskId].name : '';
-      var choice = _notifChoice;
-      var taskId = _notifTaskId;
-      // If no preset chosen, use date+time
-      if (!choice) {
-        var d = document.getElementById('tnm_date').value;
-        var t = document.getElementById('tnm_time').value;
-        if (d && t) choice = d + ' ' + t;
-      }
-      if (!choice) { appToast('Please select a reminder option.'); return; }
-      if (choice === 'off') { closeNotifModal(); clearTaskReminder(taskId); return; }
-      // For frequency options, export calendar before closing so _notifTaskId/_notifChoice are still set
-      var isFrequency = (choice === '2h' || choice === '4h' || choice === '8h');
-      if (isFrequency) exportTaskToCalendar(true);
-      closeNotifModal();
-      if (Notification.permission !== 'granted') {
-        Notification.requestPermission().then(function(p) {
-          if (p === 'granted') setTaskReminder(taskId, name, choice);
-          else appToast('Allow notifications in Settings → Safari → Notifications.');
-        });
-      } else {
-        setTaskReminder(taskId, name, choice);
-      }
-      // Show combined confirmation for frequency options
-      if (isFrequency) {
-        var intHours = choice === '2h' ? 2 : (choice === '4h' ? 4 : 8);
-        var today = new Date();
-        var slots = [];
-        var cur = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 7, 0, 0);
-        var dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 22, 0, 0);
-        while (cur <= dayEnd) { slots.push(new Date(cur)); cur.setHours(cur.getHours() + intHours); }
-        appToast('✅ Reminder set every ' + choice + ' for "' + name + '"\n\n📅 ' + slots.length + ' calendar events (7 AM – 10 PM) downloaded.\nOpen the .ics file to import into your calendar.');
-      }
-    }
-
-    // ── Reminder persistence (localStorage only, not synced to Firebase) ──
-    function reminders_get() {
-      try { var v = localStorage.getItem('task_reminders'); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
-    }
-    function reminders_set(val) {
-      try { localStorage.setItem('task_reminders', JSON.stringify(val)); } catch(e) {}
-    }
-    // ── Calendar event UID persistence (for cancel support) ──
-    function calEvents_get() {
-      try { var v = localStorage.getItem('cal_events'); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
-    }
-    function calEvents_set(val) {
-      try { localStorage.setItem('cal_events', JSON.stringify(val)); } catch(e) {}
-    }
-
-    function setTaskReminder(taskId, taskName, choice) {
-      clearTaskReminder(taskId);
-      var intervalMs = 0;
-      if (choice === '2h') intervalMs = 2 * 3600000;
-      else if (choice === '4h') intervalMs = 4 * 3600000;
-      else if (choice === '8h') intervalMs = 8 * 3600000;
-      else {
-        // specific date-time: "YYYY-MM-DD HH:MM"
-        var dt = new Date(choice.replace(' ', 'T'));
-        if (isNaN(dt.getTime())) { appToast('Invalid format. Use 2h, 4h, 8h, or "YYYY-MM-DD HH:MM"'); return; }
-        var ms = dt - Date.now();
-        if (ms < 0) { appToast('That time is in the past!'); return; }
-        var saved = reminders_get();
-        saved[taskId] = { name: taskName, intervalMs: 0, choice: choice, nextFireTime: dt.getTime() };
-        reminders_set(saved);
-        taskTimers[taskId] = setTimeout(function() {
-          var tasks = getTasks();
-          if (tasks[taskId] && Notification.permission === 'granted') {
-            new Notification('📌 Task Reminder', {body: taskName, tag: 'task-' + taskId});
-          }
-          var s = reminders_get(); delete s[taskId]; reminders_set(s);
-        }, ms);
-        appToast('✅ Reminder set for ' + dt.toLocaleString('en-IN'));
-        return;
-      }
-      // Save repeating reminder to localStorage so it survives page reloads
-      var saved = reminders_get();
-      saved[taskId] = { name: taskName, intervalMs: intervalMs, choice: choice, nextFireTime: Date.now() + intervalMs };
-      reminders_set(saved);
-      // Schedule the repeating timer
-      function fireNotif() {
-        var tasks = getTasks();
-        if (!tasks[taskId]) { clearTaskReminder(taskId); return; }
-        if (Notification.permission === 'granted') {
-          new Notification('📌 Task Reminder: ' + taskName, {
-            body: 'Still pending. Tap to open dashboard.',
-            tag: 'task-' + taskId
-          });
-        }
-        var s = reminders_get();
-        if (s[taskId]) { s[taskId].nextFireTime = Date.now() + intervalMs; reminders_set(s); }
-        taskTimers[taskId] = setTimeout(fireNotif, intervalMs);
-      }
-      taskTimers[taskId] = setTimeout(fireNotif, intervalMs);
-    }
-
-    function clearTaskReminder(taskId) {
-      var hadTimer = !!taskTimers[taskId];
-      if (taskTimers[taskId]) { clearTimeout(taskTimers[taskId]); delete taskTimers[taskId]; }
-      var saved = reminders_get();
-      var hadSaved = !!saved[taskId];
-      delete saved[taskId];
-      reminders_set(saved);
-
-      // Cancel any calendar events previously added for this task
-      var calData = calEvents_get();
-      var hadCal = !!calData[taskId];
-      if (hadCal) {
-        var uids = calData[taskId].uids || [];
-        var calTaskName = (calData[taskId].taskName || 'Task').replace(/[,;\\]/g, '\\$&');
-        if (uids.length > 0) {
-          var lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Health Dashboard//EN','CALSCALE:GREGORIAN','METHOD:CANCEL'];
-          uids.forEach(function(uid) {
-            lines = lines.concat([
-              'BEGIN:VEVENT',
-              'UID:' + uid,
-              'SUMMARY:Task Reminder: ' + calTaskName,
-              'STATUS:CANCELLED',
-              'SEQUENCE:1',
-              'END:VEVENT'
-            ]);
-          });
-          lines.push('END:VCALENDAR');
-          var blob = new Blob([lines.join('\r\n')], {type:'text/calendar;charset=utf-8'});
-          var url = URL.createObjectURL(blob);
-          var a = document.createElement('a');
-          a.href = url; a.download = 'task-reminder-cancel-' + taskId + '.ics';
-          document.body.appendChild(a); a.click();
-          document.body.removeChild(a);
-          setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
-        }
-        delete calData[taskId];
-        calEvents_set(calData);
-      }
-
-      if (hadTimer || hadSaved || hadCal) appToast('🔕 Reminder cancelled.' + (hadCal ? '\n\nOpen the downloaded .ics file to remove calendar events.' : ''));
-    }
-
-    // Restore reminders after page reload / app reopen
-    function restoreTaskReminders() {
-      if (Notification.permission !== 'granted') return;
-      var saved = reminders_get();
-      var tasks = getTasks();
-      var now = Date.now();
-      var changed = false;
-      Object.keys(saved).forEach(function(taskId) {
-        var r = saved[taskId];
-        if (!tasks[taskId]) { delete saved[taskId]; changed = true; return; } // task done
-        if (taskTimers[taskId]) return; // already active
-        if (r.intervalMs > 0) {
-          // Repeating — schedule from nextFireTime (or now if overdue)
-          var delay = Math.max(0, r.nextFireTime - now);
-          (function(id, nm, intMs) {
-            function fireNotif() {
-              var ts = getTasks();
-              if (!ts[id]) { clearTaskReminder(id); return; }
-              if (Notification.permission === 'granted') {
-                new Notification('📌 Task Reminder: ' + nm, {
-                  body: 'Still pending. Tap to open dashboard.',
-                  tag: 'task-' + id
-                });
-              }
-              var s = reminders_get();
-              if (s[id]) { s[id].nextFireTime = Date.now() + intMs; reminders_set(s); }
-              taskTimers[id] = setTimeout(fireNotif, intMs);
-            }
-            taskTimers[id] = setTimeout(fireNotif, delay);
-          })(taskId, r.name, r.intervalMs);
-        } else if (r.nextFireTime > now) {
-          // One-time, still in the future
-          (function(id, nm, fireAt) {
-            taskTimers[id] = setTimeout(function() {
-              var ts = getTasks();
-              if (ts[id] && Notification.permission === 'granted') {
-                new Notification('📌 Task Reminder', {body: nm, tag: 'task-' + id});
-              }
-              var s = reminders_get(); delete s[id]; reminders_set(s);
-            }, fireAt - Date.now());
-          })(taskId, r.name, r.nextFireTime);
-        } else {
-          // One-time reminder was missed while app was closed — fire now
-          if (Notification.permission === 'granted') {
-            new Notification('📌 Missed Reminder: ' + r.name, {
-              body: 'You had a reminder set for this task.',
-              tag: 'task-' + taskId
-            });
-          }
-          delete saved[taskId]; changed = true;
-        }
-      });
-      if (changed) reminders_set(saved);
-    }
-
-    // Export reminder as .ics calendar event (works even when app is closed)
-    // Generates one VEVENT per time slot within 7:00 AM–10:00 PM for frequency options.
-    function exportTaskToCalendar(silent) {
-      var choice = _notifChoice;
-      if (!choice) {
-        var d = document.getElementById('tnm_date').value;
-        var t = document.getElementById('tnm_time').value;
-        if (d && t) choice = d + ' ' + t;
-      }
-      if (!choice || choice === 'off') {
-        if (!silent) appToast('Pick a reminder interval first, then tap Add to Calendar.');
-        return;
-      }
-      var tasks = getTasks();
-      var taskName = (tasks[_notifTaskId] ? tasks[_notifTaskId].name : 'Task').replace(/[,;\\]/g, '\\$&');
-      var taskId = _notifTaskId;
-
-      function icsDate(d) { return d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z'; }
-
-      // Build list of reminder time slots
-      var slots = [];
-      if (choice === '2h' || choice === '4h' || choice === '8h') {
-        var intHours = choice === '2h' ? 2 : (choice === '4h' ? 4 : 8);
-        var today = new Date();
-        var slotStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 7, 0, 0);
-        var dayEnd   = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 22, 0, 0); // 10 PM
-        var cur = new Date(slotStart.getTime());
-        while (cur <= dayEnd) {
-          slots.push(new Date(cur.getTime()));
-          cur.setHours(cur.getHours() + intHours);
-        }
-      } else {
-        var dt = new Date(choice.replace(' ', 'T'));
-        if (isNaN(dt.getTime())) { if (!silent) appToast('Invalid date/time.'); return; }
-        slots.push(dt);
-      }
-
-      if (slots.length === 0) {
-        if (!silent) appToast('No reminder slots found in the 7 AM – 10 PM window.');
-        return;
-      }
-
-      var baseUid = 'task-' + taskId + '-' + Date.now();
-      var uids = [];
-      var lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Health Dashboard//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
-
-      slots.forEach(function(slot, i) {
-        var uid = baseUid + '-' + i + '@healthdash';
-        uids.push(uid);
-        var endSlot = new Date(slot.getTime() + 15 * 60000); // 15-min duration
-        lines = lines.concat([
-          'BEGIN:VEVENT',
-          'UID:' + uid,
-          'DTSTART:' + icsDate(slot),
-          'DTEND:' + icsDate(endSlot),
-          'SUMMARY:Task Reminder: ' + taskName,
-          'DESCRIPTION:Pending task: ' + taskName,
-          'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Task Reminder','TRIGGER:PT0S','END:VALARM',
-          'END:VEVENT'
-        ]);
-      });
-      lines.push('END:VCALENDAR');
-
-      // Persist UIDs so clearTaskReminder can cancel them
-      var calData = calEvents_get();
-      calData[taskId] = { uids: uids, taskName: taskName };
-      calEvents_set(calData);
-
-      var blob = new Blob([lines.join('\r\n')], {type:'text/calendar;charset=utf-8'});
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url; a.download = 'task-reminder-' + taskId + '.ics';
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
-
-      if (!silent) {
-        var label = slots.length === 1
-          ? '1 calendar event added.'
-          : slots.length + ' calendar events added (7 AM – 10 PM, every ' + choice + ').';
-        appToast('📅 ' + label + '\n\nOpen the downloaded .ics file to import into your calendar.');
-        closeNotifModal();
-      }
     }
 
     // ═══════════════════════════════════════
@@ -4447,12 +4006,21 @@
       ls_set('shop_bought', bought);
       renderShopping();
       appToast('🛍️ ' + itemName + ' marked bought');
-      // Optional, non-blocking follow-up to confirm actual spend / feeling — purchase is already recorded
+      // Optional, non-blocking follow-up to confirm actual spend — purchase is already recorded
       setTimeout(function() {
         appPrompt('🛍️ ' + itemName, 'Actual amount spent? (' + getCurSym() + ' — optional, cancel to keep ' + getCurSym() + budget + ')', String(budget), function(spentStr) {
           if (spentStr === '' || spentStr == null) return;
+          var v = parseFloat(spentStr);
+          if (isNaN(v)) return;
           var b = getBoughtItems();
-          if (b[bid]) { b[bid].spent = parseFloat(spentStr) || budget; ls_set('shop_bought', b); }
+          if (b[bid]) { b[bid].spent = v; ls_set('shop_bought', b); }
+          setTimeout(function() {
+            appPrompt('🛍️ ' + itemName, 'How did it feel? (optional — cancel to skip)', '', function(note) {
+              if (!note) return;
+              var b2 = getBoughtItems();
+              if (b2[bid]) { b2[bid].feeling = note; ls_set('shop_bought', b2); renderShopping(); }
+            });
+          }, 350);
         });
       }, 350);
     }
@@ -4464,7 +4032,7 @@
       delete list[id];
       ls_set('shop_wishlist', list);
       renderShopping();
-      appToastUndo('🗑️ Removed from wish list', function() {
+      appToastUndo('🗑️ Removed from bucket list', function() {
         var l = getShopItems();
         l[id] = removed;
         ls_set('shop_wishlist', l);
@@ -4487,14 +4055,14 @@
       var totalSpent  = bkeys.reduce(function(s,id){ return s + (parseFloat(bought[id].spent)||0); }, 0);
       var sumEl = document.getElementById('sh_summary');
       if (sumEl) sumEl.innerHTML =
-        '<div class="shop-sum-box"><div class="sv" style="color:var(--yellow)">' + fmtCur(totalBudget) + '</div><div class="sl">Budget (wish list)</div></div>' +
+        '<div class="shop-sum-box"><div class="sv" style="color:var(--yellow)">' + fmtCur(totalBudget) + '</div><div class="sl">Budget (bucket list)</div></div>' +
         '<div class="shop-sum-box"><div class="sv" style="color:var(--green)">' + fmtCur(totalSpent) + '</div><div class="sl">Actually spent</div></div>';
 
       // To-buy table
       var priCls = {High:'ph', Medium:'pm', Low:'pl'};
       var html = '<tr><th>Item</th><th>For</th><th>Priority</th><th>Budget ' + getCurSym() + '</th><th>Notes</th><th>Actions</th></tr>';
       if (lkeys.length === 0) {
-        html += '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:16px">Nothing on wish list yet — add something above!</td></tr>';
+        html += '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:16px">Nothing on your bucket list yet — add something above!</td></tr>';
       } else {
         lkeys.sort(function(a,b){ var p={High:0,Medium:1,Low:2}; return (p[list[a].pri]||1)-(p[list[b].pri]||1); });
         lkeys.forEach(function(id) {
@@ -5282,7 +4850,7 @@
       var sd = document.getElementById('score_date');
       if (sd) sd.value = yesterday;
 
-      // Show overview first (renders renderOverviewFocus/renderScores/renderWeeklyReport internally)
+      // Show overview first (renders renderScores/renderWeeklyReport internally)
       var VALID_TABS = ['overview','today','health','expenses','upskill','goals'];
       var launchTab = (window._launchTab && VALID_TABS.indexOf(window._launchTab) !== -1) ? window._launchTab : 'overview';
       showTab(launchTab);
@@ -5307,10 +4875,6 @@
 
       // Notifications (auto-request, no button needed)
       initNotifications();
-      restoreTaskReminders();
-      document.addEventListener('visibilitychange', function() {
-        if (!document.hidden) restoreTaskReminders();
-      });
     } // end initDashboard
 
 
@@ -5322,8 +4886,6 @@
     function renderGoalsTab() {
         // Wish mini
         renderWishMini();
-        // Focus
-        renderFocusDisplay();
     }
 
 
@@ -5332,7 +4894,7 @@
         if (!el) return;
         var list = getShopItems();
         var keys = Object.keys(list).slice(0, 4);
-        if (!keys.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">Nothing on wish list.</div>'; return; }
+        if (!keys.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">Nothing on bucket list.</div>'; return; }
         var html = '<div style="font-size:12px;color:var(--text2)">';
         keys.forEach(function(id) {
             var i = list[id];
@@ -5340,92 +4902,6 @@
         });
         html += '</div>';
         el.innerHTML = html;
-    }
-
-    // ═══════════════════════════════════════
-    // FOCUS (Monthly Intentions)
-    // ═══════════════════════════════════════
-    function getFocus() { return ls_get('monthly_focus'); }
-
-    // ═══════════════════════════════════════
-    // IDENTITY STATEMENT — persistent (not monthly), answers "who am I becoming"
-    // ═══════════════════════════════════════
-    function getIdentityStatement() {
-        var v = ls_get('identity_statement');
-        return (v && v.text) ? v.text : '';
-    }
-    function renderIdentityStatement() {
-        var el = document.getElementById('ov_identity_display');
-        if (!el) return;
-        var text = getIdentityStatement();
-        el.textContent = text || 'Not set. Tap Edit to write who you\'re becoming — this doesn\'t reset monthly.';
-    }
-    function editIdentityStatement() {
-        appPrompt('🧭 Identity', 'Who are you becoming? (persists across months)', getIdentityStatement(), function(text) {
-            if (text == null) return;
-            ls_set('identity_statement', {text: text.trim()});
-            renderIdentityStatement();
-            appToast('✅ Identity updated');
-        });
-    }
-
-    // Render focus/intentions on the Overview tab
-    function renderOverviewFocus() {
-        var el = document.getElementById('ov_focus_display');
-        if (!el) return;
-        var focus = getFocus();
-        var curMonth = isoD(new Date()).slice(0,7);
-        var data = focus[curMonth] || {};
-        var html = '';
-        var hasAny = data['1'] || data['2'] || data['3'];
-        if (!hasAny) {
-            html = '<div style="font-size:12px;color:var(--text3)">No intentions set for this month. <button class="btn btn-w btn-sm admin-only" style="font-size:11px;margin-left:6px" onclick="openFocusManager()">+ Set now</button></div>';
-        } else {
-            ['1','2','3'].forEach(function(n) {
-                if (!data[n]) return;
-                html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:0.5px solid var(--border2)">';
-                html += '<span style="color:var(--accent);font-weight:700;font-size:16px;min-width:18px">' + n + '</span>';
-                html += '<span style="font-size:13px;color:var(--text1);line-height:1.5">' + esc(data[n]) + '</span>';
-                html += '</div>';
-            });
-        }
-        el.innerHTML = html;
-    }
-
-    function renderFocusDisplay() {
-        var el = document.getElementById('focus_display');
-        if (!el) return;
-        var focus = getFocus();
-        var curMonth = isoD(new Date()).slice(0,7); // use local date, not UTC
-        var data = focus[curMonth] || {};
-        var html = '';
-        if (!data['1'] && !data['2'] && !data['3']) {
-            html = '<div style="font-size:12px;color:var(--text3);margin-bottom:8px">No intentions set for ' + curMonth + ' yet.</div>';
-        } else {
-            ['1','2','3'].forEach(function(n) {
-                if (!data[n]) return;
-                html += '<div style="padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--text1)">';
-                html += '<span style="color:var(--accent);font-weight:700;margin-right:8px">' + n + '.</span>' + esc(data[n]);
-                html += '</div>';
-            });
-        }
-        html += '<button class="btn btn-w btn-sm admin-only" style="margin-top:8px" onclick="document.getElementById(\'focus_edit\').style.display=\'block\';document.getElementById(\'focus_display\').style.display=\'none\'">✏️ Edit Intentions</button>';
-        el.innerHTML = html;
-    }
-
-    function saveFocus() {
-        var curMonth = isoD(new Date()).slice(0,7); // use local date, not UTC
-        var focus = getFocus();
-        focus[curMonth] = {
-            '1': document.getElementById('focus_1').value.trim(),
-            '2': document.getElementById('focus_2').value.trim(),
-            '3': document.getElementById('focus_3').value.trim()
-        };
-        ls_set('monthly_focus', focus);
-        document.getElementById('focus_edit').style.display = 'none';
-        document.getElementById('focus_display').style.display = 'block';
-        renderFocusDisplay();
-        renderOverviewFocus(); // keep overview in sync
     }
 
     // ═══════════════════════════════════════
@@ -5739,7 +5215,7 @@
         {key:'upskill',   label:'🚀 Prep',            adminOnly:false},
         {key:'goals',     label:'🎯 Goals',           adminOnly:false},
         {key:'notes',     label:'📝 Notes',           adminOnly:true},
-        {key:'shopping',  label:'🛍️ Wish & Buy',     adminOnly:false},
+        {key:'shopping',  label:'🛍️ Bucket List',     adminOnly:false},
         // Legacy sub-sections — remapped by showTab(); excluded from Tab Manager UI
         {key:'schedule',  label:'📅 Schedule (sub)',  adminOnly:true, isSub:true},
         {key:'tasks',     label:'✅ Tasks (sub)',     adminOnly:true, isSub:true},
@@ -5926,14 +5402,10 @@
     function eraseAllPrepData(){
         appConfirm('Delete ALL prep data (progress, notes, categories, mocks)?', function() {
             var keys = ['upskill_progress','upskill_notes','upskill_meta','upskill_custom','upskill_plan_data','upskill_overrides'];
-            var snapshot = {};
-            keys.forEach(function(k){ snapshot[k] = ls_get(k); });
-            _pushEraseTrash('prep_all', 'All Prep Data', snapshot);
-            _downloadEraseSnapshot('All Prep Data', snapshot);
             keys.forEach(function(k){
                 try{ls_set(k,{});}catch(e){}
             });
-            schedulePush();renderUpskill();renderEraseTrash();appToast('🗑️ All prep data erased');
+            schedulePush();renderUpskill();appToast('🗑️ All prep data erased');
         }, '🗑️ Erase All');
     }
     function saveCurrentPlanAsDefault() {
@@ -6134,21 +5606,32 @@
                 var noteLink  = typeof noteData === 'object' ? (noteData.link || '') : '';
                 var hasNote   = noteText || noteLink;
                 var isCustom  = !phase.topics.find(function(t){ return t.id === topic.id; });
+                var dueDl     = (topic.due && !isDone) ? daysLeft(topic.due) : null;
+                var isOverdue = dueDl !== null && dueDl < 0;
 
-                html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border2)">';
+                html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border2)' + (isOverdue ? ';background:rgba(255,59,48,0.08);border-left:3px solid var(--red)' : '') + '">';
                 // Checkbox
                 html += '<div onclick="toggleTopic(\'' + topic.id + '\')" style="width:22px;height:22px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--green)' : 'var(--border)') + ';background:' + (isDone ? 'rgba(52,199,89,0.2)' : 'transparent') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;transition:all .2s">';
                 if (isDone) html += '<span style="font-size:13px;color:var(--green)">✓</span>';
                 html += '</div>';
                 // Content
                 html += '<div style="flex:1;min-width:0">';
-                html += '<div style="font-size:13px;font-weight:' + (isDone ? '400' : '600') + ';color:' + (isDone ? 'var(--text3)' : 'var(--text1)') + ';text-decoration:' + (isDone ? 'line-through' : 'none') + '">' + esc(topic.name);
+                html += '<div style="font-size:13px;font-weight:' + (isDone ? '400' : '600') + ';color:' + (isOverdue ? 'var(--red)' : (isDone ? 'var(--text3)' : 'var(--text1)')) + ';text-decoration:' + (isDone ? 'line-through' : 'none') + '">' + esc(topic.name);
                 if (isCustom) html += ' <span style="font-size:10px;color:var(--accent);background:rgba(255,107,0,0.1);border-radius:10px;padding:1px 6px;vertical-align:middle">custom</span>';
                 html += '</div>';
                 html += '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;align-items:center">';
                 html += '<span style="font-size:10px;color:' + (dc[topic.diff]||'var(--text3)') + ';background:rgba(0,0,0,.18);border-radius:20px;padding:1px 7px">' + (topic.diff||'Medium') + '</span>';
                 var _td=topic.days||topic.hours||1;
                 html += '<span style="font-size:10px;color:var(--text3);background:var(--bg4);border-radius:20px;padding:1px 7px">📅 ' + _td + 'd</span>';
+                if (topic.due) {
+                    if (isOverdue) {
+                        html += '<span style="font-size:10px;color:var(--red);font-weight:700;background:rgba(255,59,48,0.14);border-radius:20px;padding:1px 7px">⚠️ Overdue ' + Math.abs(dueDl) + 'd</span>';
+                    } else if (dueDl !== null) {
+                        html += '<span style="font-size:10px;color:' + (dueDl <= 3 ? 'var(--yellow)' : 'var(--text3)') + ';background:var(--bg4);border-radius:20px;padding:1px 7px">🎯 Due ' + topic.due + '</span>';
+                    } else {
+                        html += '<span style="font-size:10px;color:var(--text3);background:var(--bg4);border-radius:20px;padding:1px 7px">🎯 ' + topic.due + '</span>';
+                    }
+                }
                 if (topic.url) {
                     html += '<a href="' + topic.url + '" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none;background:rgba(255,107,0,0.08);border-radius:20px;padding:1px 8px">📖 ' + esc(topic.source) + ' ↗</a>';
                 } else {
@@ -6228,6 +5711,7 @@
         document.getElementById('edit_hours').value    = topic.hours || 2;
         var _df2=document.getElementById('edit_days_field');if(_df2)_df2.value=topic.days||topic.hours||1;
         document.getElementById('edit_diff').value     = topic.diff || 'Medium';
+        var _due2=document.getElementById('edit_due');if(_due2)_due2.value=topic.due||'';
         // Store phase id for custom save
         document.getElementById('edit_topic_id').dataset.phase = phaseId || '';
         document.getElementById('up_edit_modal').style.display = 'flex';
@@ -6245,25 +5729,26 @@
         var _df=document.getElementById('edit_days_field')||document.getElementById('edit_hours');
         var days=parseInt((_df||{}).value)||1; var hours=days;
         var diff   = document.getElementById('edit_diff').value;
+        var due    = (document.getElementById('edit_due')||{}).value || '';
         if (!name) { appToast('⚠️ Topic name required'); return; }
 
         if (_editIsCustom) {
             var custom = ls_get('upskill_custom');
             if (custom[phase]) {
                 custom[phase] = custom[phase].map(function(t) {
-                    return t.id === id ? Object.assign({}, t, {name:name, source:source, url:url, hours:hours, days:hours, diff:diff}) : t;
+                    return t.id === id ? Object.assign({}, t, {name:name, source:source, url:url, hours:hours, days:hours, diff:diff, due:due}) : t;
                 });
                 ls_set('upskill_custom', custom);
             }
         } else {
             // For built-in topics — store override in custom overrides list
             var overrides = ls_get('upskill_overrides') || {};
-            overrides[id] = {name:name, source:source, url:url, hours:hours, days:hours, diff:diff};
+            overrides[id] = {name:name, source:source, url:url, hours:hours, days:hours, diff:diff, due:due};
             ls_set('upskill_overrides', overrides);
             // Patch in-memory
             UPSKILL_PLAN.forEach(function(ph) {
                 ph.topics.forEach(function(t) {
-                    if (t.id === id) { t.name=name; t.source=source; t.url=url; t.hours=hours; t.diff=diff; }
+                    if (t.id === id) { t.name=name; t.source=source; t.url=url; t.hours=hours; t.diff=diff; t.due=due; }
                 });
             });
         }
@@ -6283,13 +5768,14 @@
         var days=parseInt((document.getElementById('ct_days')||{}).value)||parseInt((document.getElementById('ct_hours')||{}).value)||1;
         var hours=days;
         var diff   = (document.getElementById('ct_diff')  ||{}).value || 'Medium';
+        var due    = (document.getElementById('ct_due')   ||{}).value || '';
         if (!name) { appToast('⚠️ Enter a topic name'); return; }
         var custom = ls_get('upskill_custom');
         if (!custom[phase]) custom[phase] = [];
         var id = 'custom_' + Date.now();
-        custom[phase].push({id:id, name:name, source:source||'Custom', url:url||'', hours:hours, days:days, diff:diff});
+        custom[phase].push({id:id, name:name, source:source||'Custom', url:url||'', hours:hours, days:days, diff:diff, due:due});
         ls_set('upskill_custom', custom);
-        ['ct_name','ct_source','ct_url','ct_hours','ct_days'].forEach(function(fid){
+        ['ct_name','ct_source','ct_url','ct_hours','ct_days','ct_due'].forEach(function(fid){
             var el = document.getElementById(fid); if (el) el.value = '';
         });
         renderUpskill();
@@ -7454,7 +6940,6 @@
       if (overlay) overlay.classList.add('open');
       var nameEl = document.getElementById('cfg_app_name');
       if (nameEl) nameEl.value = getAppConfig().appTitle || 'My Dashboard';
-      renderEraseTrash();
     }
     function closeConfigManager() {
       var overlay = document.getElementById('config_mgr_overlay');
@@ -7463,12 +6948,11 @@
     function saveAppName() {
       var nameEl = document.getElementById('cfg_app_name');
       var name = nameEl ? nameEl.value.trim() : '';
-      if (!name) return appToast('App name can\'t be empty.');
+      if (!name) return;
       var cfg = getAppConfig();
       cfg.appTitle = name;
       saveAppConfig(cfg);
       initAppTitle();
-      appToast('App name updated to "' + name + '".');
     }
 
     // ═══ GLOBAL SEARCH — cross-tab lookup over locally stored data ═══
@@ -7511,7 +6995,7 @@
       var wish = getShopItems(), bought = getBoughtItems();
       Object.keys(wish).forEach(function(id) {
         var w = wish[id];
-        if ((w.item||'').toLowerCase().indexOf(q) !== -1) hits.push({icon:'🛍️', label:w.item, sub:'Wishlist', tab:'goals'});
+        if ((w.item||'').toLowerCase().indexOf(q) !== -1) hits.push({icon:'🛍️', label:w.item, sub:'Bucket List', tab:'goals'});
       });
       Object.keys(bought).forEach(function(id) {
         var b = bought[id];
@@ -7672,16 +7156,6 @@
     }
     function closeRecExpManager() {
       var overlay = document.getElementById('rec_exp_mgr_overlay');
-      if (overlay) overlay.classList.remove('open');
-    }
-
-    function openFocusManager() {
-      renderFocusDisplay();
-      var overlay = document.getElementById('focus_mgr_overlay');
-      if (overlay) overlay.classList.add('open');
-    }
-    function closeFocusManager() {
-      var overlay = document.getElementById('focus_mgr_overlay');
       if (overlay) overlay.classList.remove('open');
     }
 
