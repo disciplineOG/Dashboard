@@ -1,4 +1,10 @@
-const CACHE = 'dashboard-v8';
+const CACHE = 'dashboard-v9';
+// Separate, never-purged cache used as tiny key/value storage. Service workers keep no
+// in-memory state between restarts, so config handed over via postMessage() (Firebase
+// project + VAPID key) would otherwise be lost by the time a pushsubscriptionchange
+// event fires with no page open to ask.
+const CONFIG_CACHE = 'dashboard-config-v1';
+const CONFIG_KEY = 'https://dashboard-config.local/fb-config';
 // Derive base path dynamically so this SW works at any deployment path (not just /Dashboard/)
 const BASE = new URL('./', self.location.href).pathname;
 const ASSETS = [
@@ -21,7 +27,7 @@ self.addEventListener('install', function(e) {
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
-      return Promise.all(keys.filter(function(k) { return k !== CACHE; }).map(function(k) { return caches.delete(k); }));
+      return Promise.all(keys.filter(function(k) { return k !== CACHE && k !== CONFIG_CACHE; }).map(function(k) { return caches.delete(k); }));
     })
   );
   self.clients.claim();
@@ -29,6 +35,17 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
+  // Firebase Realtime Database / Auth calls carry live, per-request data (auth tokens,
+  // fresh reads/writes) — never let the cache answer or store these, or the app could
+  // show stale data or silently drop a write.
+  var isFirebaseApi = url.indexOf('firebaseio.com') !== -1 ||
+    url.indexOf('firebasedatabase.app') !== -1 ||
+    url.indexOf('identitytoolkit.googleapis.com') !== -1 ||
+    url.indexOf('securetoken.googleapis.com') !== -1;
+  if (isFirebaseApi) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
   // Stale-while-revalidate for HTML: return cached shell immediately for instant loads,
   // then fetch and update the cache in the background so the next load gets fresh content.
   var isNav = e.request.mode === 'navigate' || url.endsWith('index.html') || url.endsWith(BASE) || url.endsWith(BASE.replace(/\/$/, ''));
@@ -65,6 +82,87 @@ self.addEventListener('message', function(e) {
       });
     });
   }
+  // SET_FB_CONFIG: index.html hands over the Firebase project + VAPID key so this worker
+  // can resubscribe on its own if pushsubscriptionchange fires with no tab open.
+  if (e.data && e.data.type === 'SET_FB_CONFIG' && e.data.dbUrl && e.data.apiKey) {
+    storeFbConfig({ dbUrl: e.data.dbUrl, apiKey: e.data.apiKey, vapidKey: e.data.vapidKey });
+  }
+});
+
+function storeFbConfig(cfg) {
+  return caches.open(CONFIG_CACHE).then(function(c) {
+    return c.put(CONFIG_KEY, new Response(JSON.stringify(cfg)));
+  });
+}
+
+function getStoredFbConfig() {
+  return caches.open(CONFIG_CACHE)
+    .then(function(c) { return c.match(CONFIG_KEY); })
+    .then(function(r) { return r ? r.json() : null; })
+    .catch(function() { return null; });
+}
+
+function urlB64ToUint8Array(base64String) {
+  var padding = '='.repeat((4 - base64String.length % 4) % 4);
+  var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var rawData = atob(base64);
+  var outputArray = new Uint8Array(rawData.length);
+  for (var i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+// Mirrors _simpleHash() in index.html — must stay in sync with it, since it's how both
+// sides derive the same push_subscriptions/<id> key from a subscription endpoint.
+function simpleHash(str) {
+  var h = 0;
+  for (var i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) | 0; }
+  return 'sub_' + Math.abs(h);
+}
+
+function signInAnon(apiKey) {
+  return fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + apiKey, {
+    method: 'POST',
+    body: JSON.stringify({ returnSecureToken: true })
+  }).then(function(r) { return r.json(); }).then(function(auth) { return auth.idToken; });
+}
+
+// The browser can invalidate/rotate a push subscription at any time (key rotation,
+// expiry) without the page being open. If we don't resubscribe here, the app silently
+// stops receiving schedule reminders until the user happens to reopen it.
+self.addEventListener('pushsubscriptionchange', function(e) {
+  e.waitUntil(
+    getStoredFbConfig().then(function(cfg) {
+      if (!cfg || !cfg.dbUrl || !cfg.apiKey || !cfg.vapidKey) return;
+      return self.registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlB64ToUint8Array(cfg.vapidKey)
+      }).then(function(newSub) {
+        return signInAnon(cfg.apiKey).then(function(token) {
+          var base = cfg.dbUrl.replace(/\/$/, '');
+          var payload = newSub.toJSON();
+          payload.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+          payload.savedAt = Date.now();
+          var newId = simpleHash(newSub.endpoint);
+          var writes = [
+            fetch(base + '/dashboard/data/push_subscriptions/' + newId + '.json?auth=' + token, {
+              method: 'PUT',
+              body: JSON.stringify(payload)
+            })
+          ];
+          var oldSub = e.oldSubscription;
+          if (oldSub && oldSub.endpoint) {
+            var oldId = simpleHash(oldSub.endpoint);
+            if (oldId !== newId) {
+              writes.push(fetch(base + '/dashboard/data/push_subscriptions/' + oldId + '.json?auth=' + token, { method: 'DELETE' }));
+            }
+          }
+          return Promise.all(writes);
+        });
+      }).catch(function(err) {
+        console.error('pushsubscriptionchange resubscribe failed:', err);
+      });
+    })
+  );
 });
 
 // ═══ SCHEDULE PUSH NOTIFICATIONS ═══
@@ -110,11 +208,7 @@ self.addEventListener('notificationclick', function(e) {
 
 function writeSchedState(data, state) {
   if (!data.dbUrl || !data.apiKey || !data.key) return Promise.resolve();
-  return fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + data.apiKey, {
-    method: 'POST',
-    body: JSON.stringify({ returnSecureToken: true })
-  }).then(function(r) { return r.json(); }).then(function(auth) {
-    var token = auth.idToken;
+  return signInAnon(data.apiKey).then(function(token) {
     var base = data.dbUrl.replace(/\/$/, '');
     var schedPatch = {};
     schedPatch[data.key] = state;

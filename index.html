@@ -479,10 +479,17 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <div class="header-title" id="app_title_header" onclick="showTab('overview')" style="cursor:pointer">My Dashboard</div>
         <div style="display:flex;gap:6px;align-items:center">
-            <!-- Sync -->
-            <button onclick="forceSyncFromFirebase();closeSettingsMenu()" class="smenu-item" id="sync_btn" aria-label="Sync data with Firebase">
-                🔄
+            <!-- Search -->
+            <button onclick="openGlobalSearch()" class="smenu-item" id="search_btn" aria-label="Search across all data">
+                🔍
             </button>
+            <!-- Sync -->
+            <button onclick="forceSyncFromFirebase();closeSettingsMenu()" class="smenu-item" id="sync_btn" aria-label="Sync data with Firebase" style="position:relative">
+                <span id="sync_btn_icon">🔄</span>
+                <span id="sync_pending_dot" style="display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--red);border:1.5px solid var(--bg2)"></span>
+            </button>
+            <!-- Offline indicator -->
+            <span id="offline_badge" style="display:none;font-size:10px;font-weight:700;color:var(--red);background:rgba(255,59,48,0.12);border:0.5px solid rgba(255,59,48,0.35);border-radius:10px;padding:3px 8px">📵 Offline</span>
             <!-- Settings menu -->
             <div style="position:relative" id="settings_menu_wrap">
                 <button class="btn btn-w btn-sm" onclick="toggleSettingsMenu()" id="settings_menu_btn" style="font-size:16px;padding:6px 10px" aria-label="Open settings menu" aria-haspopup="true" aria-expanded="false">⚙️</button>
@@ -567,6 +574,17 @@
             </div>
         </div>
 
+        <!-- IDENTITY STATEMENT (persistent, not monthly) -->
+        <div class="card" id="ov_identity_card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <div class="card-title" style="margin-bottom:0">🧭 Identity</div>
+                <button class="btn btn-w btn-sm admin-only" onclick="editIdentityStatement()" style="font-size:10px">✏️ Edit</button>
+            </div>
+            <div id="ov_identity_display" style="font-size:13px;color:var(--text2);line-height:1.6;font-style:italic">
+                <!-- rendered by renderIdentityStatement() -->
+            </div>
+        </div>
+
         <!-- MONTHLY INTENTIONS (moved from Goals) -->
         <div class="card" id="ov_intentions_card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -618,6 +636,7 @@
     <!-- ═══ HEALTH → FITNESS v2 ═══ -->
     <div id="sec_health" class="section">
         <div id="fit_app"></div>
+        <datalist id="fit_exercise_names_dl"></datalist>
     </div>
 
     <!-- ═══ TODAY ═══ -->
@@ -659,7 +678,7 @@
         <div class="card add-card admin-only">
             <div class="card-title">Add New Task</div>
             <div class="form-grid">
-                <div class="form-group"><label>Task Name</label><input class="fi" id="t_name" placeholder="e.g. Apply for passport"></div>
+                <div class="form-group"><label>Task Name</label><input class="fi" id="t_name" list="t_name_dl" placeholder="e.g. Apply for passport"><datalist id="t_name_dl"></datalist></div>
                 <div class="form-group"><label>Category</label>
                     <select class="fs" id="t_cat" onchange="handleOther(this,'t_cat_other')">
                         <option>Personal</option><option>Work</option><option>Health</option><option>Finance</option><option>Travel</option><option>Learning</option><option>Social</option><option value="Other">Other…</option>
@@ -704,9 +723,10 @@
         <div class="card add-card">
             <div class="card-title">🛍️ Add to Wish List</div>
             <div class="form-grid">
-                <div class="form-group"><label>Item</label><input class="fi" id="sh_item" placeholder="e.g. Sky blue T-shirt"></div>
+                <div class="form-group"><label>Item</label><input class="fi" id="sh_item" list="sh_item_dl" placeholder="e.g. Sky blue T-shirt"><datalist id="sh_item_dl"></datalist></div>
                 <div class="form-group"><label>For Whom</label>
-                    <input class="fi" id="sh_for" placeholder="e.g. Myself, Mummy, Friend…">
+                    <input class="fi" id="sh_for" list="sh_for_dl" placeholder="e.g. Myself, Mummy, Friend…">
+                    <datalist id="sh_for_dl"></datalist>
                 </div>
                 <div class="form-group"><label>Priority</label>
                     <select class="fs" id="sh_pri">
@@ -732,7 +752,7 @@
         <div class="card add-card admin-only">
             <div class="card-title">📝 Add a Note</div>
             <div class="form-grid">
-                <div class="form-group"><label>Title</label><input class="fi" id="nt_title" placeholder="e.g. Keys are on the shelf near the door"></div>
+                <div class="form-group"><label>Title</label><input class="fi" id="nt_title" list="nt_title_dl" placeholder="e.g. Keys are on the shelf near the door"><datalist id="nt_title_dl"></datalist></div>
                 <div class="form-group"><label>Category</label>
                     <select class="fs" id="nt_cat"></select>
                 </div>
@@ -784,7 +804,7 @@
             <div class="card-title">Add Expense</div>
             <div class="form-grid-3">
                 <div class="form-group"><label>Date</label><input type="date" class="fi" id="ex_date"></div>
-                <div class="form-group"><label>Spent On</label><input class="fi" id="ex_desc" placeholder="e.g. Groceries, Petrol, Dinner out"></div>
+                <div class="form-group"><label>Spent On</label><input class="fi" id="ex_desc" list="ex_desc_dl" placeholder="e.g. Groceries, Petrol, Dinner out"><datalist id="ex_desc_dl"></datalist></div>
                 <div class="form-group"><label>Amount (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="ex_amt" placeholder="e.g. 250"></div>
             </div>
             <div class="form-grid" style="margin-bottom:10px">
@@ -848,6 +868,7 @@
                 <button class="btn btn-w btn-sm admin-only" onclick="setUpskillStartDate()">📅 Set Start</button>
                 <button class="btn btn-w btn-sm admin-only" onclick="openPrepMetaModal()" style="font-size:11px">Edit Info</button>
             </div>
+            <div id="up_pace_label" style="font-size:11px;margin-bottom:10px"></div>
             <div style="display:flex;gap:5px">
                 <button id="up_f_all"  class="btn btn-o btn-sm" onclick="setUpFilter('all')"  style="font-size:11px;flex:1">All</button>
                 <button id="up_f_todo" class="btn btn-w btn-sm" onclick="setUpFilter('todo')" style="font-size:11px;flex:1">To Do</button>
@@ -1125,7 +1146,7 @@
     <div id="score_weights_wrap"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
         <span style="font-size:12px;color:var(--text3)">Total: <strong id="sw_total" style="color:var(--text1)">100%</strong></span>
-        <button class="btn btn-o btn-sm" onclick="saveScoreWeights()">Save Weights</button>
+        <button class="btn btn-o btn-sm" id="sw_save_btn" onclick="saveScoreWeights()">Save Weights</button>
     </div>
   </div>
 </div>
@@ -1205,6 +1226,18 @@
   </div>
 </div>
 
+<!-- GLOBAL SEARCH -->
+<div class="ql-overlay" id="global_search_overlay" onclick="if(event.target===this)closeGlobalSearch()">
+  <div class="ql-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="ql-title">🔍 Search</div>
+      <button onclick="closeGlobalSearch()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <input class="fi" id="gs_input" placeholder="Search tasks, expenses, notes, wishlist, exercises…" style="margin-bottom:12px" oninput="runGlobalSearch()">
+    <div id="gs_results" style="font-size:13px;color:var(--text2)"></div>
+  </div>
+</div>
+
 <!-- CONFIGURATION HUB (all "set once and done" settings) -->
 <div class="ql-overlay" id="config_mgr_overlay" onclick="if(event.target===this)closeConfigManager()">
   <div class="ql-sheet">
@@ -1223,7 +1256,13 @@
     <!-- Manage Muscle Groups (links to its own dedicated manager) -->
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openFitGroupManager()">🏋️ Manage Muscle Groups</button>
     <!-- Manage Note Categories (links to its own dedicated manager) -->
-    <button class="btn btn-w" style="width:100%" onclick="openNotesCatManager()">📝 Manage Note Categories</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openNotesCatManager()">📝 Manage Note Categories</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="exportAllData()">⬇️ Backup All Data (JSON)</button>
+    <button class="btn btn-w" style="width:100%" onclick="document.getElementById('restore_file_input').click()">⬆️ Restore from Backup</button>
+    <input type="file" id="restore_file_input" accept="application/json" style="display:none" onchange="importAllDataFile(this)">
+
+    <div style="font-size:11px;color:var(--text3);margin:16px 0 8px">Recently erased (Danger Zone) — restorable on this device only</div>
+    <div id="erase_trash_list"></div>
   </div>
 </div>
 
@@ -1435,6 +1474,15 @@
         try {
           if (navigator.serviceWorker && navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({ type: 'SET_START_URL', hash: location.hash });
+            // Lets sw.js re-subscribe + write to Firebase on its own if the browser fires
+            // pushsubscriptionchange while no tab is open (see sw.js for why that needs
+            // dbUrl/apiKey/vapidKey handed to it — it can't read index.html's JS state).
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SET_FB_CONFIG',
+              dbUrl: FB_CONFIG.databaseURL,
+              apiKey: FB_CONFIG.apiKey,
+              vapidKey: VAPID_PUBLIC_KEY
+            });
           }
         } catch(e) {}
         // Persist Firebase config so hash-less launches (PWA home screen) work on this device
@@ -1459,12 +1507,10 @@
             if (isLocalDirty && lTs >= sTs) {
               anyLocalWins = true; // keep local value; push will send it up
             } else if (sTs > lTs && Object.prototype.hasOwnProperty.call(data, k)) {
-              try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
-              localKeyTs[k] = sTs;
+              if (_applyRemoteValue(k, data[k])) localKeyTs[k] = sTs;
             } else if (lTs === 0 && Object.prototype.hasOwnProperty.call(data, k)) {
               // Key never synced on this device — always pull from server
-              try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
-              localKeyTs[k] = sTs || 1;
+              if (_applyRemoteValue(k, data[k])) localKeyTs[k] = sTs || 1;
             }
             // equal timestamps (and lTs>0) or no server data — keep local as-is
           });
@@ -1498,9 +1544,7 @@
             var isLocalDirty = hasPending && !!dirty[k];
             if (isLocalDirty && lTs >= sTs) return; // local is newer — don't overwrite
             if (sTs > lTs && Object.prototype.hasOwnProperty.call(data, k)) {
-              try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
-              localKeyTs[k] = sTs;
-              anyChanged = true;
+              if (_applyRemoteValue(k, data[k])) { localKeyTs[k] = sTs; anyChanged = true; }
             }
           });
           _setKeyTs(localKeyTs);
@@ -1513,21 +1557,100 @@
     }
 
     var SYNCED_KEYS = ['app_config','sched',
-      'monthly_focus',
+      'monthly_focus','identity_statement',
       'tasks_active_list','tasks_done_list','expenses_list','exp_limits',
       'theme','notif_dismissed',
       'shop_wishlist','shop_bought',
       'day_type_log','tab_visibility',
       'recurring_expenses','recurring_logged',
-      'score_weights','day_notes','notes','notes_categories',
+      'score_weights','score_weights_log','day_notes','notes','notes_categories',
+      'streak_grace',
       'upskill_progress','upskill_notes','upskill_meta','upskill_custom','hidden_tabs',
       'day_type_defs','upskill_overrides','upskill_plan_data',
       'fitness_sessions','fitness_templates','fitness_groups','fitness_day_map','sched_notes',
       'day_type_week_map'];
 
+    // Keys stored as arrays — everything else in SYNCED_KEYS is a plain object (ls_get's
+    // default shape). Used to reject corrupted/malformed remote values before they land
+    // in localStorage, where a wrong type would silently break every ls_get() caller for
+    // that key on the next read (e.g. Object.keys() on a string, or .forEach on {}).
+    var SYNCED_ARRAY_KEYS = ['upskill_plan_data', 'score_weights_log'];
+
+    function _isValidSyncValue(key, val) {
+      if (val === null || val === undefined) return true; // absence is fine — key stays local-only
+      var wantArray = SYNCED_ARRAY_KEYS.indexOf(key) !== -1;
+      var isArray = Array.isArray(val);
+      if (wantArray) return isArray;
+      return typeof val === 'object' && !isArray;
+    }
+
+    // Single choke point for "server value wins, write it into localStorage" — every pull
+    // site (initial load, live listener, force-sync) routes through this so malformed
+    // remote data can't corrupt local state.
+    function _applyRemoteValue(key, val) {
+      if (!_isValidSyncValue(key, val)) {
+        console.warn('Skipped syncing "' + key + '" — unexpected shape from Firebase:', val);
+        return false;
+      }
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) { return false; }
+      return true;
+    }
+
+    // ═══════════════════════════════════════
+    // BACKUP & RESTORE — full local export/import of all synced data
+    // ═══════════════════════════════════════
+    function exportAllData() {
+      var dump = {_exportedAt: new Date().toISOString(), _app: 'dashboard-lite'};
+      SYNCED_KEYS.forEach(function(k) { dump[k] = ls_get(k); });
+      var blob = new Blob([JSON.stringify(dump, null, 2)], {type:'application/json'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'dashboard-backup-' + isoD(new Date()) + '.json';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      appToast('✅ Backup downloaded');
+    }
+
+    function importAllDataFile(fileInput) {
+      var file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var parsed;
+        try { parsed = JSON.parse(e.target.result); }
+        catch (err) { appToast('⚠️ Invalid backup file — not valid JSON.'); return; }
+        if (!parsed || parsed._app !== 'dashboard-lite') { appToast('⚠️ This file doesn\'t look like a Dashboard backup.'); return; }
+        appConfirm('Restore this backup? This overwrites all current data on this device with the backup contents.', function() {
+          var skipped = [];
+          SYNCED_KEYS.forEach(function(k) {
+            if (Object.prototype.hasOwnProperty.call(parsed, k)) {
+              if (_isValidSyncValue(k, parsed[k])) { ls_set(k, parsed[k]); }
+              else { skipped.push(k); }
+            }
+          });
+          if (skipped.length) { appToast('⚠️ Skipped malformed field(s): ' + skipped.join(', ')); return; }
+          appToast('✅ Backup restored — reloading...');
+          setTimeout(function(){ location.reload(); }, 1200);
+        }, '⚠️ Restore & Overwrite');
+        fileInput.value = '';
+      };
+      reader.readAsText(file);
+    }
+
     function schedulePush() {
       if (_syncTimer) clearTimeout(_syncTimer);
       _syncTimer = setTimeout(pushToFirebase, 800);
+      updateSyncPendingBadge();
+    }
+
+    // Small red dot on the sync button whenever a local edit hasn't reached Firebase yet —
+    // makes "did my change actually save?" visible instead of a silent background retry.
+    function updateSyncPendingBadge() {
+      var dot = document.getElementById('sync_pending_dot');
+      if (!dot) return;
+      var pending = localStorage.getItem('_ls_pending_push') === '1';
+      dot.style.display = pending ? '' : 'none';
     }
 
     function pushToFirebase() {
@@ -1553,12 +1676,24 @@
         _pendingPush = false;
         try { localStorage.removeItem('_ls_pending_push'); localStorage.removeItem('_ls_dirty_keys'); } catch(e) {}
         _lastSyncTime = _localChangeTime;
+        updateSyncPendingBadge();
       }).catch(function() {
         _pendingPush = false;
         // Retry once after 3 seconds on failure
         setTimeout(pushToFirebase, 3000);
       });
     }
+
+    // Offline indicator — shown for the actual network state (not Firebase readiness),
+    // so the user knows unsynced edits will hold until the connection returns.
+    function updateOfflineBadge() {
+      var badge = document.getElementById('offline_badge');
+      if (!badge) return;
+      badge.style.display = navigator.onLine === false ? '' : 'none';
+    }
+    window.addEventListener('online', function() { updateOfflineBadge(); schedulePush(); });
+    window.addEventListener('offline', updateOfflineBadge);
+    document.addEventListener('DOMContentLoaded', function() { updateOfflineBadge(); updateSyncPendingBadge(); });
 
     document.addEventListener('visibilitychange', function() {
       if (document.visibilityState === 'hidden' && localStorage.getItem('_ls_pending_push') === '1') {
@@ -1582,6 +1717,7 @@
         renderNotes();
         applyTabVisibility();
         renderOverviewFocus();
+        renderIdentityStatement();
       } finally {
         _reRendering = false;
       }
@@ -1596,7 +1732,7 @@
         switch (_activeTab) {
           case 'overview':
             renderScores(); renderWeeklyReport();
-            renderTodayChecklist(); renderOverviewFocus();
+            renderTodayChecklist(); renderOverviewFocus(); renderIdentityStatement();
             break;
           case 'today':
             buildSched(); renderTasks();
@@ -1627,9 +1763,10 @@
 
     function forceSyncFromFirebase() {
         var btn = document.getElementById('sync_btn');
-        if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+        var icon = document.getElementById('sync_btn_icon');
+        if (btn) { if (icon) icon.textContent = '⏳'; btn.disabled = true; }
         if (!_fbRef || !_fbReady) {
-            if (btn) { btn.textContent = '🔄'; btn.disabled = false; }
+            if (btn) { if (icon) icon.textContent = '🔄'; btn.disabled = false; }
             appToast('Firebase not ready yet. Please wait a moment and try again.');
             return;
         }
@@ -1667,15 +1804,15 @@
                     pushNeeded = true;
                 } else if (sTs > lTs && Object.prototype.hasOwnProperty.call(data, k)) {
                     // Server is newer → pull from Firebase
-                    try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
-                    mergedKts[k] = sTs;
+                    if (_applyRemoteValue(k, data[k])) mergedKts[k] = sTs;
+                    else mergedKts[k] = Math.max(sTs, lTs);
                 } else {
                     // Same timestamp or local not dirty → keep local.
                     // Special case: if local has NEVER been synced (lTs=0) and server has data,
                     // pull it (handles first-time sync for this key on a new device).
                     if (lTs === 0 && Object.prototype.hasOwnProperty.call(data, k)) {
-                        try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
-                        mergedKts[k] = sTs || 1;
+                        if (_applyRemoteValue(k, data[k])) mergedKts[k] = sTs || 1;
+                        else mergedKts[k] = sTs || 1;
                     } else {
                         mergedKts[k] = Math.max(sTs, lTs);
                     }
@@ -1695,9 +1832,10 @@
         }).then(function() {
             try { localStorage.removeItem('_ls_dirty_keys'); localStorage.removeItem('_ls_pending_push'); } catch(e) {}
             reRenderAll();
-            if (btn) { btn.textContent = '✅'; setTimeout(function(){ btn.textContent='🔄'; btn.disabled=false; }, 1500); }
+            updateSyncPendingBadge();
+            if (btn) { if (icon) icon.textContent = '✅'; setTimeout(function(){ if (icon) icon.textContent='🔄'; btn.disabled=false; }, 1500); }
         }).catch(function(err) {
-            if (btn) { btn.textContent = '❌'; setTimeout(function(){ btn.textContent='🔄'; btn.disabled=false; }, 2500); }
+            if (btn) { if (icon) icon.textContent = '❌'; setTimeout(function(){ if (icon) icon.textContent='🔄'; btn.disabled=false; }, 2500); }
             var detail = (err && err.message) ? err.message : 'Check connection or Firebase rules.';
             reRenderAll();
             appToast('⚠️ Sync failed: ' + detail);
@@ -1737,7 +1875,7 @@
         if (sec) sec.style.display = 'block';
         var tab = document.getElementById('tab_' + name);
         if (tab) { tab.classList.add('active'); tab.setAttribute('aria-selected','true'); }
-        if (name === 'overview') { renderScores(); renderWeeklyReport(); renderScoreTrend(30); renderTodayChecklist(); renderOverviewFocus(); }
+        if (name === 'overview') { renderScores(); renderWeeklyReport(); renderScoreTrend(30); renderTodayChecklist(); renderOverviewFocus(); renderIdentityStatement(); }
         if (name === 'today') { buildSched(); renderTasks(); }
         if (name === 'health') { fitInit(); }
         if (name === 'upskill') { renderUpskill(); renderPrepTodayCard(); }
@@ -2635,6 +2773,7 @@
       document.getElementById('t_date').value = '';
       document.getElementById('t_notes').value = '';
       renderTasks();
+      _fillDatalist('t_name_dl', Object.keys(tasks).map(function(k){return tasks[k].name;}));
     }
 
     function changeStatus(id) {
@@ -2653,28 +2792,38 @@
       var done = getDoneTasks();
       if (!tasks[id]) return;
       var t = tasks[id];
-      appPrompt('✅ Task completed!', 'Where / what was the outcome for: "' + t.name + '"', '', function(where) {
-        appPrompt('💬 How do you feel?', 'One word or a sentence — e.g. Relieved, Proud, Motivated', '', function(feeling) {
-          var doneId = newId();
-          done[doneId] = { name:t.name, cat:t.cat, completedOn:new Date().toISOString().slice(0,10), where:where, feeling:feeling };
-          delete tasks[id];
-          ls_set('tasks_active_list', tasks);
-          ls_set('tasks_done_list', done);
-          renderTasks();
-          renderTodayChecklist();
+      var doneId = newId();
+      done[doneId] = { name:t.name, cat:t.cat, completedOn:new Date().toISOString().slice(0,10), where:'', feeling:'' };
+      delete tasks[id];
+      ls_set('tasks_active_list', tasks);
+      ls_set('tasks_done_list', done);
+      renderTasks();
+      renderTodayChecklist();
+      appToast('✅ ' + t.name + ' completed');
+      // Optional, non-blocking follow-up — completion above already happened either way
+      setTimeout(function() {
+        appPrompt('✅ ' + t.name, 'Outcome / how it went? (optional — cancel to skip)', '', function(note) {
+          if (!note) return;
+          var d = getDoneTasks();
+          if (d[doneId]) { d[doneId].where = note; ls_set('tasks_done_list', d); }
         });
-      });
-      return; // early return, rest handled in callback
-    }  // close completeTask here — remove original closing below
+      }, 350);
+    }
 
 
     function deleteTask(id) {
-      appConfirm('Delete this task?', function() {
-        var tasks = getTasks();
-        delete tasks[id];
-        ls_set('tasks_active_list', tasks);
+      var tasks = getTasks();
+      var removed = tasks[id];
+      if (!removed) return;
+      delete tasks[id];
+      ls_set('tasks_active_list', tasks);
+      renderTasks();
+      appToastUndo('🗑️ Task deleted', function() {
+        var t = getTasks();
+        t[id] = removed;
+        ls_set('tasks_active_list', t);
         renderTasks();
-      }, '🗑️ Delete');
+      });
     }
 
     function renderTasks() {
@@ -2786,17 +2935,26 @@
         renderExpenses();
         renderLimits();          // update budget progress bars immediately
         renderExpensePattern();  // update monthly breakdown immediately
+        _fillDatalist('ex_desc_dl', Object.keys(expenses).map(function(k){return expenses[k].desc;}));
     }
 
     function deleteExpense(id) {
-      appConfirm('Delete this expense?', function() {
-        var expenses = getExpenses();
-        delete expenses[id];
-        ls_set('expenses_list', expenses);
+      var expenses = getExpenses();
+      var removed = expenses[id];
+      if (!removed) return;
+      delete expenses[id];
+      ls_set('expenses_list', expenses);
+      renderExpenses();
+      renderLimits();
+      renderExpensePattern();
+      appToastUndo('🗑️ Expense deleted', function() {
+        var e = getExpenses();
+        e[id] = removed;
+        ls_set('expenses_list', e);
         renderExpenses();
         renderLimits();
         renderExpensePattern();
-      }, '🗑️ Delete');
+      });
     }
 
     function renderExpenses() {
@@ -2955,9 +3113,47 @@
 
     function deleteRecurring(id) {
         var data = ls_get('recurring_expenses');
+        var removed = data[id];
+        if (!removed) return;
         delete data[id];
         ls_set('recurring_expenses', data);
         renderRecurring();
+        appToastUndo('🗑️ Fixed expense deleted', function() {
+            var d = ls_get('recurring_expenses');
+            d[id] = removed;
+            ls_set('recurring_expenses', d);
+            renderRecurring();
+        });
+    }
+
+    function editRecurring(id) {
+        var data = ls_get('recurring_expenses');
+        var r = data[id];
+        if (!r) return;
+        appPrompt('Edit fixed expense', 'Name', r.name, function(name) {
+            if (!name) return;
+            appPrompt('Edit fixed expense', 'Amount (' + getCurSym() + ')', String(r.amt), function(amtStr) {
+                var amt = parseFloat(amtStr);
+                if (!amt) { appToast('⚠️ Enter a valid amount.'); return; }
+                var finish = function(day) {
+                    var d = ls_get('recurring_expenses');
+                    if (!d[id]) return;
+                    d[id].name = name;
+                    d[id].amt = amt;
+                    if (day != null) d[id].day = day;
+                    ls_set('recurring_expenses', d);
+                    renderRecurring();
+                    appToast('✅ Updated ' + name);
+                };
+                if (r.occurrence === 'recurring') {
+                    appPrompt('Edit fixed expense', 'Day of month (1-31)', String(r.day || 1), function(dayStr) {
+                        finish(parseInt(dayStr) || r.day || 1);
+                    });
+                } else {
+                    finish(null);
+                }
+            });
+        });
     }
 
     function renderRecurring() {
@@ -2976,6 +3172,7 @@
             html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)">';
             html += '<div style="flex:1"><div style="font-size:13px;color:var(--text1);font-weight:500">' + esc(r.name) + '</div>';
             html += '<div style="font-size:10px;color:var(--text3)">' + typeStr + ' ' + dayStr + ' · ' + fmtCur(Number(r.amt)) + '</div></div>';
+            html += '<button class="btn btn-o btn-sm" onclick="editRecurring(\'' + id + '\')">✎</button>';
             html += '<button class="btn btn-r btn-sm" onclick="deleteRecurring(\'' + id + '\')">✕</button>';
             html += '</div>';
         });
@@ -3129,24 +3326,6 @@
     }
 
 
-    // Auto-calc fat kg when fat% is entered
-    document.addEventListener('DOMContentLoaded', function() {
-      function calcFatKg() {
-        var wt = parseFloat(document.getElementById('wp_wt').value);
-        var fat = parseFloat(document.getElementById('wp_fat').value);
-        var el = document.getElementById('wp_fatkg');
-        if (el && !isNaN(wt) && !isNaN(fat)) {
-          el.value = (wt * fat / 100).toFixed(1);
-        } else if (el) {
-          el.value = '';
-        }
-      }
-      var wtEl = document.getElementById('wp_wt');
-      var fatEl = document.getElementById('wp_fat');
-      if (wtEl) wtEl.addEventListener('input', calcFatKg);
-      if (fatEl) fatEl.addEventListener('input', calcFatKg);
-    });
-
     // ═══════════════════════════════════════
     // THEME TOGGLE
     // ═══════════════════════════════════════
@@ -3233,7 +3412,11 @@
       });
       var expenses2 = getExpenses();
       var hasAnyEntry = Object.keys(expenses2).some(function(id){ return expenses2[id].date === dateStr; });
-      if (total === 0 && !hasAnyEntry) return null; // no data logged at all
+      if (total === 0 && !hasAnyEntry) {
+        var today0 = isoD(new Date());
+        if (dateStr >= today0) return null; // today/future with nothing logged yet — no verdict
+        return {pct: 100, over: true, unlogged: true}; // past day, nothing tracked — counts against discipline, not a free pass
+      }
       var pct = Math.round((total / limit) * 100);
       return {pct: pct, over: pct > 100};
     }
@@ -3413,7 +3596,8 @@
         if (warnEl) {
             var isToday = d === isoD(new Date());
             if (isToday && overall !== null) {
-                // Calculate current streak
+                // Calculate current streak — a graced day (streak_grace) counts as a pass
+                var graceLog = ls_get('streak_grace');
                 var streak = 0;
                 for (var si = 1; si <= 90; si++) {
                     var sd = isoD(new Date(Date.now() - si * 86400000));
@@ -3422,7 +3606,7 @@
                     var ses = sep === null ? null : Math.max(0, 100 - sep);
                     var sm = [ss, ses].filter(function(v){ return v!==null; });
                     var so = sm.length > 0 ? Math.round(sm.reduce(function(a,b){return a+b;},0)/sm.length) : null;
-                    if (so !== null && so >= 70) streak++;
+                    if ((so !== null && so >= 70) || graceLog[sd]) streak++;
                     else break;
                 }
                 if (overall < 70) {
@@ -3433,9 +3617,23 @@
                     var streakMsg = streak > 0 ? ' — your <strong>' + streak + '-day streak</strong> is at risk!' : '';
                     var warnColor = overall < 50 ? 'rgba(255,59,48,0.12)' : 'rgba(255,149,0,0.1)';
                     var borderColor = overall < 50 ? 'rgba(255,59,48,0.3)' : 'rgba(255,149,0,0.3)';
+                    var todayStr0 = isoD(new Date());
+                    var alreadyGraced = !!graceLog[todayStr0];
+                    var graceUsedThisWeek = Object.keys(graceLog).some(function(gd) {
+                        return (new Date(todayStr0) - new Date(gd)) < 7 * 86400000 && (new Date(todayStr0) - new Date(gd)) >= 0;
+                    });
+                    var graceBtn = '';
+                    if (streak > 0 && !alreadyGraced) {
+                        if (graceUsedThisWeek) {
+                            graceBtn = '<div style="font-size:10px;color:var(--text3);margin-top:6px">🛡️ Streak grace already used this week</div>';
+                        } else {
+                            graceBtn = '<button class="btn btn-w btn-sm" style="margin-top:6px;font-size:10px" onclick="useStreakGrace()">🛡️ Use weekly streak grace</button>';
+                        }
+                    }
                     warnEl.innerHTML = '<div style="background:'+warnColor+';border:0.5px solid '+borderColor+';border-radius:10px;padding:10px 12px;text-align:center">'
                         + '<div style="font-size:12px;font-weight:700;color:var(--text1);margin-bottom:4px">⚠️ Score is ' + overall + '%' + streakMsg + '</div>'
                         + (missing.length > 0 ? '<div style="font-size:11px;color:var(--text3)">Log today: ' + missing.join(' · ') + '</div>' : '')
+                        + graceBtn
                         + '</div>';
                 } else if (streak >= 3) {
                     warnEl.innerHTML = '<div style="background:rgba(52,199,89,0.08);border:0.5px solid rgba(52,199,89,0.25);border-radius:10px;padding:8px 12px;text-align:center;font-size:11px;color:var(--green)">🔥 <strong>' + streak + '-day streak</strong> — keep it going!</div>';
@@ -3446,6 +3644,27 @@
                 warnEl.innerHTML = '';
             }
         }
+    }
+
+    // Manually protects today's streak, once per rolling 7 days — a conscious opt-in,
+    // not a silent auto-forgive, so it stays a discipline tool rather than a loophole.
+    function useStreakGrace() {
+        var todayStr = isoD(new Date());
+        var graceLog = ls_get('streak_grace');
+        if (graceLog[todayStr]) { appToast('🛡️ Already used today.'); return; }
+        var usedThisWeek = Object.keys(graceLog).some(function(gd) {
+            return (new Date(todayStr) - new Date(gd)) < 7 * 86400000 && (new Date(todayStr) - new Date(gd)) >= 0;
+        });
+        if (usedThisWeek) { appToast('🛡️ Streak grace already used this week.'); return; }
+        appConfirm('Use your one streak grace for this week? Today will count toward your streak even though the score is below 70%.', function() {
+            graceLog[todayStr] = true;
+            // Prune entries older than 60 days to keep this key small
+            var cutoff = Date.now() - 60 * 86400000;
+            Object.keys(graceLog).forEach(function(gd) { if (new Date(gd).getTime() < cutoff) delete graceLog[gd]; });
+            ls_set('streak_grace', graceLog);
+            appToast('🛡️ Streak grace used for today');
+            renderScores();
+        }, '🛡️ Use Grace');
     }
 
 
@@ -3544,24 +3763,40 @@
         return Object.keys(DEFAULT_WEIGHTS).length === Object.keys(saved).length ? saved : Object.assign({}, DEFAULT_WEIGHTS);
     }
 
+    function getScoreWeightsLog() { return ls_get('score_weights_log') || []; }
+
+    function scoreWeightsLockInfo() {
+        var log = getScoreWeightsLog();
+        var curMonth = isoD(new Date()).slice(0, 7);
+        var changedThisMonth = log.some(function(e){ return e.month === curMonth; });
+        return { locked: changedThisMonth && log.length > 0, curMonth: curMonth };
+    }
+
     function renderScoreWeights() {
         var el = document.getElementById('score_weights_wrap');
         if (!el) return;
         var w = getScoreWeights();
         var labels = {sched:'📅 My Day', exp:'💸 Expenses', cons:'🔄 Consistency'};
+        var lock = scoreWeightsLockInfo();
         var html = '';
+        if (lock.locked) {
+            html += '<div style="background:rgba(255,159,10,0.10);border:0.5px solid rgba(255,159,10,0.28);border-radius:10px;padding:10px;font-size:12px;color:var(--yellow);margin-bottom:10px">🔒 Weights are locked for ' + lock.curMonth + ' — already changed once this month. This stops the score from being tuned mid-month to chase a good number.</div>';
+        }
         Object.keys(labels).forEach(function(k) {
             html += '<div style="margin-bottom:10px">';
             html += '<div style="display:flex;justify-content:space-between;margin-bottom:4px">';
             html += '<span style="font-size:12px;color:var(--text2)">' + labels[k] + '</span>';
-            html += '<span style="font-size:12px;font-weight:700;color:var(--accent)" id="sw_val_' + k + '">' + w[k] + '%</span>';
+            html += '<span style="font-size:12px;font-weight:700;color:var(--accent)" id="sw_val_' + k + '">' + Math.max(15,w[k]) + '%</span>';
             html += '</div>';
-            html += '<input type="range" min="0" max="60" step="5" value="' + w[k] + '" id="sw_' + k + '"';
+            html += '<input type="range" min="15" max="60" step="5" value="' + Math.max(15,w[k]) + '" id="sw_' + k + '"';
+            html += (lock.locked ? ' disabled' : '');
             html += ' oninput="updateSwTotal()" style="width:100%;accent-color:var(--accent)">';
             html += '</div>';
         });
         el.innerHTML = html;
         updateSwTotal();
+        var saveBtn = document.getElementById('sw_save_btn');
+        if (saveBtn) saveBtn.disabled = lock.locked;
     }
 
     function updateSwTotal() {
@@ -3576,14 +3811,20 @@
     }
 
     function saveScoreWeights() {
+        var lock = scoreWeightsLockInfo();
+        if (lock.locked) { appToast('🔒 Weights already changed this month. Try again ' + lock.curMonth.slice(0,4) + '-' + String(Number(lock.curMonth.slice(5,7))+1).padStart(2,'0') + '.'); return; }
         var keys = ['sched','exp','cons'];
         var total = keys.reduce(function(s,k){ return s + parseInt((document.getElementById('sw_'+k)||{}).value||0); }, 0);
         if (total !== 100) { appToast('⚠️ Weights must total 100%. Currently: ' + total + '%'); return; }
         var w = {};
         keys.forEach(function(k){ w[k] = parseInt(document.getElementById('sw_'+k).value); });
         ls_set('score_weights', w);
-        appToast('✅ Score weights saved!');
+        var log = getScoreWeightsLog();
+        log.push({month: lock.curMonth, at: new Date().toISOString(), weights: w});
+        ls_set('score_weights_log', log);
+        appToast('✅ Score weights saved! Locked until next month.');
         renderScores();
+        renderScoreWeights();
     }
 
 
@@ -3774,14 +4015,78 @@
       prep:      { label:'Prep / Upskill Progress',      keys:['upskill_progress','upskill_notes','upskill_meta','upskill_custom'], cb:function(){ renderUpskill(); } },
     };
 
+    // ═══ DANGER ZONE SAFETY NET — snapshot what's about to be erased before it's gone ═══
+    // Deliberately kept OUT of SYNCED_KEYS: this is a local-device safety net, not app
+    // data, and syncing it would let one device's erase overwrite another's trash log.
+    var ERASE_TRASH_KEY = '_erase_trash_log';
+    var ERASE_TRASH_MAX = 5;
+
+    function _pushEraseTrash(sectionKey, label, snapshot) {
+      var log;
+      try { log = JSON.parse(localStorage.getItem(ERASE_TRASH_KEY) || '[]'); } catch(e) { log = []; }
+      log.unshift({ sectionKey: sectionKey, label: label, at: Date.now(), data: snapshot });
+      if (log.length > ERASE_TRASH_MAX) log = log.slice(0, ERASE_TRASH_MAX);
+      try { localStorage.setItem(ERASE_TRASH_KEY, JSON.stringify(log)); } catch(e) {}
+    }
+
+    function _downloadEraseSnapshot(label, snapshot) {
+      try {
+        var dump = { _exportedAt: new Date().toISOString(), _app: 'dashboard-lite', _erasedSection: label, data: snapshot };
+        var blob = new Blob([JSON.stringify(dump, null, 2)], {type:'application/json'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'dashboard-erased-' + label.toLowerCase().replace(/[^a-z0-9]+/g,'-') + '-' + isoD(new Date()) + '.json';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      } catch(e) {}
+    }
+
+    function getEraseTrash() {
+      try { return JSON.parse(localStorage.getItem(ERASE_TRASH_KEY) || '[]'); } catch(e) { return []; }
+    }
+
+    function restoreErasedSection(index) {
+      var log = getEraseTrash();
+      var entry = log[index];
+      if (!entry) return;
+      appConfirm('Restore "' + entry.label + '"? This overwrites any data currently in that section.', function() {
+        Object.keys(entry.data).forEach(function(k) { ls_set(k, entry.data[k]); });
+        log.splice(index, 1);
+        try { localStorage.setItem(ERASE_TRASH_KEY, JSON.stringify(log)); } catch(e) {}
+        reRenderAll();
+        renderEraseTrash();
+        appToast('✅ Restored ' + entry.label);
+      }, '♻️ Restore', false);
+    }
+
+    function renderEraseTrash() {
+      var el = document.getElementById('erase_trash_list');
+      if (!el) return;
+      var log = getEraseTrash();
+      if (log.length === 0) { el.innerHTML = '<div style="font-size:11px;color:var(--text3)">Nothing erased recently.</div>'; return; }
+      el.innerHTML = log.map(function(entry, i) {
+        var when = new Date(entry.at).toLocaleString();
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)">' +
+          '<div style="font-size:12px"><div>' + entry.label + '</div><div style="font-size:10px;color:var(--text3)">' + when + '</div></div>' +
+          '<button class="btn btn-o btn-sm" onclick="restoreErasedSection(' + i + ')">♻️ Restore</button>' +
+          '</div>';
+      }).join('');
+    }
+
     function eraseSection(sectionKey) {
       var s = _ERASE[sectionKey];
       if (!s) return;
       var _confirmMsg = '⚠️ Erase all "' + s.label + '" data? This cannot be undone.';
       document.getElementById('app_confirm_sub').textContent = 'All data in this section will be permanently deleted.';
       appConfirm(_confirmMsg, function() {
+        var snapshot = {};
+        s.keys.forEach(function(k) { snapshot[k] = ls_get(k); });
+        _pushEraseTrash(sectionKey, s.label, snapshot);
+        _downloadEraseSnapshot(s.label, snapshot);
         s.keys.forEach(function(k) { try { ls_set(k, {}); } catch(e) {} });
         if (s.cb) s.cb();
+        renderEraseTrash();
       }, '🗑️ Erase', true);
       return; // appConfirm is async
     }
@@ -4120,6 +4425,8 @@
       var forEl = document.getElementById('sh_for'); if (forEl) forEl.value = '';
       var priEl = document.getElementById('sh_pri'); if (priEl) priEl.selectedIndex = 0;
       renderShopping();
+      _addDatalistOption('sh_item_dl', item);
+      _addDatalistOption('sh_for_dl', forWhom);
     }
 
     function markBought(id) {
@@ -4128,25 +4435,36 @@
       if (!list[id]) return;
       var itemName = list[id].item;
       var budget = list[id].budget || 0;
-      appPrompt('🛍️ Mark as bought: ' + itemName, 'How much did you actually spend? (' + getCurSym() + ')', String(budget), function(spentStr) {
-        appPrompt('💬 How do you feel about this purchase?', '', 'Happy 😊', function(feeling) {
-          var bid = newId();
-          bought[bid] = Object.assign({}, list[id], {boughtOn: isoD(new Date()), spent: parseFloat(spentStr)||0, feeling: feeling});
-          delete list[id];
-          ls_set('shop_wishlist', list);
-          ls_set('shop_bought', bought);
-          renderShopping();
+      var bid = newId();
+      bought[bid] = Object.assign({}, list[id], {boughtOn: isoD(new Date()), spent: budget, feeling: ''});
+      delete list[id];
+      ls_set('shop_wishlist', list);
+      ls_set('shop_bought', bought);
+      renderShopping();
+      appToast('🛍️ ' + itemName + ' marked bought');
+      // Optional, non-blocking follow-up to confirm actual spend / feeling — purchase is already recorded
+      setTimeout(function() {
+        appPrompt('🛍️ ' + itemName, 'Actual amount spent? (' + getCurSym() + ' — optional, cancel to keep ' + getCurSym() + budget + ')', String(budget), function(spentStr) {
+          if (spentStr === '' || spentStr == null) return;
+          var b = getBoughtItems();
+          if (b[bid]) { b[bid].spent = parseFloat(spentStr) || budget; ls_set('shop_bought', b); }
         });
-      });
+      }, 350);
     }
 
     function deleteShopItem(id) {
-      appConfirm('Remove from wish list?', function() {
-        var list = getShopItems();
-        delete list[id];
-        ls_set('shop_wishlist', list);
+      var list = getShopItems();
+      var removed = list[id];
+      if (!removed) return;
+      delete list[id];
+      ls_set('shop_wishlist', list);
+      renderShopping();
+      appToastUndo('🗑️ Removed from wish list', function() {
+        var l = getShopItems();
+        l[id] = removed;
+        ls_set('shop_wishlist', l);
         renderShopping();
-      }, '🗑️ Remove');
+      });
     }
 
     function renderShopping() {
@@ -4304,6 +4622,87 @@
         }, duration || 2200);
     }
 
+    // Undo toast for single-row deletes: replaces an "are you sure?" confirm dialog with
+    // instant delete + a few seconds to reverse it — less friction for the common case,
+    // still safe for the rare mis-tap.
+    var _undoToastTimer = null;
+    function appToastUndo(msg, undoCb, duration) {
+      var existing = document.getElementById('app_toast_undo');
+      if (existing) existing.remove();
+      if (_undoToastTimer) { clearTimeout(_undoToastTimer); _undoToastTimer = null; }
+      var el = document.createElement('div');
+      el.id = 'app_toast_undo';
+      el.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--bg3);color:var(--text1);border:0.5px solid var(--border);border-radius:24px;padding:10px 10px 10px 20px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.5);opacity:1;transition:opacity .4s;display:flex;align-items:center;gap:10px;white-space:nowrap';
+      var span = document.createElement('span');
+      span.textContent = msg;
+      var btn = document.createElement('button');
+      btn.textContent = 'Undo';
+      btn.style.cssText = 'background:none;border:none;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;padding:4px 8px';
+      btn.onclick = function() {
+        if (_undoToastTimer) { clearTimeout(_undoToastTimer); _undoToastTimer = null; }
+        el.remove();
+        undoCb();
+      };
+      el.appendChild(span); el.appendChild(btn);
+      document.body.appendChild(el);
+      _undoToastTimer = setTimeout(function() {
+        el.style.opacity = '0';
+        setTimeout(function(){ el.remove(); }, 400);
+      }, duration || 5000);
+    }
+
+    // ═══ AUTOCOMPLETE DATALISTS — populated from each store's own history, no schema change ═══
+    function _fillDatalist(id, values) {
+      var dl = document.getElementById(id);
+      if (!dl) return;
+      var uniq = [];
+      var seen = {};
+      for (var i = 0; i < values.length; i++) {
+        var v = (values[i] || '').toString().trim();
+        if (v && !seen[v]) { seen[v] = true; uniq.push(v); }
+      }
+      dl.innerHTML = uniq.map(function(v){ return '<option value="' + esc(v) + '">'; }).join('');
+    }
+    function _addDatalistOption(id, value) {
+      var dl = document.getElementById(id);
+      if (!dl) return;
+      var v = (value || '').toString().trim();
+      if (!v) return;
+      var exists = Array.prototype.some.call(dl.options, function(o){ return o.value === v; });
+      if (exists) return;
+      var opt = document.createElement('option');
+      opt.value = v;
+      dl.appendChild(opt);
+    }
+    function populateDatalists() {
+      try {
+        var tasks = getTasks(), done = getDoneTasks();
+        var tNames = Object.keys(tasks).map(function(k){return tasks[k].name;})
+          .concat(Object.keys(done).map(function(k){return done[k].name;}));
+        _fillDatalist('t_name_dl', tNames);
+
+        var wish = getShopItems(), bought = getBoughtItems();
+        _fillDatalist('sh_item_dl', Object.keys(wish).map(function(k){return wish[k].item;})
+          .concat(Object.keys(bought).map(function(k){return bought[k].item;})));
+        _fillDatalist('sh_for_dl', Object.keys(wish).map(function(k){return wish[k].forWhom || wish[k].for;})
+          .concat(Object.keys(bought).map(function(k){return bought[k].forWhom || bought[k].for;})));
+
+        var notes = getNotes();
+        _fillDatalist('nt_title_dl', Object.keys(notes).map(function(k){return notes[k].title;}));
+
+        var expenses = getExpenses();
+        _fillDatalist('ex_desc_dl', Object.keys(expenses).map(function(k){return expenses[k].desc;}));
+
+        var sessions = getFitSessions();
+        var exNames = [];
+        Object.keys(sessions).forEach(function(sid) {
+          var exs = sessions[sid].exercises || [];
+          exs.forEach(function(ex){ if (ex && ex.name) exNames.push(ex.name); });
+        });
+        _fillDatalist('fit_exercise_names_dl', exNames);
+      } catch (e) { /* datalists are a pure UX enhancement — never let this break rendering */ }
+    }
+
     // Escape HTML
     function esc(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -4422,7 +4821,7 @@
                     }
                 });
                 if (_total === 0 && !_hasEntry) {
-                    expData = null;
+                    expData = (d >= isoD(new Date())) ? null : {pct: 100, over: true, unlogged: true};
                 } else {
                     var _pct = Math.round((_total / _limDaily) * 100);
                     expData = {pct: _pct, over: _pct > 100};
@@ -4645,6 +5044,26 @@
       navigator.serviceWorker.addEventListener('message', function(e) {
         if (e.data && e.data.type === 'NOTIF_TAP') showNotifConfirm(e.data.key, e.data.task);
       });
+      // Fires when a new SW version takes control (after skipWaiting()). The page is now
+      // running against a stale in-memory state vs the newly-cached assets, so tell the
+      // user a reload will pick up the update rather than silently leaving them on old code.
+      var _swControllerSeen = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', function() {
+        // A fresh controller (new SW version, or first-ever activation) doesn't have the
+        // FB config posted to it yet — resend so pushsubscriptionchange handling works.
+        try {
+          if (FB_CONFIG && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SET_FB_CONFIG',
+              dbUrl: FB_CONFIG.databaseURL,
+              apiKey: FB_CONFIG.apiKey,
+              vapidKey: VAPID_PUBLIC_KEY
+            });
+          }
+        } catch(e) {}
+        if (!_swControllerSeen) { _swControllerSeen = true; return; }
+        appToast('🔄 App updated — refresh to use the latest version.');
+      });
     }
 
     window.addEventListener('load', function() {
@@ -4662,6 +5081,9 @@
           var qs = params.toString();
           history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
         }
+        // PWA shortcut launch: manifest "shortcuts" open with ?tab=<name>
+        var shortcutTab = params.get('tab');
+        if (shortcutTab) window._launchTab = shortcutTab;
       })();
       // Back-button support: restore tab from history state
       window.addEventListener('popstate', function(e) {
@@ -4856,7 +5278,9 @@
       if (sd) sd.value = yesterday;
 
       // Show overview first (renders renderOverviewFocus/renderScores/renderWeeklyReport internally)
-      showTab('overview');
+      var VALID_TABS = ['overview','today','health','expenses','upskill','goals'];
+      var launchTab = (window._launchTab && VALID_TABS.indexOf(window._launchTab) !== -1) ? window._launchTab : 'overview';
+      showTab(launchTab);
 
       // Build trackers (3-day auto view) — buildSched() renders the day-type buttons internally
       buildSched();
@@ -4872,6 +5296,9 @@
 
       // Apply tab visibility rules
       applyTabVisibility();
+
+      // Autocomplete datalists (expense/task/note/exercise history)
+      populateDatalists();
 
       // Notifications (auto-request, no button needed)
       initNotifications();
@@ -4914,6 +5341,28 @@
     // FOCUS (Monthly Intentions)
     // ═══════════════════════════════════════
     function getFocus() { return ls_get('monthly_focus'); }
+
+    // ═══════════════════════════════════════
+    // IDENTITY STATEMENT — persistent (not monthly), answers "who am I becoming"
+    // ═══════════════════════════════════════
+    function getIdentityStatement() {
+        var v = ls_get('identity_statement');
+        return (v && v.text) ? v.text : '';
+    }
+    function renderIdentityStatement() {
+        var el = document.getElementById('ov_identity_display');
+        if (!el) return;
+        var text = getIdentityStatement();
+        el.textContent = text || 'Not set. Tap Edit to write who you\'re becoming — this doesn\'t reset monthly.';
+    }
+    function editIdentityStatement() {
+        appPrompt('🧭 Identity', 'Who are you becoming? (persists across months)', getIdentityStatement(), function(text) {
+            if (text == null) return;
+            ls_set('identity_statement', {text: text.trim()});
+            renderIdentityStatement();
+            appToast('✅ Identity updated');
+        });
+    }
 
     // Render focus/intentions on the Overview tab
     function renderOverviewFocus() {
@@ -5165,15 +5614,22 @@
         document.getElementById('nt_title').value = '';
         document.getElementById('nt_body').value = '';
         renderNotes();
+        _fillDatalist('nt_title_dl', Object.keys(notes).map(function(k){return notes[k].title;}));
     }
 
     function deleteNote(id) {
-        appConfirm('Delete this note?', function() {
-            var notes = getNotes();
-            delete notes[id];
-            ls_set('notes', notes);
+        var notes = getNotes();
+        var removed = notes[id];
+        if (!removed) return;
+        delete notes[id];
+        ls_set('notes', notes);
+        renderNotes();
+        appToastUndo('🗑️ Note deleted', function() {
+            var n = getNotes();
+            n[id] = removed;
+            ls_set('notes', n);
             renderNotes();
-        }, '🗑️ Delete');
+        });
     }
 
     function markNoteDone(id) {
@@ -5464,10 +5920,15 @@
     }
     function eraseAllPrepData(){
         appConfirm('Delete ALL prep data (progress, notes, categories, mocks)?', function() {
-            ['upskill_progress','upskill_notes','upskill_meta','upskill_custom','upskill_plan_data','upskill_overrides'].forEach(function(k){
+            var keys = ['upskill_progress','upskill_notes','upskill_meta','upskill_custom','upskill_plan_data','upskill_overrides'];
+            var snapshot = {};
+            keys.forEach(function(k){ snapshot[k] = ls_get(k); });
+            _pushEraseTrash('prep_all', 'All Prep Data', snapshot);
+            _downloadEraseSnapshot('All Prep Data', snapshot);
+            keys.forEach(function(k){
                 try{ls_set(k,{});}catch(e){}
             });
-            schedulePush();renderUpskill();appToast('🗑️ All prep data erased');
+            schedulePush();renderUpskill();renderEraseTrash();appToast('🗑️ All prep data erased');
         }, '🗑️ Erase All');
     }
     function saveCurrentPlanAsDefault() {
@@ -5535,13 +5996,43 @@
         // Days calc
         var PLAN_DAYS    = getTotalPrepDays(); // user-configured plan duration (e.g. 50)
         var startLbl     = document.getElementById('up_start_label');
+        var dn = null;
         if (meta.start) {
             var sd  = new Date(meta.start + 'T00:00:00');
             var now = new Date(); now.setHours(0,0,0,0);
-            var dn  = Math.min(PLAN_DAYS, Math.max(1, Math.ceil((now - sd) / 86400000) + 1));
+            dn = Math.min(PLAN_DAYS, Math.max(1, Math.ceil((now - sd) / 86400000) + 1));
             if (startLbl)   startLbl.textContent = meta.start + '  (Day ' + dn + ' of ' + PLAN_DAYS + ')';
         } else {
             if (startLbl)   startLbl.textContent = 'Not set';
+        }
+
+        // Pace: are completed topics tracking ahead/behind the calendar day of the plan?
+        var paceEl = document.getElementById('up_pace_label');
+        if (paceEl) {
+            if (dn == null) {
+                paceEl.textContent = '';
+            } else {
+                var plan2 = getPrepPlanData();
+                var prog2 = ls_get('upskill_progress');
+                var custom2 = ls_get('upskill_custom');
+                var allTopics = [];
+                plan2.forEach(function(ph){ allTopics = allTopics.concat(ph.topics, custom2[ph.id] || []); });
+                var totalTopics = allTopics.length;
+                var doneTopics = allTopics.filter(function(t){ return prog2[t.id]; }).length;
+                if (totalTopics === 0) {
+                    paceEl.textContent = '';
+                } else {
+                    var expectedFrac = Math.min(1, dn / PLAN_DAYS);
+                    var expectedDone = Math.round(expectedFrac * totalTopics);
+                    var delta = doneTopics - expectedDone;
+                    var pct = Math.round((doneTopics / totalTopics) * 100);
+                    if (delta >= 0) {
+                        paceEl.innerHTML = '<span style="color:var(--green)">🟢 On pace</span> <span style="color:var(--text3)">— ' + doneTopics + '/' + totalTopics + ' topics (' + pct + '%), ' + delta + ' ahead of schedule</span>';
+                    } else {
+                        paceEl.innerHTML = '<span style="color:var(--red)">🔴 Behind pace</span> <span style="color:var(--text3)">— ' + doneTopics + '/' + totalTopics + ' topics (' + pct + '%), ' + Math.abs(delta) + ' behind where Day ' + dn + ' should be</span>';
+                    }
+                }
+            }
         }
 
         renderUpskillPhases();
@@ -6513,7 +7004,7 @@
       var html = '<div style="margin-top:10px;padding-top:10px;border-top:0.5px dashed var(--border2)">';
       html += '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Replace "' + esc(ex.name) + '" with</div>';
       html += '<div class="fit-row">';
-      html += '<input class="fi" id="fit_replace_name" placeholder="e.g. Hack Squat" style="flex:1;min-width:120px">';
+      html += '<input class="fi" id="fit_replace_name" list="fit_exercise_names_dl" placeholder="e.g. Hack Squat" style="flex:1;min-width:120px">';
       html += '<select class="fs" id="fit_replace_unit" style="width:80px"><option value="kg">kg</option><option value="lbs">lbs</option></select>';
       html += '</div>';
       html += '<div class="fit-row" style="margin-top:6px">';
@@ -6546,6 +7037,7 @@
       s.exercises.splice(idx, 1, newEx);
       fitState.replacingIdx = null;
       fitRender();
+      _addDatalistOption('fit_exercise_names_dl', name);
     }
 
     function fitRenderAddAndFinishBar() {
@@ -6562,7 +7054,7 @@
       var html = '<div class="card" style="margin-top:10px">';
       html += '<div class="card-title">＋ Add Exercise</div>';
       html += '<div class="fit-row">';
-      html += '<input class="fi" id="fit_adhoc_name" placeholder="e.g. Cable Fly" style="flex:1;min-width:140px">';
+      html += '<input class="fi" id="fit_adhoc_name" list="fit_exercise_names_dl" placeholder="e.g. Cable Fly" style="flex:1;min-width:140px">';
       html += '<select class="fs" id="fit_adhoc_unit" style="width:90px"><option value="kg">kg</option><option value="lbs">lbs</option></select>';
       html += '</div>';
       html += '<button class="btn btn-o btn-sm" style="width:100%;margin-top:8px" onclick="fitAddAdhocExercise()">Add</button>';
@@ -6625,6 +7117,7 @@
       fitState.currentIdx = s.exercises.length - 1;
       fitState.showAddForm = false;
       fitRender();
+      _addDatalistOption('fit_exercise_names_dl', name);
     }
 
     function fitCancelSession() {
@@ -6954,10 +7447,92 @@
     function openConfigManager() {
       var overlay = document.getElementById('config_mgr_overlay');
       if (overlay) overlay.classList.add('open');
+      renderEraseTrash();
     }
     function closeConfigManager() {
       var overlay = document.getElementById('config_mgr_overlay');
       if (overlay) overlay.classList.remove('open');
+    }
+
+    // ═══ GLOBAL SEARCH — cross-tab lookup over locally stored data ═══
+    function openGlobalSearch() {
+      closeSettingsMenu();
+      var overlay = document.getElementById('global_search_overlay');
+      if (!overlay) return;
+      overlay.classList.add('open');
+      var inp = document.getElementById('gs_input');
+      document.getElementById('gs_results').innerHTML = '';
+      inp.value = '';
+      setTimeout(function(){ inp.focus(); }, 250);
+    }
+    function closeGlobalSearch() {
+      var overlay = document.getElementById('global_search_overlay');
+      if (overlay) overlay.classList.remove('open');
+    }
+    function runGlobalSearch() {
+      var q = document.getElementById('gs_input').value.trim().toLowerCase();
+      var el = document.getElementById('gs_results');
+      if (!q) { el.innerHTML = ''; return; }
+      var hits = [];
+
+      var tasks = getTasks();
+      Object.keys(tasks).forEach(function(id) {
+        var t = tasks[id];
+        if ((t.name||'').toLowerCase().indexOf(q) !== -1 || (t.notes||'').toLowerCase().indexOf(q) !== -1) {
+          hits.push({icon:'✅', label:t.name, sub:'Task · ' + (t.date||'no date'), tab:'today'});
+        }
+      });
+
+      var expenses = getExpenses();
+      Object.keys(expenses).forEach(function(id) {
+        var e = expenses[id];
+        if ((e.desc||'').toLowerCase().indexOf(q) !== -1) {
+          hits.push({icon:'💸', label:e.desc, sub:'Expense · ' + fmtCur(Number(e.amt)) + ' · ' + e.date, tab:'expenses'});
+        }
+      });
+
+      var wish = getShopItems(), bought = getBoughtItems();
+      Object.keys(wish).forEach(function(id) {
+        var w = wish[id];
+        if ((w.item||'').toLowerCase().indexOf(q) !== -1) hits.push({icon:'🛍️', label:w.item, sub:'Wishlist', tab:'goals'});
+      });
+      Object.keys(bought).forEach(function(id) {
+        var b = bought[id];
+        if ((b.item||'').toLowerCase().indexOf(q) !== -1) hits.push({icon:'🛍️', label:b.item, sub:'Bought · ' + (b.boughtOn||''), tab:'goals'});
+      });
+
+      var notes = getNotes();
+      Object.keys(notes).forEach(function(id) {
+        var n = notes[id];
+        if ((n.title||'').toLowerCase().indexOf(q) !== -1 || (n.body||'').toLowerCase().indexOf(q) !== -1) {
+          hits.push({icon:'📝', label:n.title, sub:'Note', tab:'goals'});
+        }
+      });
+
+      var sessions = getFitSessions();
+      Object.keys(sessions).forEach(function(sid) {
+        var s = sessions[sid];
+        (s.exercises||[]).forEach(function(ex) {
+          if (ex && ex.name && ex.name.toLowerCase().indexOf(q) !== -1) {
+            hits.push({icon:'🏋️', label:ex.name, sub:'Exercise · ' + (s.date||''), tab:'health'});
+          }
+        });
+      });
+
+      if (hits.length === 0) {
+        el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">No matches.</div>';
+        return;
+      }
+      var html = '';
+      hits.slice(0, 50).forEach(function(h) {
+        html += '<div onclick="closeGlobalSearch();showTab(\'' + h.tab + '\')" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border2);cursor:pointer">';
+        html += '<span style="font-size:16px">' + h.icon + '</span>';
+        html += '<div style="flex:1;min-width:0"><div style="font-size:13px;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(h.label) + '</div>';
+        html += '<div style="font-size:10px;color:var(--text3)">' + esc(h.sub) + '</div></div>';
+        html += '</div>';
+      });
+      if (hits.length > 50) html += '<div style="font-size:10px;color:var(--text3);padding:8px 0">+' + (hits.length - 50) + ' more — refine your search</div>';
+      el.innerHTML = html;
     }
 
     // ═══ SCHEDULE PUSH NOTIFICATIONS ═══
