@@ -11,13 +11,12 @@ const VAPID_PUBLIC_KEY = (process.env.VAPID_PUBLIC_KEY || '').trim();
 const VAPID_PRIVATE_KEY = (process.env.VAPID_PRIVATE_KEY || '').trim();
 const VAPID_SUBJECT = (process.env.VAPID_SUBJECT || 'mailto:admin@example.com').trim();
 
-// GitHub Actions treats short cron intervals as "best effort" and has been observed
-// running this job with gaps up to ~90 minutes instead of every 5 minutes (checked via
-// the Actions run history, not just assumed). The lookback window has to cover the real
-// gap between runs, not the declared one, or items get silently missed. Overlap with the
-// previous run's window is fine — notif_sent_log dedupes by schedKey+subId, so re-checking
-// an already-sent item is a no-op.
-const LOOKBACK_MINUTES = 120;
+// With an external pinger (e.g. cron-job.org) driving workflow_dispatch every ~5 minutes
+// instead of relying on GitHub's own unreliable `schedule:` trigger, runs happen close to
+// on-time. This only needs to cover occasional pinger/runner-queue delays, not GitHub's
+// observed ~90 minute scheduling gaps. Overlap with the previous run's window is fine —
+// notif_sent_log dedupes by schedKey+subId, so re-checking an already-sent item is a no-op.
+const LOOKBACK_MINUTES = 15;
 
 // Consecutive Web Push failures (any non-404/410 error) before we drop a subscription.
 // 404/410 mean "gone" and are removed immediately; other errors could be transient
@@ -152,9 +151,10 @@ async function main() {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: sub.keys },
           JSON.stringify({
-            title: 'Did you do: ' + (row.task || 'this') + '?',
-            body: 'Due ' + (row.time || 'now') + (dayLabel ? ' · ' + dayLabel : '') + ' — tap to mark',
+            title: '⏰ ' + (row.task || 'Reminder'),
+            body: (row.time || 'now') + (dayLabel ? ' · ' + dayLabel : '') + ' — mark it done below',
             tag: schedKey,
+            renotify: true,
             data: { key: schedKey, dbUrl: FB_DB_URL, apiKey: FB_API_KEY, task: row.task || 'Scheduled item' }
           })
         );
