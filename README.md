@@ -20,6 +20,7 @@ A single-file personal life dashboard that lives on GitHub Pages and syncs to Fi
 
 ---
 
+
 ## Features in detail
 
 ### Overview tab
