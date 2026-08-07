@@ -1,4 +1,4 @@
-const CACHE = 'dashboard-v9';
+const CACHE = 'dashboard-v10';
 // Separate, never-purged cache used as tiny key/value storage. Service workers keep no
 // in-memory state between restarts, so config handed over via postMessage() (Firebase
 // project + VAPID key) would otherwise be lost by the time a pushsubscriptionchange
@@ -173,8 +173,11 @@ self.addEventListener('push', function(e) {
   var options = {
     body: payload.body || '',
     tag: payload.tag || 'sched-reminder',
+    renotify: !!payload.renotify,
     data: payload.data || {},
     icon: BASE + 'icon-192.png',
+    badge: BASE + 'icon-192.png',
+    vibrate: [200, 100, 200],
     actions: [
       { action: 'done', title: '✅ Done' },
       { action: 'skip', title: '⏭️ Skip' }

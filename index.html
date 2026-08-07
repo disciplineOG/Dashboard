@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title id="app_title_tag">My Dashboard</title>
+    <title id="app_title_tag">GBC</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Health">
+    <meta name="apple-mobile-web-app-title" content="GBC">
     <meta name="theme-color" content="#0d0d10">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -477,7 +477,7 @@
 
 <div class="header">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div class="header-title" id="app_title_header" onclick="showTab('overview')" style="cursor:pointer">My Dashboard</div>
+        <div class="header-title" id="app_title_header" onclick="showTab('overview')" style="cursor:pointer">GBC</div>
         <div style="display:flex;gap:6px;align-items:center">
             <!-- Search -->
             <button onclick="openGlobalSearch()" class="smenu-item" id="search_btn" aria-label="Search across all data">
@@ -1247,6 +1247,12 @@
     </div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Things you set once and rarely change again.</div>
 
+    <label style="font-size:11px;color:var(--text3)">App Name (home screen &amp; notifications)</label>
+    <div style="display:flex;gap:6px;margin:4px 0 14px">
+      <input class="fi" id="cfg_app_name" type="text" style="flex:1">
+      <button class="btn btn-g btn-sm" onclick="saveAppName()">Save</button>
+    </div>
+
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openRecExpManager()">🔄 Manage Recurring Expenses</button>
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openFocusManager()">🔥 Manage Monthly Intentions</button>
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openExpLimitManager()">💸 Manage Monthly Expense Limit</button>
@@ -1368,7 +1374,7 @@
 <div class="auth-overlay" id="auth_overlay">
     <div class="auth-box">
         <div class="auth-logo">⚡</div>
-        <div class="auth-title" id="app_title_auth">My Dashboard</div>
+        <div class="auth-title" id="app_title_auth">GBC</div>
         <div class="auth-sub" id="auth_sub">Enter admin password for edit access.</div>
         <input class="auth-input" id="auth_input" type="password" placeholder="Access code" autocomplete="off">
         <div class="auth-err" id="auth_err"></div>
@@ -7447,11 +7453,23 @@
     function openConfigManager() {
       var overlay = document.getElementById('config_mgr_overlay');
       if (overlay) overlay.classList.add('open');
+      var nameEl = document.getElementById('cfg_app_name');
+      if (nameEl) nameEl.value = getAppConfig().appTitle || 'My Dashboard';
       renderEraseTrash();
     }
     function closeConfigManager() {
       var overlay = document.getElementById('config_mgr_overlay');
       if (overlay) overlay.classList.remove('open');
+    }
+    function saveAppName() {
+      var nameEl = document.getElementById('cfg_app_name');
+      var name = nameEl ? nameEl.value.trim() : '';
+      if (!name) return appToast('App name can\'t be empty.');
+      var cfg = getAppConfig();
+      cfg.appTitle = name;
+      saveAppConfig(cfg);
+      initAppTitle();
+      appToast('App name updated to "' + name + '".');
     }
 
     // ═══ GLOBAL SEARCH — cross-tab lookup over locally stored data ═══

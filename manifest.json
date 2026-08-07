@@ -1,6 +1,6 @@
 {
-  "name": "My Dashboard",
-  "short_name": "Dashboard",
+  "name": "GBC",
+  "short_name": "GBC",
   "description": "A personal dashboard for monitoring and managing your data at a glance.",
   "start_url": "./",
   "scope": "./",
