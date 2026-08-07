@@ -93,7 +93,11 @@ function pruneSentLog(sentLog) {
   const pruned = {};
   let removed = 0;
   Object.keys(sentLog).forEach(function(key) {
-    const m = key.match(/(\d{4}-\d{2}-\d{2})/);
+    // Anchored to the '__' delimiter that always immediately follows dateStr in both
+    // schedKey and taskKey formats — a plain /\d{4}-\d{2}-\d{2}/ search could match an
+    // unrelated digit run earlier in the key (e.g. inside a day-type name) instead of
+    // the actual date.
+    const m = key.match(/(\d{4}-\d{2}-\d{2})__/);
     const ts = m ? new Date(m[1] + 'T00:00:00Z').getTime() : NaN;
     if (!isNaN(ts) && ts < cutoff) { removed++; return; }
     pruned[key] = sentLog[key];
@@ -136,6 +140,21 @@ async function main() {
   const subRemovals = [];
   const failureUpdates = {};
   let sentCount = 0;
+
+  // Persists a single dedup entry immediately instead of waiting for the end-of-run
+  // batch write below — otherwise a crash partway through a run (e.g. network blip on
+  // notification #40 of 100) would lose every dedup record for the whole run, and the
+  // next run would re-send everything already delivered.
+  async function flushSentKey(sentKey) {
+    try {
+      await fetch(base + '/dashboard/data/notif_sent_log/' + sentKey + '.json?auth=' + token, {
+        method: 'PUT',
+        body: JSON.stringify(true)
+      });
+    } catch (e) {
+      console.error('Failed to flush sent-log entry for ' + sentKey + ':', e.message);
+    }
+  }
 
   // Shared send/failure-tracking path for both the schedule loop and the task loop below —
   // a subscription that's gone (404/410) or repeatedly failing should be dropped regardless
@@ -194,6 +213,7 @@ async function main() {
       });
       if (ok) {
         sentUpdates[sentKey] = true;
+        await flushSentKey(sentKey);
         console.log('Sent: ' + schedKey + ' -> ' + subId);
       }
     }
@@ -232,6 +252,7 @@ async function main() {
       });
       if (ok) {
         sentUpdates[sentKey] = true;
+        await flushSentKey(sentKey);
         console.log('Sent: ' + sentKey);
       }
     }
