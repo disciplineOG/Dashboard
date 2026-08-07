@@ -11,8 +11,22 @@ const VAPID_PUBLIC_KEY = (process.env.VAPID_PUBLIC_KEY || '').trim();
 const VAPID_PRIVATE_KEY = (process.env.VAPID_PRIVATE_KEY || '').trim();
 const VAPID_SUBJECT = (process.env.VAPID_SUBJECT || 'mailto:admin@example.com').trim();
 
-// How far back to look for a "due" item, to tolerate GitHub Actions schedule drift/delay.
-const LOOKBACK_MINUTES = 20;
+// GitHub Actions treats short cron intervals as "best effort" and has been observed
+// running this job with gaps up to ~90 minutes instead of every 5 minutes (checked via
+// the Actions run history, not just assumed). The lookback window has to cover the real
+// gap between runs, not the declared one, or items get silently missed. Overlap with the
+// previous run's window is fine — notif_sent_log dedupes by schedKey+subId, so re-checking
+// an already-sent item is a no-op.
+const LOOKBACK_MINUTES = 120;
+
+// Consecutive Web Push failures (any non-404/410 error) before we drop a subscription.
+// 404/410 mean "gone" and are removed immediately; other errors could be transient
+// (rate limits, brief outages), so we give them a few tries before giving up.
+const MAX_CONSECUTIVE_FAILURES = 5;
+
+// Prune notif_sent_log entries older than this — the log only needs to dedup recent
+// sends, and otherwise grows forever since every scheduled item writes one entry per subscriber.
+const SENT_LOG_RETENTION_DAYS = 14;
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
@@ -51,6 +65,43 @@ async function signInAnon() {
   return json.idToken;
 }
 
+// Fetches only the subtrees this worker actually needs instead of the whole
+// dashboard/data tree (which also holds tasks/expenses/notes/fitness history —
+// unrelated data that only adds bandwidth and latency to every run).
+async function fetchNeededData(base, token) {
+  const keys = ['push_subscriptions', 'day_type_defs', 'day_type_log', 'day_type_week_map', 'sched', 'notif_sent_log', 'push_failure_counts'];
+  const results = await Promise.all(keys.map(function(k) {
+    return fetch(base + '/dashboard/data/' + k + '.json?auth=' + token).then(function(r) { return r.json(); });
+  }));
+  const data = {};
+  keys.forEach(function(k, i) { data[k] = results[i] || {}; });
+  return data;
+}
+
+function pruneSentLog(sentLog) {
+  const cutoff = Date.now() - SENT_LOG_RETENTION_DAYS * 86400000;
+  const pruned = {};
+  let removed = 0;
+  Object.keys(sentLog).forEach(function(key) {
+    const m = key.match(/(\d{4}-\d{2}-\d{2})/);
+    const ts = m ? new Date(m[1] + 'T00:00:00Z').getTime() : NaN;
+    if (!isNaN(ts) && ts < cutoff) { removed++; return; }
+    pruned[key] = sentLog[key];
+  });
+  return { pruned: pruned, removed: removed };
+}
+
+async function writeHeartbeat(base, token, payload) {
+  try {
+    await fetch(base + '/dashboard/data/notif_worker_heartbeat.json?auth=' + token, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+  } catch (e) {
+    console.error('Heartbeat write failed:', e.message);
+  }
+}
+
 async function main() {
   if (!FB_DB_URL || !FB_API_KEY || !VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     console.error('Missing one of FB_DB_URL / FB_API_KEY / VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY.');
@@ -58,21 +109,21 @@ async function main() {
   }
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
-  const token = await signInAnon();
   const base = FB_DB_URL.replace(/\/$/, '');
+  const token = await signInAnon();
 
-  const dataRes = await fetch(base + '/dashboard/data.json?auth=' + token);
-  const data = (await dataRes.json()) || {};
-
-  const subs = data.push_subscriptions || {};
-  const dayTypeDefs = data.day_type_defs || {};
-  const dayTypeLog = data.day_type_log || {};
-  const weekMap = data.day_type_week_map || {};
-  const sched = data.sched || {};
-  const sentLog = data.notif_sent_log || {};
+  const data = await fetchNeededData(base, token);
+  const subs = data.push_subscriptions;
+  const dayTypeDefs = data.day_type_defs;
+  const dayTypeLog = data.day_type_log;
+  const weekMap = data.day_type_week_map;
+  const sched = data.sched;
+  const sentLog = data.notif_sent_log;
+  const failureCounts = data.push_failure_counts;
 
   const sentUpdates = {};
   const subRemovals = [];
+  const failureUpdates = {};
   let sentCount = 0;
 
   for (const [subId, sub] of Object.entries(subs)) {
@@ -109,25 +160,63 @@ async function main() {
         );
         sentUpdates[sentKey] = true;
         sentCount++;
+        failureUpdates[subId] = 0; // reset on any successful send
         console.log('Sent: ' + schedKey + ' -> ' + subId);
       } catch (err) {
         console.error('Push failed for ' + subId + ':', err.statusCode || err.message);
-        if (err.statusCode === 404 || err.statusCode === 410) subRemovals.push(subId);
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          subRemovals.push(subId);
+        } else {
+          const prevFails = failureUpdates[subId] != null ? failureUpdates[subId] : (failureCounts[subId] || 0);
+          const nextFails = prevFails + 1;
+          failureUpdates[subId] = nextFails;
+          if (nextFails >= MAX_CONSECUTIVE_FAILURES) {
+            console.error('Dropping ' + subId + ' after ' + nextFails + ' consecutive failures.');
+            subRemovals.push(subId);
+          }
+        }
       }
     }
   }
 
-  if (Object.keys(sentUpdates).length > 0) {
-    await fetch(base + '/dashboard/data/notif_sent_log.json?auth=' + token, {
-      method: 'PATCH',
-      body: JSON.stringify(sentUpdates)
-    });
-  }
+  const { pruned: prunedSentLog, removed: prunedCount } = pruneSentLog(Object.assign({}, sentLog, sentUpdates));
+
+  await fetch(base + '/dashboard/data/notif_sent_log.json?auth=' + token, {
+    method: 'PUT',
+    body: JSON.stringify(prunedSentLog)
+  });
+
   for (const subId of subRemovals) {
     await fetch(base + '/dashboard/data/push_subscriptions/' + subId + '.json?auth=' + token, { method: 'DELETE' });
+    await fetch(base + '/dashboard/data/push_failure_counts/' + subId + '.json?auth=' + token, { method: 'DELETE' });
+    delete failureUpdates[subId];
+  }
+  if (Object.keys(failureUpdates).length > 0) {
+    await fetch(base + '/dashboard/data/push_failure_counts.json?auth=' + token, {
+      method: 'PATCH',
+      body: JSON.stringify(failureUpdates)
+    });
   }
 
-  console.log(`Checked ${Object.keys(subs).length} subscription(s), sent ${sentCount} notification(s).`);
+  console.log(`Checked ${Object.keys(subs).length} subscription(s), sent ${sentCount} notification(s), pruned ${prunedCount} old log entries.`);
+
+  await writeHeartbeat(base, token, {
+    at: new Date().toISOString(),
+    ok: true,
+    subsChecked: Object.keys(subs).length,
+    sentCount: sentCount,
+    prunedCount: prunedCount
+  });
 }
 
-main().catch(function(err) { console.error(err); process.exit(1); });
+main().catch(async function(err) {
+  console.error(err);
+  try {
+    const base = FB_DB_URL.replace(/\/$/, '');
+    const token = await signInAnon();
+    await writeHeartbeat(base, token, { at: new Date().toISOString(), ok: false, error: String(err && err.message || err) });
+  } catch (e) {
+    console.error('Failed to write failure heartbeat:', e.message);
+  }
+  process.exit(1);
+});
