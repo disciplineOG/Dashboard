@@ -98,15 +98,15 @@
           letter-spacing:-0.3px;
         }
 
-        .tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:10px;padding-top:6px}
+        .tabs{display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:10px;padding-top:6px}
         .tabs::-webkit-scrollbar{display:none}
         .tab{
-          flex-shrink:0;padding:7px 14px;
+          flex-shrink:0;padding:5px 9px;
           border:0.5px solid var(--border);
-          border-radius:20px;
+          border-radius:16px;
           background:transparent;
           color:var(--text3);
-          font-size:12px;font-weight:600;font-family:inherit;
+          font-size:10.5px;font-weight:600;font-family:inherit;
           cursor:pointer;white-space:nowrap;
           transition:all .2s;outline:none;
         }
@@ -625,7 +625,7 @@
                 <div class="card-title" style="margin-bottom:0">📅 My Day</div>
                 <div style="display:flex;align-items:center;gap:8px">
                     <input type="date" class="fi view-ok" id="day_date" style="width:auto;padding:5px 10px;font-size:12px" onchange="onDayDateChange()">
-                    <button class="btn btn-o btn-sm admin-only" onclick="openDayTypeHub()">✏️ Edit Schedule</button>
+                    <button class="btn btn-o btn-sm admin-only" onclick="openDayTypeHub()" title="Edit Schedule" aria-label="Edit Schedule">⚙️</button>
                 </div>
             </div>
             <div id="day_type_label" style="font-size:12px;color:var(--text3);margin-bottom:10px"></div>
@@ -1116,14 +1116,14 @@
 <div class="ql-overlay ql-nested" id="daytype_hub_overlay" onclick="if(event.target===this)closeDayTypeHub()">
   <div class="ql-sheet">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="ql-title">📅 Manage Day-Type</div>
+      <div class="ql-title">📅 Manage Day-Type Schedules</div>
       <button onclick="closeDayTypeHub()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
     </div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Everything about how your day types and schedule rows are structured.</div>
-    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeManager()">Edit Day Types</button>
-    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeWeekManager()">Weekly Plan</button>
-    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeOverrideManager()">Upcoming Overrides</button>
-    <button class="btn btn-w" style="width:100%" onclick="openDayTypeEditRowsManager()">Edit Schedule</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeManager()">📅 Add / Rename / Delete Day Types</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeWeekManager()">📆 Weekly Plan</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeOverrideManager()">🗓️ Upcoming Overrides</button>
+    <button class="btn btn-w" style="width:100%" onclick="openDayTypeEditRowsManager()">✏️ Edit Schedule Rows</button>
     <div style="margin-top:16px;padding-top:10px;border-top:0.5px solid var(--border2)">
         <button class="btn-erase" onclick="eraseSection('daytypedefs')">🗑️ Erase Day Type Definitions</button>
     </div>
@@ -1223,9 +1223,6 @@
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openFitGroupManager()">🏋️ Manage Muscle Groups</button>
     <!-- Manage Note Categories (links to its own dedicated manager) -->
     <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openNotesCatManager()">📝 Manage Note Categories</button>
-    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="exportAllData()">⬇️ Backup All Data (JSON)</button>
-    <button class="btn btn-w" style="width:100%" onclick="document.getElementById('restore_file_input').click()">⬆️ Restore from Backup</button>
-    <input type="file" id="restore_file_input" accept="application/json" style="display:none" onchange="importAllDataFile(this)">
   </div>
 </div>
 
@@ -1376,6 +1373,7 @@
     var _syncTimer = null;
     var _localChangeTime = 0;   // timestamp of last local edit
     var _pendingPush = false;   // true while a push is in-flight
+    var _deferredSnap = null;   // remote snapshot that arrived mid-push, merged once the push settles
     var _lastSyncTime = null;
     var _blockAnonAuth = false; // true in readonly mode to prevent anon re-sign-in after signOut
 
@@ -1471,29 +1469,15 @@
           if (!_initDone) { _initDone = true; initDashboard(); }
         }, 4000);
 
-        // Live sync listener — per-key merge so remote changes don't overwrite local unsent edits
+        // Live sync listener — per-key merge so remote changes don't overwrite local unsent edits.
+        // While a push is in flight we can't safely merge (our own dirty keys are ambiguous),
+        // so the snapshot is stashed and re-merged once pushToFirebase() finishes, instead of
+        // being dropped — otherwise a remote change arriving mid-push would be lost until some
+        // unrelated future write happened to trigger another 'value' event.
         _fbRef.on('value', function(snap) {
           if (!_initDone) return;
-          if (_pendingPush) return;
-          _lastSyncTime = Date['now']();
-          var data = snap.val();
-          if (!data || typeof data !== 'object') return;
-          var serverKeyTs = data._key_ts || {};
-          var localKeyTs = _getKeyTs();
-          var dirty = _getDirtyKeys();
-          var hasPending = localStorage.getItem('_ls_pending_push') === '1';
-          var anyChanged = false;
-          SYNCED_KEYS.forEach(function(k) {
-            var sTs = serverKeyTs[k] || 0;
-            var lTs = localKeyTs[k] || 0;
-            var isLocalDirty = hasPending && !!dirty[k];
-            if (isLocalDirty && lTs >= sTs) return; // local is newer — don't overwrite
-            if (sTs > lTs && Object.prototype.hasOwnProperty.call(data, k)) {
-              if (_applyRemoteValue(k, data[k])) { localKeyTs[k] = sTs; anyChanged = true; }
-            }
-          });
-          _setKeyTs(localKeyTs);
-          if (anyChanged) reRenderActiveTab();
+          if (_pendingPush) { _deferredSnap = snap; return; }
+          _mergeRemoteSnapshot(snap);
         });
 
       } catch(e) {
@@ -1540,46 +1524,31 @@
       return true;
     }
 
-    // ═══════════════════════════════════════
-    // BACKUP & RESTORE — full local export/import of all synced data
-    // ═══════════════════════════════════════
-    function exportAllData() {
-      var dump = {_exportedAt: new Date().toISOString(), _app: 'dashboard-lite'};
-      SYNCED_KEYS.forEach(function(k) { dump[k] = ls_get(k); });
-      var blob = new Blob([JSON.stringify(dump, null, 2)], {type:'application/json'});
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url; a.download = 'dashboard-backup-' + isoD(new Date()) + '.json';
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
-      appToast('✅ Backup downloaded');
-    }
-
-    function importAllDataFile(fileInput) {
-      var file = fileInput.files && fileInput.files[0];
-      if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        var parsed;
-        try { parsed = JSON.parse(e.target.result); }
-        catch (err) { appToast('⚠️ Invalid backup file — not valid JSON.'); return; }
-        if (!parsed || parsed._app !== 'dashboard-lite') { appToast('⚠️ This file doesn\'t look like a Dashboard backup.'); return; }
-        appConfirm('Restore this backup? This overwrites all current data on this device with the backup contents.', function() {
-          var skipped = [];
-          SYNCED_KEYS.forEach(function(k) {
-            if (Object.prototype.hasOwnProperty.call(parsed, k)) {
-              if (_isValidSyncValue(k, parsed[k])) { ls_set(k, parsed[k]); }
-              else { skipped.push(k); }
-            }
-          });
-          if (skipped.length) { appToast('⚠️ Skipped malformed field(s): ' + skipped.join(', ')); return; }
-          appToast('✅ Backup restored — reloading...');
-          setTimeout(function(){ location.reload(); }, 1200);
-        }, '⚠️ Restore & Overwrite');
-        fileInput.value = '';
-      };
-      reader.readAsText(file);
+    // Per-key merge for a live 'value' snapshot — same winner rules as the initial fetch
+    // (see initFirebase), but re-renders just the active tab instead of running initDashboard.
+    // Called directly when no push is in flight, or replayed from _deferredSnap once
+    // pushToFirebase() settles (see initFirebase / pushToFirebase).
+    function _mergeRemoteSnapshot(snap) {
+      _lastSyncTime = Date['now']();
+      var data = snap.val();
+      if (!data || typeof data !== 'object') return;
+      var serverKeyTs = data._key_ts || {};
+      var localKeyTs = _getKeyTs();
+      var dirty = _getDirtyKeys();
+      var hasPending = localStorage.getItem('_ls_pending_push') === '1';
+      var anyChanged = false;
+      SYNCED_KEYS.forEach(function(k) {
+        var sTs = serverKeyTs[k] || 0;
+        var lTs = localKeyTs[k] || 0;
+        var isLocalDirty = hasPending && !!dirty[k];
+        if (isLocalDirty && lTs >= sTs) {
+          // keep local value; it's newer/equal and still unsent — push will send it up
+        } else if (sTs > lTs && Object.prototype.hasOwnProperty.call(data, k)) {
+          if (_applyRemoteValue(k, data[k])) { localKeyTs[k] = sTs; anyChanged = true; }
+        }
+      });
+      _setKeyTs(localKeyTs);
+      if (anyChanged) reRenderActiveTab();
     }
 
     function schedulePush() {
@@ -1621,8 +1590,12 @@
         try { localStorage.removeItem('_ls_pending_push'); localStorage.removeItem('_ls_dirty_keys'); } catch(e) {}
         _lastSyncTime = _localChangeTime;
         updateSyncPendingBadge();
+        // A remote snapshot may have arrived while this push was in flight (see the
+        // 'value' listener in initFirebase) — replay it now instead of losing it.
+        if (_deferredSnap) { var _ds = _deferredSnap; _deferredSnap = null; _mergeRemoteSnapshot(_ds); }
       }).catch(function() {
         _pendingPush = false;
+        if (_deferredSnap) { var _ds2 = _deferredSnap; _deferredSnap = null; _mergeRemoteSnapshot(_ds2); }
         // Retry once after 3 seconds on failure
         setTimeout(pushToFirebase, 3000);
       });
@@ -1942,7 +1915,8 @@
     }
 
     function ls_get(key) {
-      try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
+      var fallback = SYNCED_ARRAY_KEYS.indexOf(key) !== -1 ? [] : {};
+      try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; }
     }
     function _getKeyTs() {
       try { return JSON.parse(localStorage.getItem('_ls_key_ts') || '{}'); } catch(e) { return {}; }
@@ -3121,8 +3095,13 @@
 
     function autoLogRecurring() {
         var data = ls_get('recurring_expenses');
-        var today = isoD(new Date());
-        var dayOfMonth = new Date().getDate();
+        var todayDate = new Date();
+        var today = isoD(todayDate);
+        var dayOfMonth = todayDate.getDate();
+        // Last day of the current month — lets a recurring item set for day 29/30/31
+        // still fire in shorter months (e.g. day 31 in April) instead of being
+        // permanently skipped every month that doesn't reach that day number.
+        var lastDayOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0).getDate();
         var keys = Object.keys(data);
         if (keys.length === 0) return;
         var expenses = getExpenses();
@@ -3131,7 +3110,8 @@
         var anyNew = false;
         keys.forEach(function(id) {
             var r = data[id];
-            if (r.day !== dayOfMonth) return;
+            var isMatch = r.day === dayOfMonth || (r.day > lastDayOfMonth && dayOfMonth === lastDayOfMonth);
+            if (!isMatch) return;
             if (r.occurrence === 'once') return; // one-time entries are logged immediately on add, not auto-repeated
             var logKey = id + '_' + monthKey;
             if (logged[logKey]) return;
@@ -3703,7 +3683,13 @@
         return Object.keys(DEFAULT_WEIGHTS).length === Object.keys(saved).length ? saved : Object.assign({}, DEFAULT_WEIGHTS);
     }
 
-    function getScoreWeightsLog() { return ls_get('score_weights_log') || []; }
+    // Self-heals any legacy non-array value — this key held plain-object {} on devices
+    // that synced/saved it before SYNCED_ARRAY_KEYS existed, which crashed every caller
+    // that expects .some()/.push() (e.g. opening the Score Weights manager).
+    function getScoreWeightsLog() {
+        var v = ls_get('score_weights_log');
+        return Array.isArray(v) ? v : [];
+    }
 
     function scoreWeightsLockInfo() {
         var log = getScoreWeightsLog();
@@ -5134,12 +5120,18 @@
         var expireLabels = {never:'', today:'Expires today', week:'Expires this week', month:'Expires this month'};
         var today = isoD(new Date());
 
-        // Auto-expire
+        // Auto-expire — 'week'/'month' expire N days after creation, mirroring 'today's
+        // day-boundary check rather than calendar week/month boundaries (simpler and matches
+        // what the option labels imply: "this week"/"this month" relative to when it was noted).
         var changed = false;
         Object.keys(notes).forEach(function(id) {
             var n = notes[id];
-            if (n.done) return;
-            if (n.expire === 'today' && n.created < today) { notes[id].done = true; changed = true; }
+            if (n.done || !n.expire || n.expire === 'never') return;
+            var span = n.expire === 'today' ? 0 : n.expire === 'week' ? 7 : n.expire === 'month' ? 30 : null;
+            if (span === null) return;
+            var expiresOn = new Date(n.created + 'T00:00:00');
+            expiresOn.setDate(expiresOn.getDate() + span);
+            if (isoD(expiresOn) < today) { notes[id].done = true; changed = true; }
         });
         if (changed) ls_set('notes', notes);
 
@@ -5701,7 +5693,11 @@
             var custom = ls_get('upskill_custom');
             (custom[phaseId] || []).forEach(function(t){ if (t.id === topicId) topic = t; });
         } else {
-            UPSKILL_PLAN.forEach(function(ph){ ph.topics.forEach(function(t){ if (t.id === topicId) topic = t; }); });
+            // Read via getPrepPlanData() (not the raw UPSKILL_PLAN default) so this reflects
+            // any saved upskill_plan_data snapshot — once that snapshot exists it's the sole
+            // source of truth for renderUpskillPhases(), so editing from the live default here
+            // would silently disagree with what's shown.
+            getPrepPlanData().forEach(function(ph){ (ph.topics||[]).forEach(function(t){ if (t.id === topicId) topic = t; }); });
         }
         if (!topic) return;
         document.getElementById('edit_topic_id').value = topicId;
@@ -5731,6 +5727,7 @@
         var diff   = document.getElementById('edit_diff').value;
         var due    = (document.getElementById('edit_due')||{}).value || '';
         if (!name) { appToast('⚠️ Topic name required'); return; }
+        if (due && !due.match(/^\d{4}-\d{2}-\d{2}$/)) { appToast('⚠️ Due date: YYYY-MM-DD'); return; }
 
         if (_editIsCustom) {
             var custom = ls_get('upskill_custom');
@@ -5745,12 +5742,25 @@
             var overrides = ls_get('upskill_overrides') || {};
             overrides[id] = {name:name, source:source, url:url, hours:hours, days:hours, diff:diff, due:due};
             ls_set('upskill_overrides', overrides);
-            // Patch in-memory
+            // Patch in-memory default (keeps it consistent for devices/sessions that
+            // never saved a upskill_plan_data snapshot)
             UPSKILL_PLAN.forEach(function(ph) {
                 ph.topics.forEach(function(t) {
                     if (t.id === id) { t.name=name; t.source=source; t.url=url; t.hours=hours; t.diff=diff; t.due=due; }
                 });
             });
+            // Once a upskill_plan_data snapshot exists, renderUpskillPhases() reads only from
+            // it — the override + in-memory patch above would otherwise never actually show up.
+            var snapshot = ls_get('upskill_plan_data');
+            if (Array.isArray(snapshot) && snapshot.length > 0) {
+                var patched = false;
+                snapshot.forEach(function(ph) {
+                    (ph.topics||[]).forEach(function(t) {
+                        if (t.id === id) { t.name=name; t.source=source; t.url=url; t.hours=hours; t.days=hours; t.diff=diff; t.due=due; patched=true; }
+                    });
+                });
+                if (patched) savePrepPlanData(snapshot);
+            }
         }
         closeEditModal();
         renderUpskill();
@@ -5770,6 +5780,7 @@
         var diff   = (document.getElementById('ct_diff')  ||{}).value || 'Medium';
         var due    = (document.getElementById('ct_due')   ||{}).value || '';
         if (!name) { appToast('⚠️ Enter a topic name'); return; }
+        if (due && !due.match(/^\d{4}-\d{2}-\d{2}$/)) { appToast('⚠️ Due date: YYYY-MM-DD'); return; }
         var custom = ls_get('upskill_custom');
         if (!custom[phase]) custom[phase] = [];
         var id = 'custom_' + Date.now();
@@ -6273,9 +6284,31 @@
       var groups = getFitGroups();
       var todayGroup = dayMap[fitTodayKey()];
       fitState.group = (todayGroup && groups.some(function(g){ return g.id === todayGroup; })) ? todayGroup : null;
-      fitState.screen = 'home';
+      // Restore an in-progress session that wasn't explicitly finished/discarded (e.g. the
+      // tab was backgrounded/closed mid-workout) — fitState is otherwise in-memory only and
+      // would silently lose all logged sets on reload.
+      var draft = null;
+      try { var raw = localStorage.getItem('fit_session_draft'); draft = raw ? JSON.parse(raw) : null; } catch(e) {}
+      if (draft && draft.id) {
+        fitState.session = draft;
+        fitState.currentIdx = draft.exercises.length ? 0 : null;
+        fitState.screen = 'logging';
+      } else {
+        fitState.screen = 'home';
+      }
       fitRender();
     }
+
+    function _fitSaveDraft() {
+      try {
+        if (fitState.session) localStorage.setItem('fit_session_draft', JSON.stringify(fitState.session));
+        else localStorage.removeItem('fit_session_draft');
+      } catch(e) {}
+    }
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden') _fitSaveDraft();
+    });
+    window.addEventListener('pagehide', _fitSaveDraft);
 
     function fitRender() {
       var el = document.getElementById('fit_app');
@@ -6614,6 +6647,7 @@
     function fitCancelSession() {
       appConfirm('Discard this session? Nothing will be saved.', function() {
         fitState.session = null;
+        _fitSaveDraft();
         fitInit();
       }, 'Discard', true);
     }
@@ -6636,6 +6670,7 @@
       fitRunTemplateSync(s, function() {
         appToast('✅ Session saved!');
         fitState.session = null;
+        _fitSaveDraft();
         fitInit();
       });
     }
@@ -7006,7 +7041,7 @@
       Object.keys(notes).forEach(function(id) {
         var n = notes[id];
         if ((n.title||'').toLowerCase().indexOf(q) !== -1 || (n.body||'').toLowerCase().indexOf(q) !== -1) {
-          hits.push({icon:'📝', label:n.title, sub:'Note', tab:'goals'});
+          hits.push({icon:'📝', label:n.title, sub:'Note', tab:'notes'});
         }
       });
 
