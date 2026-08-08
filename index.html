@@ -2300,10 +2300,12 @@
         if (isReadOnly) {
           html += noteVal ? '<span style="font-size:11px;color:var(--text2)">' + esc(noteVal) + '</span>' : '<span style="font-size:11px;color:var(--text3)">—</span>';
         } else {
-          html += '<button class="btn btn-w btn-sm" style="font-size:10px;width:100%;text-align:left;white-space:normal;line-height:1.4" onclick="openScheduleNoteModal(\'' + k + '\', \'' + esc(row.time||'').replace(/'/g,"\\'") + '\', \'' + esc(row.task||'').replace(/'/g,"\\'") + '\', \'' + dateStr + '\')">' + (noteVal ? '📝 ' + esc(noteVal) : '+ Add note') + '</button>';
+          html += '<div style="display:flex;align-items:center;gap:4px">';
+          html += '<button class="btn btn-w btn-sm" style="flex:1;min-width:0;font-size:10px;text-align:left;white-space:normal;line-height:1.4" onclick="openScheduleNoteModal(\'' + k + '\', \'' + esc(row.time||'').replace(/'/g,"\\'") + '\', \'' + esc(row.task||'').replace(/'/g,"\\'") + '\', \'' + dateStr + '\')">' + (noteVal ? '📝 ' + esc(noteVal) : '+ Add note') + '</button>';
           if (row.isCustom) {
-            html += ' <button class="btn btn-r btn-sm" style="font-size:9px;margin-left:4px;padding:4px 6px" title="Delete reminder" onclick="deleteSchedCustomRow(\'' + row.customId + '\', \'' + row.customDate + '\')">✕</button>';
+            html += '<button class="btn btn-r btn-sm" style="flex-shrink:0;font-size:9px;padding:4px 6px" title="Delete reminder" onclick="deleteSchedCustomRow(\'' + row.customId + '\', \'' + row.customDate + '\')">✕</button>';
           }
+          html += '</div>';
         }
         html += '</td>';
         html += '</tr>';
@@ -7111,28 +7113,49 @@
     }
 
     function toggleScheduleNotifications() {
-      navigator.serviceWorker.ready.then(function(reg) {
-        return reg.pushManager.getSubscription().then(function(sub) {
-          if (sub) {
-            var id = _simpleHash(sub.endpoint);
-            return sub.unsubscribe().then(function() {
-              if (_fbRef) _fbRef.child('push_subscriptions/' + id).remove();
-            });
-          }
-          return Notification.requestPermission().then(function(perm) {
-            if (perm !== 'granted') { appToast('Notification permission denied.'); return; }
-            return reg.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
-            }).then(function(newSub) {
-              var id = _simpleHash(newSub.endpoint);
-              var payload = newSub.toJSON();
-              payload.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-              payload.savedAt = Date.now();
-              if (_fbRef) _fbRef.child('push_subscriptions/' + id).set(payload);
-              appToast('Schedule notifications enabled.');
-            });
+      var btnEl = document.getElementById('notif_sched_btn');
+      var isDisabling = btnEl && btnEl.textContent === 'Disable';
+
+      if (isDisabling) {
+        navigator.serviceWorker.ready.then(function(reg) {
+          return reg.pushManager.getSubscription();
+        }).then(function(sub) {
+          if (!sub) return;
+          var id = _simpleHash(sub.endpoint);
+          return sub.unsubscribe().then(function() {
+            if (_fbRef) _fbRef.child('push_subscriptions/' + id).remove();
           });
+        }).then(function() {
+          renderNotifSchedStatus();
+        }).catch(function() {
+          appToast('Could not update notification settings.');
+          renderNotifSchedStatus();
+        });
+        return;
+      }
+
+      // Requesting permission must happen synchronously within the click handler —
+      // some browsers (notably iOS Safari standalone PWAs) require the permission
+      // prompt to fire directly off the user gesture, and silently no-op it (no
+      // prompt, no error) once it's nested behind earlier awaited promises.
+      if (Notification.permission === 'denied') {
+        appToast('Notifications are blocked for this app — enable them in your device\'s Settings.');
+        return;
+      }
+      Notification.requestPermission().then(function(perm) {
+        if (perm !== 'granted') { appToast('Notification permission denied.'); return; }
+        return navigator.serviceWorker.ready.then(function(reg) {
+          return reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+          });
+        }).then(function(newSub) {
+          var id = _simpleHash(newSub.endpoint);
+          var payload = newSub.toJSON();
+          payload.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+          payload.savedAt = Date.now();
+          if (_fbRef) _fbRef.child('push_subscriptions/' + id).set(payload);
+          appToast('Schedule notifications enabled.');
         });
       }).then(function() {
         renderNotifSchedStatus();
