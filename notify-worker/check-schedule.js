@@ -79,12 +79,13 @@ async function signInAnon() {
 // dashboard/data tree (which also holds expenses/notes/fitness history —
 // unrelated data that only adds bandwidth and latency to every run).
 async function fetchNeededData(base, token) {
-  const keys = ['push_subscriptions', 'day_type_defs', 'day_type_log', 'day_type_week_map', 'sched', 'notif_sent_log', 'push_failure_counts', 'tasks_active_list'];
+  const keys = ['push_subscriptions', 'day_type_defs', 'day_type_log', 'day_type_week_map', 'sched', 'notif_sent_log', 'push_failure_counts', 'tasks_active_list', 'sched_custom'];
+  const arrayKeys = ['sched_custom'];
   const results = await Promise.all(keys.map(function(k) {
     return fetch(base + '/dashboard/data/' + k + '.json?auth=' + token).then(function(r) { return r.json(); });
   }));
   const data = {};
-  keys.forEach(function(k, i) { data[k] = results[i] || {}; });
+  keys.forEach(function(k, i) { data[k] = results[i] || (arrayKeys.indexOf(k) !== -1 ? [] : {}); });
   return data;
 }
 
@@ -135,6 +136,7 @@ async function main() {
   const sentLog = data.notif_sent_log;
   const failureCounts = data.push_failure_counts;
   const tasks = data.tasks_active_list;
+  const schedCustom = Array.isArray(data.sched_custom) ? data.sched_custom : [];
 
   const sentUpdates = {};
   const subRemovals = [];
@@ -210,6 +212,40 @@ async function main() {
         tag: schedKey,
         renotify: true,
         data: { type: 'sched', key: schedKey, dbUrl: FB_DB_URL, apiKey: FB_API_KEY, task: row.task || 'Scheduled item' }
+      });
+      if (ok) {
+        sentUpdates[sentKey] = true;
+        await flushSentKey(sentKey);
+        console.log('Sent: ' + schedKey + ' -> ' + subId);
+      }
+    }
+  }
+
+  // One-off reminders — single-date rows created via the dashboard's "+ Add Reminder"
+  // form, matched by exact date instead of a recurring day-type template.
+  for (const [subId, sub] of Object.entries(subs)) {
+    if (!sub || !sub.endpoint || !sub.keys) continue;
+    const tz = sub.tz || 'UTC';
+    const { dateStr, mins: nowMins } = nowPartsInTz(tz);
+
+    for (const row of schedCustom) {
+      if (!row || !row.id || row.date !== dateStr) continue;
+      const rowMins = timeToMins(row.time);
+      if (rowMins > nowMins || rowMins < nowMins - LOOKBACK_MINUTES) continue;
+
+      const schedKey = 'sched_custom_' + row.id + '_' + row.date;
+      const sentKey = schedKey + '__' + subId;
+      if (sentLog[sentKey]) continue;
+
+      const state = sched[schedKey] || 0;
+      if (state !== 0) { sentUpdates[sentKey] = true; continue; } // already marked done/skipped
+
+      const ok = await sendAndTrack(subId, sub, {
+        title: '⏰ ' + (row.task || 'Reminder'),
+        body: (row.time || 'now') + ' · One-off reminder — mark it done below',
+        tag: schedKey,
+        renotify: true,
+        data: { type: 'sched', key: schedKey, dbUrl: FB_DB_URL, apiKey: FB_API_KEY, task: row.task || 'Reminder' }
       });
       if (ok) {
         sentUpdates[sentKey] = true;
