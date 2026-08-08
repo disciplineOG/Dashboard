@@ -7089,7 +7089,7 @@
       var statusEl = document.getElementById('notif_sched_status');
       var btnEl = document.getElementById('notif_sched_btn');
       if (!statusEl || !btnEl) return;
-      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !FB_CONFIG) {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window) || !FB_CONFIG) {
         statusEl.innerHTML = !FB_CONFIG
           ? '⚠️ Connect Firebase sync first (Settings) — schedule notifications need it to deliver pushes.'
           : '⚠️ Push notifications aren\'t supported in this browser.';
@@ -7113,56 +7113,64 @@
     }
 
     function toggleScheduleNotifications() {
-      var btnEl = document.getElementById('notif_sched_btn');
-      var isDisabling = btnEl && btnEl.textContent === 'Disable';
+      try {
+        var btnEl = document.getElementById('notif_sched_btn');
+        var isDisabling = btnEl && btnEl.textContent === 'Disable';
 
-      if (isDisabling) {
-        navigator.serviceWorker.ready.then(function(reg) {
-          return reg.pushManager.getSubscription();
-        }).then(function(sub) {
-          if (!sub) return;
-          var id = _simpleHash(sub.endpoint);
-          return sub.unsubscribe().then(function() {
-            if (_fbRef) _fbRef.child('push_subscriptions/' + id).remove();
+        if (isDisabling) {
+          navigator.serviceWorker.ready.then(function(reg) {
+            return reg.pushManager.getSubscription();
+          }).then(function(sub) {
+            if (!sub) return;
+            var id = _simpleHash(sub.endpoint);
+            return sub.unsubscribe().then(function() {
+              if (_fbRef) _fbRef.child('push_subscriptions/' + id).remove();
+            });
+          }).then(function() {
+            renderNotifSchedStatus();
+          }).catch(function() {
+            appToast('Could not update notification settings.');
+            renderNotifSchedStatus();
+          });
+          return;
+        }
+
+        // Requesting permission must happen synchronously within the click handler —
+        // some browsers (notably iOS Safari standalone PWAs) require the permission
+        // prompt to fire directly off the user gesture, and silently no-op it (no
+        // prompt, no error) once it's nested behind earlier awaited promises.
+        if (typeof Notification === 'undefined') {
+          appToast('Notifications aren\'t supported in this browser/app.');
+          return;
+        }
+        if (Notification.permission === 'denied') {
+          appToast('Notifications are blocked for this app — enable them in your device\'s Settings.');
+          return;
+        }
+        Notification.requestPermission().then(function(perm) {
+          if (perm !== 'granted') { appToast('Notification permission denied.'); return; }
+          return navigator.serviceWorker.ready.then(function(reg) {
+            return reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+          }).then(function(newSub) {
+            var id = _simpleHash(newSub.endpoint);
+            var payload = newSub.toJSON();
+            payload.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+            payload.savedAt = Date.now();
+            if (_fbRef) _fbRef.child('push_subscriptions/' + id).set(payload);
+            appToast('Schedule notifications enabled.');
           });
         }).then(function() {
           renderNotifSchedStatus();
-        }).catch(function() {
-          appToast('Could not update notification settings.');
+        }).catch(function(err) {
+          appToast('Could not update notification settings' + (err && err.message ? ': ' + err.message : '.'));
           renderNotifSchedStatus();
         });
-        return;
+      } catch (err) {
+        appToast('Could not update notification settings' + (err && err.message ? ': ' + err.message : '.'));
       }
-
-      // Requesting permission must happen synchronously within the click handler —
-      // some browsers (notably iOS Safari standalone PWAs) require the permission
-      // prompt to fire directly off the user gesture, and silently no-op it (no
-      // prompt, no error) once it's nested behind earlier awaited promises.
-      if (Notification.permission === 'denied') {
-        appToast('Notifications are blocked for this app — enable them in your device\'s Settings.');
-        return;
-      }
-      Notification.requestPermission().then(function(perm) {
-        if (perm !== 'granted') { appToast('Notification permission denied.'); return; }
-        return navigator.serviceWorker.ready.then(function(reg) {
-          return reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
-          });
-        }).then(function(newSub) {
-          var id = _simpleHash(newSub.endpoint);
-          var payload = newSub.toJSON();
-          payload.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-          payload.savedAt = Date.now();
-          if (_fbRef) _fbRef.child('push_subscriptions/' + id).set(payload);
-          appToast('Schedule notifications enabled.');
-        });
-      }).then(function() {
-        renderNotifSchedStatus();
-      }).catch(function() {
-        appToast('Could not update notification settings.');
-        renderNotifSchedStatus();
-      });
     }
 
     // Quick-confirm popup: iOS doesn't render custom action buttons on the push
