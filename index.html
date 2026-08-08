@@ -145,12 +145,6 @@
         }
         .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
         @media(min-width:500px){.metrics{grid-template-columns:repeat(4,1fr)}}
-        .metric{
-          background:var(--bg3);
-          border:0.5px solid var(--border);
-          border-radius:10px;padding:10px 12px;
-          transition:background .35s;
-        }
 
         /* ══════════════════════════════════════
            BADGES
@@ -327,15 +321,6 @@
         .tri-btn:active{transform:scale(0.85)}
         .tri-btn[disabled]{cursor:default;opacity:0.7;pointer-events:none}
 
-        /* ═══ TASK REMINDER MODAL ═══ */
-        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px)}
-        .modal-overlay.open{display:flex}
-        .modal-sheet{background:var(--bg2);border-radius:22px 22px 0 0;padding:20px 16px 36px;width:100%;max-width:480px;transition:background .35s}
-        .modal-title{font-size:15px;font-weight:700;color:var(--text1);margin-bottom:4px}
-        .modal-sub{font-size:12px;color:var(--text3);margin-bottom:16px}
-        .modal-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-        .modal-opt{background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);border-radius:12px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center}
-        .modal-opt:active,.modal-opt.sel{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 10px var(--accent-glow)}
         /* ═══ APP PROMPT MODAL ═══ */
         .aprompt-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:2000;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px)}
         .aprompt-overlay.open{display:flex}
@@ -345,8 +330,6 @@
         .aprompt-input{background:var(--bg3);border:0.5px solid var(--border);color:var(--text1);border-radius:10px;padding:12px 14px;font-size:15px;font-family:inherit;width:100%;outline:none;margin-bottom:14px;min-height:44px;-webkit-appearance:none}
         .aprompt-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
         .aprompt-btn-row{display:flex;gap:8px}
-        .modal-cancel{width:100%;background:var(--bg3);border:0.5px solid var(--border);color:var(--red);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px}
-        .modal-dt-row{display:flex;gap:8px;margin-bottom:8px}
 
         /* ═══ SHOPPING TAB ═══ */
         .shop-sum{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
@@ -376,8 +359,6 @@
         .ql-overlay.ql-nested2{z-index:1700}
         .ql-sheet{background:var(--bg2);border-radius:22px 22px 0 0;padding:18px 16px 36px;width:100%;max-width:480px;max-height:82vh;overflow-y:auto}
         .ql-title{font-size:15px;font-weight:700;color:var(--text1);margin-bottom:4px}
-        .ql-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)}
-        .ql-row:last-child{border-bottom:none}
 
         /* ══════ WEEKLY REPORT ══════ */
         .report-day{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)}
@@ -391,7 +372,6 @@
         body.readonly .fs:not(.view-ok){pointer-events:none;opacity:0.6}
         body.readonly .ft{pointer-events:none;opacity:0.6}
         body.readonly .tri-btn{pointer-events:none !important}
-        body.readonly .ro-block{pointer-events:none !important;opacity:0.5}
 
         /* ══════════════════════════════════════
            NOTIFICATION BANNER
@@ -614,7 +594,6 @@
     <!-- ═══ HEALTH → FITNESS v2 ═══ -->
     <div id="sec_health" class="section">
         <div id="fit_app"></div>
-        <datalist id="fit_exercise_names_dl"></datalist>
     </div>
 
     <!-- ═══ TODAY ═══ -->
@@ -630,6 +609,18 @@
             </div>
             <div id="day_type_label" style="font-size:12px;color:var(--text3);margin-bottom:10px"></div>
             <div class="tracker-outer" id="day_tracker_wrap"></div>
+            <div class="admin-only" style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border)">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">⏰ One-off reminder for this date</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <input class="fi" id="sc_row_time" placeholder="e.g. 7:30" style="flex:1;min-width:80px">
+                    <select class="fi" id="sc_row_ampm" style="flex:0 0 72px">
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                    </select>
+                    <input class="fi" id="sc_row_task" placeholder="Task / reminder text" style="flex:2;min-width:140px">
+                </div>
+                <button class="btn btn-o btn-sm" style="margin-top:6px" onclick="addSchedCustomRow()">+ Add Reminder</button>
+            </div>
             <div style="margin-top:12px" id="day_note_wrap">
                 <div style="font-size:11px;color:var(--text3);margin-bottom:4px">📝 Day note (optional)</div>
                 <textarea class="ft admin-only" id="day_note_input" placeholder="Why did I miss things? What went well?" style="min-height:60px;font-size:12px" oninput="saveDayNote()"></textarea>
@@ -656,7 +647,7 @@
         <div class="card add-card admin-only">
             <div class="card-title">Add New Task</div>
             <div class="form-grid">
-                <div class="form-group"><label>Task Name</label><input class="fi" id="t_name" list="t_name_dl" placeholder="e.g. Apply for passport"><datalist id="t_name_dl"></datalist></div>
+                <div class="form-group"><label>Task Name</label><input class="fi" id="t_name" placeholder="e.g. Apply for passport"></div>
                 <div class="form-group"><label>Category</label>
                     <select class="fs" id="t_cat" onchange="handleOther(this,'t_cat_other')">
                         <option>Personal</option><option>Work</option><option>Health</option><option>Finance</option><option>Travel</option><option>Learning</option><option>Social</option><option value="Other">Other…</option>
@@ -701,10 +692,9 @@
         <div class="card add-card">
             <div class="card-title">🛍️ Add to Bucket List</div>
             <div class="form-grid">
-                <div class="form-group"><label>Item</label><input class="fi" id="sh_item" list="sh_item_dl" placeholder="e.g. Sky blue T-shirt"><datalist id="sh_item_dl"></datalist></div>
+                <div class="form-group"><label>Item</label><input class="fi" id="sh_item" placeholder="e.g. Sky blue T-shirt"></div>
                 <div class="form-group"><label>For Whom</label>
-                    <input class="fi" id="sh_for" list="sh_for_dl" placeholder="e.g. Myself, Mummy, Friend…">
-                    <datalist id="sh_for_dl"></datalist>
+                    <input class="fi" id="sh_for" placeholder="e.g. Myself, Mummy, Friend…">
                 </div>
                 <div class="form-group"><label>Priority</label>
                     <select class="fs" id="sh_pri">
@@ -730,7 +720,7 @@
         <div class="card add-card admin-only">
             <div class="card-title">📝 Add a Note</div>
             <div class="form-grid">
-                <div class="form-group"><label>Title</label><input class="fi" id="nt_title" list="nt_title_dl" placeholder="e.g. Keys are on the shelf near the door"><datalist id="nt_title_dl"></datalist></div>
+                <div class="form-group"><label>Title</label><input class="fi" id="nt_title" placeholder="e.g. Keys are on the shelf near the door"></div>
                 <div class="form-group"><label>Category</label>
                     <select class="fs" id="nt_cat"></select>
                 </div>
@@ -781,7 +771,7 @@
             <div class="card-title">Add Expense</div>
             <div class="form-grid-3">
                 <div class="form-group"><label>Date</label><input type="date" class="fi" id="ex_date"></div>
-                <div class="form-group"><label>Spent On</label><input class="fi" id="ex_desc" list="ex_desc_dl" placeholder="e.g. Groceries, Petrol, Dinner out"><datalist id="ex_desc_dl"></datalist></div>
+                <div class="form-group"><label>Spent On</label><input class="fi" id="ex_desc" placeholder="e.g. Groceries, Petrol, Dinner out"></div>
                 <div class="form-group"><label>Amount (<span class="cur-sym">₹</span>)</label><input type="number" class="fi" id="ex_amt" placeholder="e.g. 250"></div>
             </div>
             <div class="form-grid" style="margin-bottom:10px">
@@ -1120,10 +1110,10 @@
       <button onclick="closeDayTypeHub()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0">✕</button>
     </div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Everything about how your day types and schedule rows are structured.</div>
-    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeManager()">📅 Add / Rename / Delete Day Types</button>
-    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeWeekManager()">📆 Weekly Plan</button>
-    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeOverrideManager()">🗓️ Upcoming Overrides</button>
-    <button class="btn btn-w" style="width:100%" onclick="openDayTypeEditRowsManager()">✏️ Edit Schedule Rows</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeManager()">Edit Day Types</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeWeekManager()">Edit Weekly Plan</button>
+    <button class="btn btn-w" style="width:100%;margin-bottom:10px" onclick="openDayTypeOverrideManager()">Edit Upcoming Overrides</button>
+    <button class="btn btn-w" style="width:100%" onclick="openDayTypeEditRowsManager()">Edit Schedule</button>
     <div style="margin-top:16px;padding-top:10px;border-top:0.5px solid var(--border2)">
         <button class="btn-erase" onclick="eraseSection('daytypedefs')">🗑️ Erase Day Type Definitions</button>
     </div>
@@ -1496,13 +1486,13 @@
       'upskill_progress','upskill_notes','upskill_meta','upskill_custom','hidden_tabs',
       'day_type_defs','upskill_overrides','upskill_plan_data',
       'fitness_sessions','fitness_templates','fitness_groups','fitness_day_map','sched_notes',
-      'day_type_week_map'];
+      'day_type_week_map','sched_custom'];
 
     // Keys stored as arrays — everything else in SYNCED_KEYS is a plain object (ls_get's
     // default shape). Used to reject corrupted/malformed remote values before they land
     // in localStorage, where a wrong type would silently break every ls_get() caller for
     // that key on the next read (e.g. Object.keys() on a string, or .forEach on {}).
-    var SYNCED_ARRAY_KEYS = ['upskill_plan_data', 'score_weights_log'];
+    var SYNCED_ARRAY_KEYS = ['upskill_plan_data', 'score_weights_log', 'sched_custom'];
 
     function _isValidSyncValue(key, val) {
       if (val === null || val === undefined) return true; // absence is fine — key stays local-only
@@ -1761,15 +1751,6 @@
     // TAB SWITCHING
     // ═══════════════════════════════════════
 
-    function toggleGoalsCard(bodyId) {
-        var body = document.getElementById(bodyId);
-        var arr = document.getElementById(bodyId + '_arr');
-        if (!body) return;
-        var hidden = body.style.display === 'none';
-        body.style.display = hidden ? '' : 'none';
-        if (arr) arr.textContent = hidden ? '▼' : '▶';
-    }
-
     function showTab(name, _fromHistory) {
         // Remap merged tabs
         if (name === 'schedule' || name === 'tasks') name = 'today';
@@ -2015,20 +1996,10 @@
     // DAY-TYPE SCHEDULE SYSTEM — fully dynamic
     // ═══════════════════════════════════════
 
-    // Seed data used only on first run (when day_type_defs is empty)
-    var DAY_TYPE_DEFAULTS_SEED = {
-      work:    { label: '🏢 Work',    schedule: [] },
-      holiday: { label: '🌴 Holiday', schedule: [] }
-    };
-
     // Returns { key: { label, schedule: [{time, task}] } } — always from day_type_defs.
-    // Seeds defaults on first run.
+    // Empty ({}) until the user defines their own day types via ⚙️ Manage Day Types.
     function getDayTypeDefs() {
-      var saved = ls_get('day_type_defs');
-      if (Object.keys(saved).length > 0) return saved;
-      // First run: persist seed so it becomes editable
-      saveDayTypeDefs(DAY_TYPE_DEFAULTS_SEED);
-      return DAY_TYPE_DEFAULTS_SEED;
+      return ls_get('day_type_defs');
     }
 
     function saveDayTypeDefs(defs) {
@@ -2044,13 +2015,8 @@
     function getDayTypeWeekMap() {
       var saved = ls_get('day_type_week_map');
       if (saved && Object.keys(saved).length > 0) return saved;
-      // First run: seed a sensible preset if the familiar work/holiday keys exist
-      var defs = getDayTypeDefs();
       var map = {};
       DT_WEEK_ORDER.forEach(function(d) { map[d] = null; });
-      if (defs.work) { ['mon','tue','wed','thu','fri'].forEach(function(d){ map[d] = 'work'; }); }
-      if (defs.holiday) { ['sat','sun'].forEach(function(d){ map[d] = 'holiday'; }); }
-      saveDayTypeWeekMap(map);
       return map;
     }
 
@@ -2121,14 +2087,14 @@
       var defs = getDayTypeDefs();
       var today = isoD(new Date());
       var dates = Object.keys(log).filter(function(d) { return d >= today; }).sort();
-      if (dates.length === 0) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">No upcoming overrides scheduled.</div>'; return; }
+      if (dates.length === 0) { el.innerHTML = '<div class="fit-muted" style="text-align:center;padding:12px 0">No upcoming overrides scheduled.</div>'; return; }
       var html = '';
       dates.forEach(function(d) {
         var type = log[d];
         var label = (defs[type] && defs[type].label) || type;
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border)">';
-        html += '<span style="font-size:12px;color:var(--text1)">' + d + ' — ' + esc(label) + '</span>';
-        html += '<button class="btn btn-r btn-sm" style="font-size:10px" onclick="removeDayTypeOverride(\'' + d + '\')">✕</button>';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:8px">';
+        html += '<span style="font-size:13px;font-weight:700;color:var(--text1)">' + d + ' — ' + esc(label) + '</span>';
+        html += '<button class="btn btn-r btn-sm" onclick="removeDayTypeOverride(\'' + d + '\')">🗑️</button>';
         html += '</div>';
       });
       el.innerHTML = html;
@@ -2168,6 +2134,49 @@
       // Last resort: first defined day type
       var keys = Object.keys(defs);
       return keys.length > 0 ? keys[0] : null;
+    }
+
+    // ═══ ONE-OFF CUSTOM REMINDERS — single-date schedule rows, not tied to a day type ═══
+    function getSchedCustom() {
+      return ls_get('sched_custom');
+    }
+
+    function saveSchedCustom(rows) {
+      ls_set('sched_custom', rows);
+    }
+
+    function schedCustomRowsForDate(dateStr) {
+      return getSchedCustom().filter(function(r) { return r.date === dateStr; });
+    }
+
+    function addSchedCustomRow() {
+      var d = document.getElementById('day_date').value;
+      if (!d) { appToast('Pick a date first.'); return; }
+      var timeRaw = (document.getElementById('sc_row_time')||{}).value.trim();
+      var ampm = (document.getElementById('sc_row_ampm')||{}).value || 'AM';
+      var time = (timeRaw && !/AM|PM/i.test(timeRaw)) ? timeRaw + ' ' + ampm : timeRaw;
+      var task = (document.getElementById('sc_row_task')||{}).value.trim();
+      if (!task) { appToast('Enter a task.'); return; }
+      var rows = getSchedCustom();
+      rows.push({id: newId(), date: d, time: time||'', task: task});
+      saveSchedCustom(rows);
+      document.getElementById('sc_row_time').value = '';
+      document.getElementById('sc_row_task').value = '';
+      renderDayTracker(d);
+    }
+
+    function deleteSchedCustomRow(id, date) {
+      appConfirm('Remove this one-off reminder?', function() {
+        var rows = getSchedCustom().filter(function(r) { return r.id !== id; });
+        saveSchedCustom(rows);
+        var k = 'sched_custom_' + id + '_' + date;
+        var sd = ls_get('sched');
+        if (k in sd) { delete sd[k]; ls_set('sched', sd); }
+        var notes = ls_get('sched_notes');
+        if (k in notes) { delete notes[k]; ls_set('sched_notes', notes); }
+        var d = document.getElementById('day_date');
+        if (d) renderDayTracker(d.value);
+      });
     }
 
         function setDayType(type) {
@@ -2238,7 +2247,7 @@
       if (lbl) lbl.textContent = ((_dtDefs[type] && _dtDefs[type].label) || type || '—') + ' — ' + dateStr;
 
       var schedules = getDayTypeSchedules();
-      var rows = schedules[type] || [];
+      var dtRows = schedules[type] || [];
       var data = ls_get('sched');
       var TODAY_ISO = isoD(new Date());
       var YEST_ISO = isoD(new Date(Date.now()-86400000));
@@ -2247,6 +2256,24 @@
       var dateObj = new Date(dateStr + 'T00:00:00');
       var fmtDate = dateObj.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dateObj.getMonth()];
 
+      var rows = dtRows.map(function(row, ri) {
+        return {time: row.time, task: row.task, key: 'sched_' + type + '_' + ri + '_' + dateStr, isCustom: false};
+      });
+      // One-off reminders auto-hide from view once their date is in the past — they still
+      // count toward that day's historical score via schedCustomRowsForDate in schedScoreForDate.
+      if (dateStr >= TODAY_ISO) {
+        schedCustomRowsForDate(dateStr).forEach(function(row) {
+          rows.push({time: row.time, task: row.task, key: 'sched_custom_' + row.id + '_' + row.date, isCustom: true, customId: row.id, customDate: row.date});
+        });
+      }
+      rows.sort(function(a, b) { return timeToMins(a.time) - timeToMins(b.time); });
+
+      var wrap = document.getElementById('day_tracker_wrap');
+      if (rows.length === 0) {
+        if (wrap) wrap.innerHTML = '<div class="fit-muted" style="text-align:center;padding:16px 0">No schedule for this day yet.<br>Add a day type with ⚙️ Manage Day Types, or add a one-off reminder below.</div>';
+        return;
+      }
+
       var html = '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px"><span class="flash" id="fl_sched">✓</span></div>';
       html += '<table class="trk"><thead><tr>';
       html += '<th class="s1">Time</th><th class="s2">Task</th>';
@@ -2254,14 +2281,14 @@
       html += '<th class="s3">Note</th>';
       html += '</tr></thead><tbody>';
       var schedNotes = ls_get('sched_notes');
-      rows.forEach(function(row, ri) {
-        var k = 'sched_' + type + '_' + ri + '_' + dateStr;
+      rows.forEach(function(row) {
+        var k = row.key;
         var state = data[k] || 0;
         var isMissedPast = (state===0) && typeof dateStr==='string' && dateStr>='2020-01-01' && dateStr<getTodayISO();
         var noteVal = schedNotes[k] || '';
         html += '<tr>';
         html += '<td class="s1" style="color:var(--accent);font-weight:700;font-size:10px">' + esc(row.time||'') + '</td>';
-        html += '<td class="s2">' + esc(row.task||'') + '</td>';
+        html += '<td class="s2">' + esc(row.task||'') + (row.isCustom ? ' <span style="font-size:9px;color:var(--text3)">(one-off)</span>' : '') + '</td>';
         if (isPast || isReadOnly) {
           var roStyle = state===1 ? triStyle(1) : state===2 ? triStyle(2) : isMissedPast ? 'background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.4);border-radius:6px' : 'background:var(--bg3);opacity:0.4;border:0.5px solid var(--border)';
           var roContent = isMissedPast ? '<span style="font-size:8px;color:var(--red)">x</span>' : '';
@@ -2274,12 +2301,14 @@
           html += noteVal ? '<span style="font-size:11px;color:var(--text2)">' + esc(noteVal) + '</span>' : '<span style="font-size:11px;color:var(--text3)">—</span>';
         } else {
           html += '<button class="btn btn-w btn-sm" style="font-size:10px;width:100%;text-align:left;white-space:normal;line-height:1.4" onclick="openScheduleNoteModal(\'' + k + '\', \'' + esc(row.time||'').replace(/'/g,"\\'") + '\', \'' + esc(row.task||'').replace(/'/g,"\\'") + '\', \'' + dateStr + '\')">' + (noteVal ? '📝 ' + esc(noteVal) : '+ Add note') + '</button>';
+          if (row.isCustom) {
+            html += ' <button class="btn btn-r btn-sm" style="font-size:9px;margin-left:4px;padding:4px 6px" title="Delete reminder" onclick="deleteSchedCustomRow(\'' + row.customId + '\', \'' + row.customDate + '\')">✕</button>';
+          }
         }
         html += '</td>';
         html += '</tr>';
       });
       html += '</tbody></table>';
-      var wrap = document.getElementById('day_tracker_wrap');
       if (wrap) wrap.innerHTML = html;
     }
 
@@ -2487,13 +2516,13 @@
       var _editLabel = (_editDefs[_selectedDayTypeEdit] && _editDefs[_selectedDayTypeEdit].label) || _selectedDayTypeEdit || '';
       var html = '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:8px">' + _editLabel + ' — ' + rows.length + ' tasks</div>';
       rows.forEach(function(row, ri) {
-        html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)">';
-        html += '<span style="font-size:11px;color:var(--accent);min-width:70px;font-weight:700">' + esc(row.time||'') + '</span>';
-        html += '<span style="flex:1;font-size:12px;color:var(--text1)">' + esc(row.task||'') + '</span>';
-        html += '<button class="btn btn-r btn-sm" style="font-size:10px" onclick="deleteDayTypeRow(' + ri + ')">✕</button>';
+        html += '<div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:8px">';
+        html += '<span style="font-size:12px;color:var(--accent);font-weight:700;min-width:60px">' + esc(row.time||'') + '</span>';
+        html += '<span style="flex:1;font-size:13px;font-weight:700;color:var(--text1)">' + esc(row.task||'') + '</span>';
+        html += '<button class="btn btn-r btn-sm" onclick="deleteDayTypeRow(' + ri + ')">🗑️</button>';
         html += '</div>';
       });
-      wrap.innerHTML = html || '<div style="font-size:12px;color:var(--text3)">No tasks yet for this type.</div>';
+      wrap.innerHTML = html || '<div class="fit-muted" style="text-align:center;padding:12px 0">No tasks yet for this type.</div>';
     }
 
     function addDayTypeRow() {
@@ -2640,7 +2669,9 @@
       var type = log[dateStr] || getDayTypeForDate(dateStr);
       var schedules = getDayTypeSchedules();
       var rows = schedules[type] || [];
-      if (rows.length === 0) return null;
+      var customRows = schedCustomRowsForDate(dateStr);
+      var totalRows = rows.length + customRows.length;
+      if (totalRows === 0) return null;
       var data = ls_get('sched');
       var green = 0, anyLogged = false;
       rows.forEach(function(row, ri) {
@@ -2650,10 +2681,16 @@
         if (v === 1) green++;
         // v=0 (unlogged) and v=2 (explicitly not done) both count as not done
       });
+      customRows.forEach(function(row) {
+        var k = 'sched_custom_' + row.id + '_' + row.date;
+        var v = data[k];
+        if (v !== undefined) anyLogged = true;
+        if (v === 1) green++;
+      });
       // Return null for today/future if nothing has been logged yet
       var today = isoD(new Date());
       if (!anyLogged && dateStr >= today) return null;
-      return Math.round((green / rows.length) * 100);
+      return Math.round((green / totalRows) * 100);
     }
 
     // Parse time string to minutes for sorting
@@ -2688,7 +2725,6 @@
       document.getElementById('t_date').value = '';
       document.getElementById('t_notes').value = '';
       renderTasks();
-      _fillDatalist('t_name_dl', Object.keys(tasks).map(function(k){return tasks[k].name;}));
     }
 
     function changeStatus(id) {
@@ -2849,7 +2885,6 @@
         renderExpenses();
         renderLimits();          // update budget progress bars immediately
         renderExpensePattern();  // update monthly breakdown immediately
-        _fillDatalist('ex_desc_dl', Object.keys(expenses).map(function(k){return expenses[k].desc;}));
     }
 
     function deleteExpense(id) {
@@ -3975,8 +4010,6 @@
       var forEl = document.getElementById('sh_for'); if (forEl) forEl.value = '';
       var priEl = document.getElementById('sh_pri'); if (priEl) priEl.selectedIndex = 0;
       renderShopping();
-      _addDatalistOption('sh_item_dl', item);
-      _addDatalistOption('sh_for_dl', forWhom);
     }
 
     function markBought(id) {
@@ -4210,57 +4243,6 @@
       }, duration || 5000);
     }
 
-    // ═══ AUTOCOMPLETE DATALISTS — populated from each store's own history, no schema change ═══
-    function _fillDatalist(id, values) {
-      var dl = document.getElementById(id);
-      if (!dl) return;
-      var uniq = [];
-      var seen = {};
-      for (var i = 0; i < values.length; i++) {
-        var v = (values[i] || '').toString().trim();
-        if (v && !seen[v]) { seen[v] = true; uniq.push(v); }
-      }
-      dl.innerHTML = uniq.map(function(v){ return '<option value="' + esc(v) + '">'; }).join('');
-    }
-    function _addDatalistOption(id, value) {
-      var dl = document.getElementById(id);
-      if (!dl) return;
-      var v = (value || '').toString().trim();
-      if (!v) return;
-      var exists = Array.prototype.some.call(dl.options, function(o){ return o.value === v; });
-      if (exists) return;
-      var opt = document.createElement('option');
-      opt.value = v;
-      dl.appendChild(opt);
-    }
-    function populateDatalists() {
-      try {
-        var tasks = getTasks(), done = getDoneTasks();
-        var tNames = Object.keys(tasks).map(function(k){return tasks[k].name;})
-          .concat(Object.keys(done).map(function(k){return done[k].name;}));
-        _fillDatalist('t_name_dl', tNames);
-
-        var wish = getShopItems(), bought = getBoughtItems();
-        _fillDatalist('sh_item_dl', Object.keys(wish).map(function(k){return wish[k].item;})
-          .concat(Object.keys(bought).map(function(k){return bought[k].item;})));
-        _fillDatalist('sh_for_dl', Object.keys(wish).map(function(k){return wish[k].forWhom || wish[k].for;})
-          .concat(Object.keys(bought).map(function(k){return bought[k].forWhom || bought[k].for;})));
-
-        var notes = getNotes();
-        _fillDatalist('nt_title_dl', Object.keys(notes).map(function(k){return notes[k].title;}));
-
-        var expenses = getExpenses();
-        _fillDatalist('ex_desc_dl', Object.keys(expenses).map(function(k){return expenses[k].desc;}));
-
-        var sessions = getFitSessions();
-        var exNames = [];
-        Object.keys(sessions).forEach(function(sid) {
-          var exs = sessions[sid].exercises || [];
-          exs.forEach(function(ex){ if (ex && ex.name) exNames.push(ex.name); });
-        });
-        _fillDatalist('fit_exercise_names_dl', exNames);
-      } catch (e) { /* datalists are a pure UX enhancement — never let this break rendering */ }
-    }
 
     // Escape HTML
     function esc(s) {
@@ -4331,6 +4313,7 @@
         var _cachedSchedData    = ls_get('sched');
         var _cachedDayTypeLog   = ls_get('day_type_log');
         var _cachedDayTypeDefs  = ls_get('day_type_defs');
+        var _cachedSchedCustom  = getSchedCustom();
         var _cachedExpenses     = ls_get('expenses_list');
         var _cachedExpLimits    = ls_get('exp_limits');
 
@@ -4347,8 +4330,10 @@
             })();
             var _dtDefs = _cachedDayTypeDefs;
             var _dtRows = (_dtDefs[_dtType] && _dtDefs[_dtType].schedule) ? _dtDefs[_dtType].schedule : [];
+            var _customRows = _cachedSchedCustom.filter(function(r) { return r.date === d; });
+            var _totalRows = _dtRows.length + _customRows.length;
             var sched;
-            if (_dtRows.length === 0) {
+            if (_totalRows === 0) {
                 sched = null;
             } else {
                 var _green = 0, _anyLogged = false;
@@ -4358,8 +4343,14 @@
                     if (_v !== undefined) _anyLogged = true;
                     if (_v === 1) _green++;
                 }
+                _customRows.forEach(function(row) {
+                    var _ck = 'sched_custom_' + row.id + '_' + row.date;
+                    var _cv = _cachedSchedData[_ck];
+                    if (_cv !== undefined) _anyLogged = true;
+                    if (_cv === 1) _green++;
+                });
                 var _today = isoD(new Date());
-                sched = (!_anyLogged && d >= _today) ? null : Math.round((_green / _dtRows.length) * 100);
+                sched = (!_anyLogged && d >= _today) ? null : Math.round((_green / _totalRows) * 100);
             }
 
             // --- expenseScoreForDate(d) inlined with cached data ---
@@ -4593,6 +4584,32 @@
       try { localStorage.setItem('_automiss_last', todayIso); } catch(e) {}
     }
 
+    // One-off reminders are cheap to keep, but retire ones far enough in the past that no
+    // score view (trend chart caps at 90 days) could still need them, bounding storage growth.
+    function pruneSchedCustom() {
+      var todayIso = isoD(new Date());
+      try { if (localStorage.getItem('_prunesc_last') === todayIso) return; } catch(e) {}
+      var cutoffMs = new Date(todayIso + 'T00:00:00').getTime() - 100 * 86400000;
+      var rows = getSchedCustom();
+      var keep = [], dropped = [];
+      rows.forEach(function(r) {
+        var rowMs = new Date(r.date + 'T00:00:00').getTime();
+        if (rowMs >= cutoffMs) keep.push(r); else dropped.push(r);
+      });
+      if (dropped.length) {
+        saveSchedCustom(keep);
+        var sd = ls_get('sched'), notes = ls_get('sched_notes'), sdChanged = false, notesChanged = false;
+        dropped.forEach(function(r) {
+          var k = 'sched_custom_' + r.id + '_' + r.date;
+          if (k in sd) { delete sd[k]; sdChanged = true; }
+          if (k in notes) { delete notes[k]; notesChanged = true; }
+        });
+        if (sdChanged) ls_set('sched', sd);
+        if (notesChanged) ls_set('sched_notes', notes);
+      }
+      try { localStorage.setItem('_prunesc_last', todayIso); } catch(e) {}
+    }
+
     // ═══════════════════════════════════════
     // INIT
     // ═══════════════════════════════════════
@@ -4813,6 +4830,7 @@
     function initDashboard() {
       // Auto-mark unlogged items from 2+ days ago as missed before rendering
       autoMarkMissed();
+      pruneSchedCustom();
       migrateThingsAndSparksToNotes();
       wipeDefaultPrepPlan();
 
@@ -4856,9 +4874,6 @@
       // Apply tab visibility rules
       applyTabVisibility();
 
-      // Autocomplete datalists (expense/task/note/exercise history)
-      populateDatalists();
-
       // Notifications (auto-request, no button needed)
       initNotifications();
     } // end initDashboard
@@ -4895,29 +4910,12 @@
     // ═══════════════════════════════════════
     var _notesFilter = 'all';
 
-    var DEFAULT_NOTE_CATS = [
-        {key:'reminder',    icon:'🔔', label:'Reminders'},
-        {key:'location',    icon:'📍', label:'Location'},
-        {key:'number',      icon:'🔢', label:'Number'},
-        {key:'person',      icon:'👤', label:'Person'},
-        {key:'idea',        icon:'💡', label:'Ideas'},
-        {key:'enhancement', icon:'🔧', label:'Enhancements'},
-        {key:'insight',     icon:'💭', label:'Insights'},
-        {key:'question',    icon:'❓', label:'Questions'},
-        {key:'shopping',    icon:'🛒', label:'Shopping'},
-        {key:'misc',        icon:'📝', label:'Misc'},
-    ];
-
     function getNotes() { return ls_get('notes'); }
 
+    // Empty ([]) until the user defines their own categories via ⚙️ Categories.
     function getNotesCategories() {
         var saved = ls_get('notes_categories');
-        if (!saved || !Array.isArray(saved.list) || saved.list.length === 0) {
-            var list = DEFAULT_NOTE_CATS.map(function(c){ return {key:c.key, icon:c.icon, label:c.label, hidden:false}; });
-            ls_set('notes_categories', {list:list});
-            return list;
-        }
-        return saved.list;
+        return (saved && Array.isArray(saved.list)) ? saved.list : [];
     }
 
     function saveNotesCategories(list) {
@@ -4982,7 +4980,7 @@
         if (!el) return;
         var list = getNotesCategories();
         if (list.length === 0) {
-            el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0">No categories yet.</div>';
+            el.innerHTML = '<div class="fit-muted" style="text-align:center;padding:12px 0">No categories yet — add one below.</div>';
             return;
         }
         var html = '';
@@ -5012,6 +5010,10 @@
         var sel = document.getElementById('nt_cat');
         if (!sel) return;
         var list = getNotesCategories().filter(function(c){ return !c.hidden; });
+        if (list.length === 0) {
+            sel.innerHTML = '<option value="">No categories — tap ⚙️ Categories to add one</option>';
+            return;
+        }
         var prevVal = sel.value;
         sel.innerHTML = list.map(function(c){ return '<option value="' + c.key + '">' + c.icon + ' ' + esc(c.label) + '</option>'; }).join('');
         if (list.some(function(c){ return c.key === prevVal; })) sel.value = prevVal;
@@ -5072,6 +5074,7 @@
         var body   = document.getElementById('nt_body').value.trim();
         var expire = document.getElementById('nt_expire').value;
         if (!title) { appToast('Enter something to note down.'); return; }
+        if (!cat) { appToast('Add a category first — tap ⚙️ Categories.'); return; }
         var notes = getNotes();
         var id = newId();
         notes[id] = {id:id, title:title, cat:cat, body:body,
@@ -5081,7 +5084,6 @@
         document.getElementById('nt_title').value = '';
         document.getElementById('nt_body').value = '';
         renderNotes();
-        _fillDatalist('nt_title_dl', Object.keys(notes).map(function(k){return notes[k].title;}));
     }
 
     function deleteNote(id) {
@@ -5937,20 +5939,6 @@
       }
     }
 
-    function skipSetup() {
-      var existing = getAppConfig();
-      existing.setupDone = true;
-      saveAppConfig(existing);
-      var wiz = document.getElementById('setup_wizard');
-      if (wiz) wiz.classList.remove('open');
-      if (checkAuth()) {
-        initFirebase();
-      } else {
-        document.getElementById('auth_overlay').classList.add('open');
-        updateAuthSubtitle();
-      }
-    }
-
     function _buildSetupWizard() {
       var div = document.createElement('div');
       div.id = 'setup_wizard';
@@ -6528,7 +6516,7 @@
       var html = '<div style="margin-top:10px;padding-top:10px;border-top:0.5px dashed var(--border2)">';
       html += '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Replace "' + esc(ex.name) + '" with</div>';
       html += '<div class="fit-row">';
-      html += '<input class="fi" id="fit_replace_name" list="fit_exercise_names_dl" placeholder="e.g. Hack Squat" style="flex:1;min-width:120px">';
+      html += '<input class="fi" id="fit_replace_name" placeholder="e.g. Hack Squat" style="flex:1;min-width:120px">';
       html += '<select class="fs" id="fit_replace_unit" style="width:80px"><option value="kg">kg</option><option value="lbs">lbs</option></select>';
       html += '</div>';
       html += '<div class="fit-row" style="margin-top:6px">';
@@ -6561,7 +6549,6 @@
       s.exercises.splice(idx, 1, newEx);
       fitState.replacingIdx = null;
       fitRender();
-      _addDatalistOption('fit_exercise_names_dl', name);
     }
 
     function fitRenderAddAndFinishBar() {
@@ -6578,7 +6565,7 @@
       var html = '<div class="card" style="margin-top:10px">';
       html += '<div class="card-title">＋ Add Exercise</div>';
       html += '<div class="fit-row">';
-      html += '<input class="fi" id="fit_adhoc_name" list="fit_exercise_names_dl" placeholder="e.g. Cable Fly" style="flex:1;min-width:140px">';
+      html += '<input class="fi" id="fit_adhoc_name" placeholder="e.g. Cable Fly" style="flex:1;min-width:140px">';
       html += '<select class="fs" id="fit_adhoc_unit" style="width:90px"><option value="kg">kg</option><option value="lbs">lbs</option></select>';
       html += '</div>';
       html += '<button class="btn btn-o btn-sm" style="width:100%;margin-top:8px" onclick="fitAddAdhocExercise()">Add</button>';
@@ -6641,7 +6628,6 @@
       fitState.currentIdx = s.exercises.length - 1;
       fitState.showAddForm = false;
       fitRender();
-      _addDatalistOption('fit_exercise_names_dl', name);
     }
 
     function fitCancelSession() {
