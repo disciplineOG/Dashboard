@@ -7117,6 +7117,19 @@
       });
     }
 
+    // navigator.serviceWorker.ready never rejects on its own — if the service worker
+    // failed to install/activate (e.g. a flaky network request during install), it
+    // just hangs forever with no error. Race it against a timeout so a broken SW
+    // surfaces as a diagnosable message instead of an infinite "Subscribing…".
+    function _swReadyOrTimeout(ms) {
+      return Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise(function(_, reject) {
+          setTimeout(function() { reject(new Error('Service worker did not activate in time. Try reloading the app.')); }, ms);
+        })
+      ]);
+    }
+
     function toggleScheduleNotifications() {
       var statusEl = document.getElementById('notif_sched_status');
       function setStatus(msg) { if (statusEl) statusEl.innerHTML = msg; }
@@ -7126,7 +7139,7 @@
 
         if (isDisabling) {
           setStatus('Disabling…');
-          navigator.serviceWorker.ready.then(function(reg) {
+          _swReadyOrTimeout(10000).then(function(reg) {
             return reg.pushManager.getSubscription();
           }).then(function(sub) {
             if (!sub) return;
@@ -7158,7 +7171,7 @@
         Notification.requestPermission().then(function(perm) {
           if (perm !== 'granted') { setStatus('⚠️ Permission not granted (' + perm + ').'); return; }
           setStatus('Subscribing…');
-          return navigator.serviceWorker.ready.then(function(reg) {
+          return _swReadyOrTimeout(10000).then(function(reg) {
             return reg.pushManager.subscribe({
               userVisibleOnly: true,
               applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)

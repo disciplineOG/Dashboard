@@ -1,4 +1,4 @@
-const CACHE = 'dashboard-v14';
+const CACHE = 'dashboard-v15';
 // Separate, never-purged cache used as tiny key/value storage. Service workers keep no
 // in-memory state between restarts, so config handed over via postMessage() (Firebase
 // project + VAPID key) would otherwise be lost by the time a pushsubscriptionchange
@@ -19,7 +19,17 @@ const ASSETS = [
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
-    caches.open(CACHE).then(function(c) { return c.addAll(ASSETS); })
+    caches.open(CACHE).then(function(c) {
+      // addAll() is all-or-nothing — one flaky cross-origin request (the gstatic
+      // CDN scripts) would otherwise fail the ENTIRE install, leaving no service
+      // worker ever active and navigator.serviceWorker.ready hanging forever on
+      // every future page load (breaking push subscribe with no visible error).
+      return Promise.all(ASSETS.map(function(url) {
+        return c.add(url).catch(function(err) {
+          console.warn('SW precache skipped (non-fatal):', url, err);
+        });
+      }));
+    })
   );
   self.skipWaiting();
 });
