@@ -5350,11 +5350,15 @@
     }
     function deletePrepCategory(catId){
         appConfirm('Delete this entire category and all its topics?', function() {
-            var plan=getPrepPlanData().filter(function(p){return p.id!==catId;});
+            var allPlan=getPrepPlanData();
+            var deletedPhase=allPlan.filter(function(p){return p.id===catId;})[0];
+            var plan=allPlan.filter(function(p){return p.id!==catId;});
             savePrepPlanData(plan);
             var prog=ls_get('upskill_progress'),notes=ls_get('upskill_notes'),custom=ls_get('upskill_custom');
+            (deletedPhase && deletedPhase.topics || []).forEach(function(t){delete prog[t.id];delete notes[t.id];});
             (custom[catId]||[]).forEach(function(t){delete prog[t.id];delete notes[t.id];});
-            ls_set('upskill_progress',prog);ls_set('upskill_notes',notes);
+            delete custom[catId];
+            ls_set('upskill_progress',prog);ls_set('upskill_notes',notes);ls_set('upskill_custom',custom);
             renderUpskill();appToast('🗑️ Category deleted');
         }, '🗑️ Delete Category');
     }
@@ -5399,7 +5403,8 @@
         appConfirm('Delete ALL prep data (progress, notes, categories, mocks)?', function() {
             var keys = ['upskill_progress','upskill_notes','upskill_meta','upskill_custom','upskill_plan_data','upskill_overrides'];
             keys.forEach(function(k){
-                try{ls_set(k,{});}catch(e){}
+                var isArrayKey = SYNCED_ARRAY_KEYS.indexOf(k) !== -1;
+                try{ls_set(k, isArrayKey ? [] : {});}catch(e){}
             });
             schedulePush();renderUpskill();appToast('🗑️ All prep data erased');
         }, '🗑️ Erase All');
@@ -7113,24 +7118,26 @@
     }
 
     function toggleScheduleNotifications() {
+      var statusEl = document.getElementById('notif_sched_status');
+      function setStatus(msg) { if (statusEl) statusEl.innerHTML = msg; }
       try {
         var btnEl = document.getElementById('notif_sched_btn');
         var isDisabling = btnEl && btnEl.textContent === 'Disable';
 
         if (isDisabling) {
+          setStatus('Disabling…');
           navigator.serviceWorker.ready.then(function(reg) {
             return reg.pushManager.getSubscription();
           }).then(function(sub) {
             if (!sub) return;
             var id = _simpleHash(sub.endpoint);
             return sub.unsubscribe().then(function() {
-              if (_fbRef) _fbRef.child('push_subscriptions/' + id).remove();
+              if (_fbRef && _fbReady) return _fbRef.child('push_subscriptions/' + id).remove();
             });
           }).then(function() {
             renderNotifSchedStatus();
-          }).catch(function() {
-            appToast('Could not update notification settings.');
-            renderNotifSchedStatus();
+          }).catch(function(err) {
+            setStatus('⚠️ ' + (err && (err.message || err.name) || 'Could not disable.'));
           });
           return;
         }
@@ -7140,36 +7147,43 @@
         // prompt to fire directly off the user gesture, and silently no-op it (no
         // prompt, no error) once it's nested behind earlier awaited promises.
         if (typeof Notification === 'undefined') {
-          appToast('Notifications aren\'t supported in this browser/app.');
+          setStatus('⚠️ Notifications aren\'t supported in this browser/app.');
           return;
         }
         if (Notification.permission === 'denied') {
-          appToast('Notifications are blocked for this app — enable them in your device\'s Settings.');
+          setStatus('⚠️ Blocked — enable notifications for this app in your device\'s Settings.');
           return;
         }
+        setStatus('Requesting permission…');
         Notification.requestPermission().then(function(perm) {
-          if (perm !== 'granted') { appToast('Notification permission denied.'); return; }
+          if (perm !== 'granted') { setStatus('⚠️ Permission not granted (' + perm + ').'); return; }
+          setStatus('Subscribing…');
           return navigator.serviceWorker.ready.then(function(reg) {
             return reg.pushManager.subscribe({
               userVisibleOnly: true,
               applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
             });
           }).then(function(newSub) {
+            setStatus('Saving…');
+            if (!_fbRef || !_fbReady) {
+              return newSub.unsubscribe().then(function() {
+                setStatus('⚠️ Not connected to sync yet — wait a moment for the app to finish loading, then try again.');
+              });
+            }
             var id = _simpleHash(newSub.endpoint);
             var payload = newSub.toJSON();
             payload.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
             payload.savedAt = Date.now();
-            if (_fbRef) _fbRef.child('push_subscriptions/' + id).set(payload);
-            appToast('Schedule notifications enabled.');
+            return _fbRef.child('push_subscriptions/' + id).set(payload).then(function() {
+              appToast('Schedule notifications enabled.');
+              renderNotifSchedStatus();
+            });
           });
-        }).then(function() {
-          renderNotifSchedStatus();
         }).catch(function(err) {
-          appToast('Could not update notification settings' + (err && err.message ? ': ' + err.message : '.'));
-          renderNotifSchedStatus();
+          setStatus('⚠️ ' + (err && (err.message || err.name) || 'Could not enable notifications.'));
         });
       } catch (err) {
-        appToast('Could not update notification settings' + (err && err.message ? ': ' + err.message : '.'));
+        setStatus('⚠️ ' + (err && (err.message || err.name) || 'Unexpected error.'));
       }
     }
 

@@ -1,4 +1,4 @@
-const CACHE = 'dashboard-v12';
+const CACHE = 'dashboard-v14';
 // Separate, never-purged cache used as tiny key/value storage. Service workers keep no
 // in-memory state between restarts, so config handed over via postMessage() (Firebase
 // project + VAPID key) would otherwise be lost by the time a pushsubscriptionchange
